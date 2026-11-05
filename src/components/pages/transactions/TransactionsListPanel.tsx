@@ -359,9 +359,9 @@ function TransactionsTable({ tabs, activeTab, wallets, beneficiariesById, transa
                         <TableControlButton label="Status" active={showStatus} onClick={() => toggleViewPreference("showStatus")} />
                         <TableControlButton label="Data" active={showDate} onClick={() => toggleViewPreference("showDate")} />
                         <TableControlButton label="Descrição" active={showDescription} onClick={() => toggleViewPreference("showDescription")} />
-                        <TableControlButton label="Categoria" active={showCategory} onClick={() => toggleViewPreference("showCategory")} />
+                        <TableControlButton label={activeTab === "transfer" ? "Origem" : "Categoria"} active={showCategory} onClick={() => toggleViewPreference("showCategory")} />
                         <TableControlButton label="Tags" active={showTags} onClick={() => toggleViewPreference("showTags")} />
-                        <TableControlButton label="Beneficiário" active={showBeneficiary} onClick={() => toggleViewPreference("showBeneficiary")} />
+                        <TableControlButton label={activeTab === "transfer" ? "Destino" : "Beneficiário"} active={showBeneficiary} onClick={() => toggleViewPreference("showBeneficiary")} />
                         <TableControlButton label="Valor" active={showValue} onClick={() => toggleViewPreference("showValue")} />
                     </div>
                 </div>
