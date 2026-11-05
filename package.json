@@ -10,7 +10,8 @@
     "test": "vitest run --configLoader runner",
     "test:migrations": "node supabase/tests/validate-migrations-pglite.mjs",
     "typecheck": "tsc --noEmit",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "prepare": "git config core.hooksPath .githooks || exit 0"
   },
   "dependencies": {
     "@radix-ui/react-switch": "^1.2.6",
