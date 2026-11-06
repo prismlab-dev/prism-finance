@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { Children, type ReactNode } from "react";
 import type { ItemIconTone } from "./planningTimelineTypes";
 
 interface PlanningDetailsSectionProps {
@@ -23,12 +23,13 @@ const SECTION_LINE_CLASS_NAMES: Record<ItemIconTone, string> = {
 
 export function PlanningDetailsSection({ children, title, tone }: PlanningDetailsSectionProps) {
     return (
-        <section>
-            <div className="mb-3 mt-1 flex w-full items-center px-1.5">
-                <p className={`text-[11px] uppercase tracking-[0.14em] ${SECTION_TITLE_CLASS_NAMES[tone]}`}>{title}</p>
-                <div className={`mx-1.5 h-px grow ${SECTION_LINE_CLASS_NAMES[tone]}`} />
+        <section className="mt-2 first:mt-0">
+            <div className="mb-1 flex w-full items-center gap-2 px-1">
+                <span className={`h-3 w-0.5 rounded-full ${SECTION_LINE_CLASS_NAMES[tone]}`} aria-hidden />
+                <h3 className={`text-xs font-medium ${SECTION_TITLE_CLASS_NAMES[tone]}`}>{title}</h3>
+                <span className="text-xs tabular-nums text-white/35">{Children.count(children)}</span>
             </div>
-            <div className="space-y-1">{children}</div>
+            <div className="flex flex-col gap-1">{children}</div>
         </section>
     );
 }

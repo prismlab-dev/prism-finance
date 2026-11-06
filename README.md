@@ -1,8 +1,8 @@
-# Prism Finance
+# Silus
 
 Aplicação web para organização e acompanhamento de finanças pessoais, desenvolvida com React, TypeScript e Supabase.
 
-O Prism Finance centraliza transações, carteiras, cartões de crédito, faturas, planejamento financeiro e relatórios em uma interface responsiva e orientada à visualização dos dados.
+O Silus centraliza transações, carteiras, cartões de crédito, faturas, planejamento financeiro e relatórios em uma interface responsiva e orientada à visualização dos dados.
 
 > O projeto está em desenvolvimento ativo. Funcionalidades, estrutura do banco de dados e regras financeiras podem sofrer alterações.
 
@@ -250,7 +250,7 @@ Na Vercel, esse comportamento é configurado pelo arquivo `vercel.json`:
 
 ## Arquitetura financeira
 
-O Prism Finance trabalha com diferentes entidades do domínio financeiro.
+O Silus trabalha com diferentes entidades do domínio financeiro.
 
 ### Carteiras
 
@@ -310,7 +310,7 @@ A área de planejamento utiliza receitas, despesas, simulações e itens selecio
 
 ## Sincronização
 
-O Prism Finance sincroniza os dados financeiros com o Supabase.
+O Silus sincroniza os dados financeiros com o Supabase.
 
 O sistema possui mecanismos para:
 
@@ -334,7 +334,7 @@ Cenários importantes:
 
 ## Configuração do Supabase
 
-O projeto Supabase deve conter as tabelas, índices, funções e políticas necessárias para armazenar os dados do Prism Finance.
+O projeto Supabase deve conter as tabelas, índices, funções e políticas necessárias para armazenar os dados do Silus.
 
 As políticas de Row Level Security devem garantir que:
 
@@ -356,7 +356,7 @@ for select
 using (auth.uid() = user_id);
 ```
 
-A política real deve ser adaptada à estrutura do banco e às regras de compartilhamento do Prism Finance.
+A política real deve ser adaptada à estrutura do banco e às regras de compartilhamento do Silus.
 
 ## Deploy na Vercel
 
@@ -523,6 +523,6 @@ refactor(transactions): extract recurring transaction logic
 
 ## Licença
 
-O Prism Finance é um projeto privado.
+O Silus é um projeto privado.
 
 Todos os direitos são reservados ao proprietário do repositório. O código não deve ser copiado, distribuído, publicado ou utilizado sem autorização.

@@ -5,6 +5,7 @@ import { type Category, useFinanceCategories } from "../../context/FinanceContex
 import { useModal } from "../../context/ModalContext";
 import { getCategoryIconComponent } from "../../lib/categoryIcons";
 import { MobileListToolbar } from "../MobileListToolbar";
+import { readableTint } from "../../lib/colorContrast";
 
 const TYPES = [
     { key: "expense" as const, label: "Despesas", active: "border-red-300/45 bg-red-500/18 text-red-100" },
@@ -78,7 +79,7 @@ export function MobileCategoriesSection() {
                                     onClick={() => (children.length > 0 ? setExpandedId(expanded ? null : category.id) : edit(category.id))}
                                     className="flex w-full items-center gap-3 px-1 py-3 text-left outline-none active:bg-white/[0.03] focus-visible:ring-2 focus-visible:ring-sky-400/60"
                                 >
-                                    <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ color, backgroundColor: `${color}22` }}>
+                                    <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ color: readableTint(color), backgroundColor: `${color}22` }}>
                                         <Icon size={18} />
                                     </span>
                                     <span className="min-w-0 flex-1">
@@ -107,7 +108,7 @@ export function MobileCategoriesSection() {
                                                     onClick={() => edit(child.id)}
                                                     className={`flex w-full items-center gap-2.5 py-2.5 text-left text-sm text-neutral-200 outline-none active:text-white ${child.isActive ? "" : "opacity-60"}`}
                                                 >
-                                                    <ChildIcon size={15} className="shrink-0" style={{ color: child.color ?? color }} />
+                                                    <ChildIcon size={15} className="shrink-0" style={{ color: readableTint(child.color ?? color) }} />
                                                     <span className="min-w-0 flex-1 truncate">{child.name}</span>
                                                     {!child.isActive && <InactiveBadge />}
                                                 </button>

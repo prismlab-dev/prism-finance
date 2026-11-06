@@ -1,5 +1,8 @@
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
-import { CreditCard, FileSpreadsheet, FileUp, ShieldAlert } from "lucide-react";
+import { FileSpreadsheet, FileUp, TextCursorInput } from "lucide-react";
+import { SETTINGS_PRIMARY_BUTTON_CLASS, SETTINGS_SECONDARY_BUTTON_CLASS, SettingsFeedback, SettingsSection } from "./SettingsSection";
+import { IconTextField } from "../../transactions/IconTextField";
+import { SingleSelectCombobox } from "../../transactions/SingleSelectCombobox";
 import { useFinance } from "../../../context/FinanceContext";
 import {
     buildCreditCardInvoiceImportSnapshot,
@@ -44,21 +47,21 @@ function ImportPreviewStats({ preview }: { preview: CreditCardInvoiceCsvImportRe
     ];
 
     return (
-        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+        <dl className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3">
             {items.map((item) => (
-                <div key={item.label} className="rounded-xl border border-white/[0.08] bg-black/20 px-3 py-2">
-                    <p className="text-xs uppercase tracking-[0.18em] text-white/40">{item.label}</p>
-                    <p className="mt-1 text-sm font-semibold text-white">{item.value}</p>
+                <div key={item.label} className="min-w-0">
+                    <dt className="truncate text-xs text-white/40">{item.label}</dt>
+                    <dd className="mt-0.5 text-sm font-semibold tabular-nums text-white">{item.value}</dd>
                 </div>
             ))}
-        </div>
+        </dl>
     );
 }
 
 function InvoiceTotalsPreview({ preview }: { preview: CreditCardInvoiceCsvImportResult }) {
     return (
-        <div className="mt-4 rounded-xl border border-white/[0.08] bg-black/20 p-3">
-            <p className="text-xs uppercase tracking-[0.18em] text-white/40">Totais por fatura</p>
+        <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-3">
+            <p className="text-xs text-white/40">Totais por fatura</p>
             <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
                 {preview.summary.totalsByInvoice.map((invoice) => (
                     <div key={invoice.cycleKey} className="rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-2">
@@ -77,6 +80,7 @@ export function CreditCardInvoiceCsvImportCard() {
     const { user, profile, finance, favoriteWalletId, favoriteCreditCardId, creditCards, loading, updateFinance } = useFinance();
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const activeCreditCards = useMemo(() => creditCards.filter((card) => card.isActive), [creditCards]);
+    const creditCardOptions = useMemo(() => activeCreditCards.map((card) => ({ id: card.id, label: card.name, searchText: card.name })), [activeCreditCards]);
     const activeCreditCardIds = useMemo(() => new Set(activeCreditCards.map((card) => card.id)), [activeCreditCards]);
     const [selectedCreditCardId, setSelectedCreditCardId] = useState(() => getDefaultCreditCardId(activeCreditCardIds, favoriteCreditCardId));
     const [preview, setPreview] = useState<CreditCardInvoiceCsvImportResult | null>(null);
@@ -193,122 +197,73 @@ export function CreditCardInvoiceCsvImportCard() {
     };
 
     return (
-        <article className="rounded-lg border border-white/[0.08] bg-[#101010] p-4">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-                <div className="max-w-2xl">
-                    <div className="flex items-center gap-2 text-white">
-                        <CreditCard size={18} />
-                        <h3 className="text-lg font-semibold">Importar faturas CSV</h3>
-                    </div>
-                    <p className="mt-2 text-sm text-white/55">
-                        Importe despesas e encargos de faturas, mantendo compras parceladas como uma unica serie e usando a coluna Fatura para vincular cada parcela.
-                    </p>
-                </div>
-                <div className="flex flex-wrap gap-3">
-                    <input ref={fileInputRef} type="file" accept=".csv,text/csv" onChange={handleFileChange} className="hidden" />
-                    <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={!finance || loading || activeCreditCards.length < 1}
-                        className="inline-flex items-center gap-2 rounded-xl border border-violet-300/35 bg-violet-500/15 px-4 py-2 text-sm font-medium text-violet-100 transition-colors hover:border-violet-300/55 hover:bg-violet-500/20 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                        <FileSpreadsheet size={16} />
-                        Importar faturas CSV
-                    </button>
-                </div>
-            </div>
-
-            {feedback ? (
-                <div
-                    className={`mt-4 rounded-xl border px-4 py-3 text-sm ${
-                        feedback.type === "error"
-                            ? "border-rose-400/35 bg-rose-500/10 text-rose-100"
-                            : "border-emerald-400/30 bg-emerald-500/10 text-emerald-100"
-                    }`}
+        <SettingsSection title="Importar faturas" description="Adiciona despesas e encargos de faturas de cartão. Compras parceladas viram uma única série, ligada a cada fatura pela coluna Fatura.">
+            <div className="space-y-4">
+                <input ref={fileInputRef} type="file" accept=".csv,text/csv" onChange={handleFileChange} className="hidden" />
+                <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={!finance || loading || activeCreditCards.length < 1}
+                    className={SETTINGS_SECONDARY_BUTTON_CLASS}
                 >
-                    {feedback.message}
-                </div>
-            ) : null}
+                    <FileSpreadsheet size={16} aria-hidden />
+                    Escolher arquivo CSV
+                </button>
+                {activeCreditCards.length < 1 ? <p className="text-sm text-white/45">Cadastre um cartão antes de importar faturas.</p> : null}
 
-            {preview ? (
-                <div className="mt-5 rounded-2xl border border-violet-300/25 bg-violet-400/10 p-4">
-                    <div className="flex items-start gap-3">
-                        <ShieldAlert size={18} className="mt-0.5 text-violet-100" />
-                        <div className="min-w-0">
-                            <p className="text-sm font-semibold text-violet-100">CSV de faturas pronto para importacao</p>
-                            <p className="mt-1 text-sm text-violet-50/80">
-                                Escolha o cartao e confirme para registrar as despesas nas faturas correspondentes.
-                            </p>
-                        </div>
-                    </div>
+                <SettingsFeedback feedback={feedback} />
 
-                    <div className="mt-4">
+                {preview ? (
+                    <div className="max-w-2xl space-y-4 rounded-2xl border border-white/[0.08] bg-surface p-4">
+                        <p className="text-sm text-white/70">Confira o resumo, escolha o cartão e confirme. As despesas entram nas faturas correspondentes.</p>
                         <ImportPreviewStats preview={preview} />
                         <InvoiceTotalsPreview preview={preview} />
-                    </div>
 
-                    {preview.skippedRows.length > 0 || preview.ignoredRows.length > 0 ? (
-                        <div className="mt-4 rounded-xl border border-amber-300/25 bg-amber-400/10 px-4 py-3 text-sm text-amber-50/85">
-                            <p className="font-medium text-amber-100">Linhas nao importadas</p>
-                            <ul className="mt-2 space-y-1">
-                                {[...preview.skippedRows, ...preview.ignoredRows].slice(0, 6).map((message) => (
-                                    <li key={message}>{message}</li>
-                                ))}
-                            </ul>
-                            {preview.skippedRows.length + preview.ignoredRows.length > 6 ? (
-                                <p className="mt-2">Mais {preview.skippedRows.length + preview.ignoredRows.length - 6} linhas nao foram importadas.</p>
-                            ) : null}
+                        {(preview.skippedRows.length + preview.ignoredRows.length) > 0 ? (
+                            <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-sm text-white/60">
+                                <p className="font-medium text-white/80">Linhas que não serão importadas</p>
+                                <ul className="mt-2 space-y-1">
+                                    {[...preview.skippedRows, ...preview.ignoredRows].slice(0, 5).map((message) => (
+                                        <li key={message}>{message}</li>
+                                    ))}
+                                </ul>
+                                {(preview.skippedRows.length + preview.ignoredRows.length) > 5 ? <p className="mt-2">E mais {(preview.skippedRows.length + preview.ignoredRows.length) - 5}.</p> : null}
+                            </div>
+                        ) : null}
+
+                        <div className="grid max-w-xl gap-3 sm:grid-cols-2">
+                            <SingleSelectCombobox
+                                hideLabel
+                                label="Cartão de destino"
+                                value={selectedCreditCardId}
+                                placeholder="Cartão de destino"
+                                emptyMessage="Nenhum cartão ativo."
+                                options={creditCardOptions}
+                                onChange={setSelectedCreditCardId}
+                                renderOptionContent={(option) => <span className="truncate text-sm text-white">{option.label}</span>}
+                            />
+                            <IconTextField
+                                ariaLabel={`Digite ${INVOICE_CSV_IMPORT_CONFIRMATION_TEXT} para confirmar`}
+                                icon={TextCursorInput}
+                                value={confirmation}
+                                onChange={setConfirmation}
+                                placeholder={`Digite ${INVOICE_CSV_IMPORT_CONFIRMATION_TEXT}`}
+                                disabled={isImporting}
+                            />
                         </div>
-                    ) : null}
 
-                    <label className="mt-4 block text-sm text-white/78">
-                        <span className="mb-2 block">Cartao de destino</span>
-                        <select
-                            value={selectedCreditCardId}
-                            onChange={(event) => setSelectedCreditCardId(event.target.value)}
-                            className="w-full rounded-xl border border-white/[0.1] bg-black/20 px-3 py-2 text-white outline-none transition-colors focus:border-violet-200/40"
-                        >
-                            {activeCreditCards.map((card) => (
-                                <option key={card.id} value={card.id} className="bg-[#101010] text-white">
-                                    {card.name}
-                                </option>
-                            ))}
-                        </select>
-                    </label>
-
-                    <label className="mt-4 block text-sm text-white/78">
-                        <span className="mb-2 block">
-                            Digite <strong>{INVOICE_CSV_IMPORT_CONFIRMATION_TEXT}</strong> para confirmar
-                        </span>
-                        <input
-                            type="text"
-                            value={confirmation}
-                            onChange={(event) => setConfirmation(event.target.value)}
-                            className="w-full rounded-xl border border-white/[0.1] bg-black/20 px-3 py-2 text-white outline-none transition-colors focus:border-violet-200/40"
-                            placeholder={INVOICE_CSV_IMPORT_CONFIRMATION_TEXT}
-                        />
-                    </label>
-
-                    <div className="mt-4 flex flex-wrap gap-3">
-                        <button
-                            type="button"
-                            onClick={handleConfirmImport}
-                            disabled={!canImport}
-                            className="inline-flex items-center gap-2 rounded-xl border border-violet-300/30 bg-violet-400/15 px-4 py-2 text-sm font-medium text-violet-50 transition-colors hover:border-violet-300/45 hover:bg-violet-400/20 disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                            <FileUp size={16} />
-                            {isImporting ? "Importando..." : "Confirmar importacao de faturas"}
-                        </button>
-                        <button
-                            type="button"
-                            onClick={resetPreview}
-                            className="inline-flex items-center gap-2 rounded-xl border border-white/[0.12] bg-white/[0.03] px-4 py-2 text-sm text-white transition-colors hover:border-white/[0.18] hover:bg-white/[0.06]"
-                        >
-                            Cancelar
-                        </button>
+                        <div className="flex flex-wrap gap-2">
+                            <button type="button" onClick={handleConfirmImport} disabled={!canImport} className={SETTINGS_PRIMARY_BUTTON_CLASS}>
+                                <FileUp size={16} aria-hidden />
+                                {isImporting ? "Importando..." : "Importar faturas"}
+                            </button>
+                            <button type="button" onClick={resetPreview} disabled={isImporting} className={SETTINGS_SECONDARY_BUTTON_CLASS}>
+                                Cancelar
+                            </button>
+                        </div>
                     </div>
-                </div>
-            ) : null}
-        </article>
+                ) : null}
+            </div>
+        </SettingsSection>
     );
 }

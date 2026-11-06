@@ -69,7 +69,7 @@ export function SummaryCard({ title, value, tone, badge, helper, icon: Icon, ind
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2, delay: index * 0.03, ease: "easeOut" }}
-            className={`relative overflow-hidden rounded-2xl border ${styles.border} bg-[#111111] p-3.5 text-left`}
+            className={`relative overflow-hidden rounded-2xl border ${styles.border} bg-surface p-3.5 text-left`}
         >
             <div className={`pointer-events-none absolute -bottom-16 -right-16 h-32 w-32 rounded-full ${styles.glow} blur-3xl`} />
             <div className="relative flex items-start justify-between gap-2">

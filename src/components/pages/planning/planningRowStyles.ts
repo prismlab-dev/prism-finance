@@ -14,16 +14,27 @@ const ACTIVE_AMOUNT_CLASS_NAMES: Record<ItemIconTone, string> = {
     neutral: "text-white/78",
 };
 
-export const PLANNING_ROW_BASE_CLASS_NAME = "flex w-full items-center justify-between gap-2 rounded-lg border p-1.5 pr-2.5 text-left transition-colors";
+const ACTIVE_MARKER_CLASS_NAMES: Record<ItemIconTone, string> = {
+    income: "bg-emerald-300",
+    expense: "bg-orange-300",
+    wishlist: "bg-rose-300",
+    neutral: "bg-white/60",
+};
+
+export const PLANNING_ROW_BASE_CLASS_NAME =
+    "flex w-full items-center justify-between gap-3 rounded-md px-2 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-white/30";
 
 export function getPlanningRowStateClassName(active: boolean): string {
-    return active
-        ? "border-white/[0.13] bg-white/[0.06] text-white/88 shadow-[0_10px_30px_-24px_rgba(255,255,255,0.65)]"
-        : "border-white/[0.04] bg-black/10 text-white/34";
+    return active ? "text-white/90" : "text-white/40";
 }
 
 export function getPlanningRowHoverClassName(active: boolean): string {
-    return active ? "hover:border-white/[0.2] hover:bg-white/[0.09]" : "hover:border-white/[0.12] hover:bg-white/[0.04] hover:text-white/62";
+    return active ? "hover:bg-white/[0.05]" : "hover:bg-white/[0.03] hover:text-white/60";
+}
+
+/** Indicador de inclusão no saldo: anel vazio quando ignorado. */
+export function getPlanningRowMarkerClassName(iconTone: ItemIconTone, active: boolean): string {
+    return active ? `border-transparent ${ACTIVE_MARKER_CLASS_NAMES[iconTone]}` : "border-white/25 bg-transparent";
 }
 
 export function getPlanningRowIconClassName(iconTone: ItemIconTone, active: boolean): string {
@@ -36,7 +47,7 @@ export function getPlanningRowIconClassName(iconTone: ItemIconTone, active: bool
 
 export function getPlanningRowAmountClassName(iconTone: ItemIconTone, active: boolean, overrideClassName?: string): string {
     if (!active) {
-        return "text-white/35";
+        return "text-white/30 line-through decoration-white/25";
     }
 
     return overrideClassName ?? ACTIVE_AMOUNT_CLASS_NAMES[iconTone];

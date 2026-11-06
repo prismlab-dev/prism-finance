@@ -32,7 +32,7 @@ export function PlanningAlertsPanel({ summary }: PlanningAlertsPanelProps) {
 
     return (
         <section className="space-y-2">
-            <article className="rounded-2xl border border-white/[0.08] bg-[#111111] p-4 text-left shadow-[0_24px_60px_-32px_rgba(0,0,0,0.9)]">
+            <article className="rounded-2xl border border-white/[0.08] bg-surface p-4 text-left shadow-[0_24px_60px_-32px_rgba(0,0,0,0.9)]">
                 <p className="text-lg font-medium text-white">Alertas inteligentes</p>
                 <div className="mt-3 space-y-2">
                     {summary.alerts.map((alert) => {
@@ -52,7 +52,7 @@ export function PlanningAlertsPanel({ summary }: PlanningAlertsPanelProps) {
                 </div>
             </article>
 
-            <article className="rounded-2xl border border-white/[0.08] bg-[#111111] p-4 text-left shadow-[0_24px_60px_-32px_rgba(0,0,0,0.9)]">
+            <article className="rounded-2xl border border-white/[0.08] bg-surface p-4 text-left shadow-[0_24px_60px_-32px_rgba(0,0,0,0.9)]">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="text-lg font-medium text-white">Linha do tempo de caixa</p>
                     <p className={`text-sm font-medium ${summary.minBalanceInMonth < 0 ? "text-red-300" : "text-emerald-300"}`}>

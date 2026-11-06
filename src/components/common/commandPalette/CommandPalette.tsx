@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 import { normalizeComparisonText } from "../../../context/finance/helpers";
 import { usePage } from "../../../context/PageContext";
+import { OPEN_COMMAND_PALETTE_EVENT } from "./openCommandPalette";
 import { rankCommandItems } from "./rankCommandItems";
 import { useCommandItems, type CommandItem } from "./useCommandItems";
 
@@ -24,7 +25,9 @@ const GROUP_HUE: Record<string, string> = {
     Beneficiários: "#fdba74",
     Tags: "#a5b4fc",
 };
-const SPECTRUM = "linear-gradient(90deg, #a78bfa, #7dd3fc, #6ee7b7, #fcd34d, #fdba74, #fda4af)";
+// Única cor de destaque do modal: marca o trecho que coincide com a busca.
+const MATCH_COLOR = "#fcd34d";
+const SHORTCUT_LABEL = /Mac|iPhone|iPad/.test(navigator.userAgent) ? "⌘ K" : "Ctrl K";
 
 export function CommandPalette() {
     const { goToPage } = usePage();
@@ -45,8 +48,18 @@ export function CommandPalette() {
             }
         }
 
+        function handleOpenRequest() {
+            setIsOpen(true);
+            setQuery("");
+            setActiveIndex(0);
+        }
+
         document.addEventListener("keydown", handleShortcut);
-        return () => document.removeEventListener("keydown", handleShortcut);
+        window.addEventListener(OPEN_COMMAND_PALETTE_EVENT, handleOpenRequest);
+        return () => {
+            document.removeEventListener("keydown", handleShortcut);
+            window.removeEventListener(OPEN_COMMAND_PALETTE_EVENT, handleOpenRequest);
+        };
     }, []);
 
     // Sem busca: só as páginas. Com busca, grupos aparecem na ordem do seu melhor resultado.
@@ -58,12 +71,6 @@ export function CommandPalette() {
         const groupOrder = [...new Set(ranked.map((item) => item.group))];
         return ranked.sort((a, b) => groupOrder.indexOf(a.group) - groupOrder.indexOf(b.group));
     }, [items, query]);
-
-    const groupCounts = useMemo(() => {
-        const counts = new Map<string, number>();
-        results.forEach((item) => counts.set(item.group, (counts.get(item.group) ?? 0) + 1));
-        return counts;
-    }, [results]);
 
     useEffect(() => {
         listRef.current?.querySelector(`[data-index="${activeIndex}"]`)?.scrollIntoView({ block: "nearest" });
@@ -99,7 +106,7 @@ export function CommandPalette() {
         }
     }
 
-    const activeHue = GROUP_HUE[results[activeIndex]?.group ?? ""] ?? GROUP_HUE.Páginas;
+    const activeItem = results[activeIndex];
 
     return (
         <div className="fixed inset-0 z-[60] flex items-start justify-center bg-black/60 px-4 pt-[9vh] backdrop-blur-[2px]" onMouseDown={() => setIsOpen(false)}>
@@ -108,12 +115,15 @@ export function CommandPalette() {
                 aria-modal="true"
                 aria-label="Busca global"
                 onMouseDown={(event) => event.stopPropagation()}
-                className="command-palette-in relative flex max-h-[min(580px,78vh)] w-full max-w-[660px] flex-col overflow-hidden rounded-[20px] border border-white/[0.09] bg-[#141417] shadow-[0_40px_100px_-30px_rgba(0,0,0,0.95)]"
+                style={{
+                    borderColor: "color-mix(in oklab, var(--color-white) 9%, transparent)",
+                    backgroundImage: "radial-gradient(90% 55% at 0% 0%, color-mix(in oklab, var(--color-white) 5%, transparent), transparent 65%)",
+                }}
+                className="command-palette-in relative flex max-h-[min(580px,78vh)] w-full max-w-[640px] flex-col overflow-hidden rounded-[18px] border bg-raised shadow-[inset_0_1px_0_color-mix(in_oklab,var(--color-white)_6%,transparent),0_40px_100px_-30px_rgba(0,0,0,0.95)] transition-[border-color,background-image] duration-300 motion-reduce:transition-none"
             >
-                <div aria-hidden className="absolute inset-x-0 top-0 h-px opacity-70" style={{ background: SPECTRUM }} />
 
                 <label className="flex h-16 shrink-0 items-center gap-3 px-5">
-                    <Search size={18} className="shrink-0 transition-colors" style={{ color: query.trim() ? activeHue : "rgba(255,255,255,0.4)" }} />
+                    <Search size={20} className="shrink-0 text-white/60" />
                     <input
                         autoFocus
                         type="search"
@@ -124,15 +134,16 @@ export function CommandPalette() {
                             setActiveIndex(0);
                         }}
                         onKeyDown={handleKeyDown}
-                        placeholder="O que você procura?"
+                        placeholder="Pesquise qualquer coisa"
                         aria-expanded="true"
                         aria-controls="command-palette-results"
                         aria-activedescendant={results[activeIndex] ? `command-${results[activeIndex].id}` : undefined}
-                        className="min-w-0 flex-1 bg-transparent text-[17px] text-white outline-none placeholder:text-white/30 [&::-webkit-search-cancel-button]:hidden"
+                        className="min-w-0 flex-1 bg-transparent text-[17px] font-medium tracking-[-0.01em] text-white outline-none placeholder:text-white/30 [&::-webkit-search-cancel-button]:hidden"
                     />
                 </label>
 
-                <div ref={listRef} id="command-palette-results" role="listbox" className="elegant-scrollbar min-h-0 flex-1 overflow-y-auto border-t border-white/[0.06] px-2 pb-2">
+                <div ref={listRef} id="command-palette-results" role="listbox"
+                    className="command-palette-scroll mx-2 mb-2 min-h-0 flex-1 overflow-y-auto rounded-2xl border border-white/[0.06] bg-surface p-1.5">
                     {results.length === 0 ? (
                         <div className="px-4 py-10 text-center">
                             <p className="text-sm text-white/70">Nada encontrado para “{query.trim()}”.</p>
@@ -142,66 +153,73 @@ export function CommandPalette() {
                         results.map((item, index) => {
                             const hue = GROUP_HUE[item.group] ?? GROUP_HUE.Páginas;
                             const isActive = index === activeIndex;
-                            const startsGroup = index === 0 || item.group !== results[index - 1].group;
                             return (
-                                <div key={item.id}>
-                                    {startsGroup ? (
-                                        <p className="flex items-center gap-2 px-3 pb-1.5 pt-3.5 text-xs text-white/45">
-                                            <span className="size-1.5 rounded-full" style={{ background: hue }} />
-                                            {item.group}
-                                            <span className="text-white/25">{groupCounts.get(item.group)}</span>
-                                        </p>
-                                    ) : null}
-                                    <button
-                                        id={`command-${item.id}`}
-                                        type="button"
-                                        role="option"
-                                        data-index={index}
-                                        aria-selected={isActive}
-                                        onMouseMove={() => setActiveIndex(index)}
-                                        onClick={() => open(item)}
-                                        style={{ "--hue": hue } as CSSProperties}
-                                        className={`relative flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm transition-colors ${isActive ? "bg-white/[0.06]" : ""}`}
-                                    >
-                                        {isActive ? <span aria-hidden className="absolute inset-y-2 left-0 w-[2px] rounded-full bg-[var(--hue)]" /> : null}
-                                        {item.media ? (
-                                            <span className="flex size-8 shrink-0">{item.media}</span>
-                                        ) : (
-                                            <span
-                                                className="flex size-8 shrink-0 items-center justify-center rounded-[10px] [&_svg]:size-4"
-                                                style={{
-                                                    color: item.color ?? hue,
-                                                    background: `color-mix(in srgb, ${item.color ?? hue} ${isActive ? 18 : 11}%, transparent)`,
-                                                    boxShadow: item.color ? `inset 0 0 0 1px color-mix(in srgb, ${item.color} 22%, transparent)` : undefined,
-                                                }}
-                                            >
-                                                {item.icon}
-                                            </span>
-                                        )}
-                                        <span className="min-w-0 flex-1">
-                                            <span className="block truncate text-white/90">
-                                                <HighlightedLabel label={item.label} query={query} />
-                                            </span>
-                                            <span className="block truncate text-xs text-white/40">{item.hint}</span>
+                                <button
+                                    key={item.id}
+                                    id={`command-${item.id}`}
+                                    type="button"
+                                    role="option"
+                                    data-index={index}
+                                    aria-selected={isActive}
+                                    onMouseMove={() => setActiveIndex(index)}
+                                    onClick={() => open(item)}
+                                    className={`group/item relative flex w-full items-center gap-3 rounded-[10px] py-1.5 pl-3 pr-3 text-left text-sm transition-colors duration-150 ${
+                                        isActive ? "bg-white/[0.06]" : ""
+                                    }`}
+                                >
+                                    <span
+                                        aria-hidden
+                                        className={`absolute inset-y-2.5 left-0 w-[3px] rounded-r-full bg-white/70 transition-opacity duration-150 ${isActive ? "opacity-100" : "opacity-0"}`}
+                                    />
+                                    {item.media ? (
+                                        <span className="flex size-9 shrink-0">{item.media}</span>
+                                    ) : (
+                                        <span
+                                            className="flex size-9 shrink-0 items-center justify-center rounded-[10px] transition-colors duration-150 [&_svg]:size-[19px]"
+                                            style={{
+                                                color: item.color ?? hue,
+                                                background: isActive ? `color-mix(in srgb, ${item.color ?? hue} 18%, transparent)` : "transparent",
+                                            }}
+                                        >
+                                            {item.icon}
                                         </span>
+                                    )}
+                                    <span className={`min-w-0 flex-1 truncate font-medium transition-colors ${isActive ? "text-white" : "text-neutral-300"}`}>
+                                        <HighlightedLabel label={item.label} query={query} />
+                                    </span>
+                                    <span className="flex max-w-[45%] shrink-0 flex-col items-end leading-tight">
                                         {item.amount ? (
-                                            <span className={`shrink-0 text-[13px] ${AMOUNT_TONE[item.amount.tone]}`} style={{ fontFamily: "'Azeret Mono', monospace", fontVariantNumeric: "tabular-nums" }}>
+                                            <span className={`text-sm font-semibold tabular-nums ${AMOUNT_TONE[item.amount.tone]}`}>
                                                 {item.amount.tone === "income" ? "+" : item.amount.tone === "spending" ? "−" : ""}
                                                 {currencyFormatter.format(item.amount.value)}
                                             </span>
                                         ) : null}
-                                    </button>
-                                </div>
+                                        <span className={`max-w-full truncate text-neutral-500 ${item.amount ? "mt-0.5 text-[11px]" : "text-xs"}`}>{item.hint || item.group}</span>
+                                    </span>
+                                </button>
                             );
                         })
                     )}
                 </div>
 
-                <div className="hidden shrink-0 items-center gap-4 border-t border-white/[0.06] px-5 py-2.5 text-xs text-white/35 sm:flex">
-                    <KeyHint keys={["↑", "↓"]} label="navegar" />
-                    <KeyHint keys={["Enter"]} label="abrir" />
-                    <KeyHint keys={["Esc"]} label="fechar" />
-                    <span className="ml-auto">{query.trim() ? `${results.length} resultado${results.length === 1 ? "" : "s"}` : "Ctrl K abre de qualquer tela"}</span>
+                <div className="hidden shrink-0 items-center gap-4 px-5 pb-3.5 pt-1.5 text-xs text-neutral-500 sm:flex">
+                    {activeItem ? (
+                        <span className="flex min-w-0 flex-1 items-center gap-2">
+                            <Keycap>Enter</Keycap>
+                            <span className="truncate">
+                                abre <span className="font-medium ml-1 text-neutral-200">{activeItem.label}</span>
+                            </span>
+                        </span>
+                    ) : (
+                        <span className="flex-1">{SHORTCUT_LABEL} abre de qualquer tela</span>
+                    )}
+                    <span className="flex shrink-0 items-center gap-1.5">
+                        <Keycap>↑</Keycap>
+                        <Keycap>↓</Keycap>
+                        <span className="mr-2">navegar</span>
+                        <Keycap>Esc</Keycap>
+                        <span>fechar</span>
+                    </span>
                 </div>
             </div>
         </div>
@@ -219,21 +237,16 @@ function HighlightedLabel({ label, query }: { label: string; query: string }) {
     return (
         <>
             {label.slice(0, start)}
-            <span className="text-white underline decoration-[var(--hue)] decoration-2 underline-offset-[3px]">{label.slice(start, start + needle.length)}</span>
+            <span style={{ color: MATCH_COLOR }} className="underline decoration-current/40 underline-offset-[3px]">{label.slice(start, start + needle.length)}</span>
             {label.slice(start + needle.length)}
         </>
     );
 }
 
-function KeyHint({ keys, label }: { keys: string[]; label: string }) {
+function Keycap({ children }: { children: string }) {
     return (
-        <span className="flex items-center gap-1.5">
-            {keys.map((key) => (
-                <kbd key={key} className="min-w-5 rounded-md border border-white/[0.1] bg-white/[0.03] px-1.5 py-0.5 text-center font-sans text-[11px] text-white/50">
-                    {key}
-                </kbd>
-            ))}
-            {label}
-        </span>
+        <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded-md border border-white/[0.1] border-b-white/[0.04] bg-raised px-1.5 font-sans text-[11px] font-medium text-neutral-300 shadow-[0_2px_0_#0b0b0c,inset_0_1px_0_color-mix(in_oklab,var(--color-white)_6%,transparent)]">
+            {children}
+        </kbd>
     );
 }

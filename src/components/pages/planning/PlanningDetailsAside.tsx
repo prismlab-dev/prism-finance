@@ -1,8 +1,9 @@
-import { ArrowDownRight, ArrowRightLeft, ArrowUpRight, CalendarClock, Columns3Cog, CreditCard as CreditCardIcon, Gift, Plus } from "lucide-react";
+import { ArrowDownRight, ArrowRightLeft, ArrowUpRight, CalendarClock, CreditCard as CreditCardIcon, Gift, Search } from "lucide-react";
 import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import type { PlanningWishlistSelection, WishItem } from "../../../context/FinanceContext";
 import type { IncomeItem, InheritedExpenseItem, MonthProjection, PlanningPanel, SimulatedExpenseItem, SimulatedIncomeItem } from "./planningTimelineTypes";
-import { getAmountClassName } from "./planningTimelineUtils";
+import { IconTextField } from "../../transactions/IconTextField";
+import { PlanningDetailsHeader } from "./PlanningDetailsHeader";
 import { PlanningDetailsSection } from "./PlanningDetailsSection";
 import { PlanningListRow } from "./PlanningListRow";
 import { PlanningProjectionContextMenu, type PlanningProjectionContextMenuState } from "./PlanningProjectionContextMenu";
@@ -63,6 +64,12 @@ type PlanningProjectionContextState = PlanningProjectionContextMenuState & {
     target: PlanningProjectionContextTarget;
 };
 
+const EMPTY_STATE_CLASS_NAME = "rounded-lg border border-dashed border-white/[0.1] px-3 py-6 text-center text-sm text-white/50";
+
+function normalizeSearchText(value: string): string {
+    return value.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+}
+
 function getPanelTitle(panel: PlanningPanel): string {
     if (panel === "income") {
         return "Receitas";
@@ -98,6 +105,9 @@ export function PlanningDetailsAside({
     onToggleWishlistSelection,
 }: PlanningDetailsAsideProps) {
     const [contextMenuState, setContextMenuState] = useState<PlanningProjectionContextState | null>(null);
+    const [searchQuery, setSearchQuery] = useState("");
+    const normalizedQuery = normalizeSearchText(searchQuery.trim());
+    const matchesSearch = (label: string) => !normalizedQuery || normalizeSearchText(label).includes(normalizedQuery);
     const selectedPanelTitle = getPanelTitle(selectedPanel);
     const contextMenuActions = useMemo(() => {
         if (!contextMenuState) {
@@ -135,6 +145,10 @@ export function PlanningDetailsAside({
     useEffect(() => {
         setContextMenuState(null);
     }, [selectedMonth?.monthKey, selectedPanel]);
+
+    useEffect(() => {
+        setSearchQuery("");
+    }, [selectedPanel]);
 
     const handleProjectionContextMenu = (event: MouseEvent, target: PlanningProjectionContextTarget) => {
         event.preventDefault();
@@ -228,14 +242,23 @@ export function PlanningDetailsAside({
 
     const renderContent = () => {
         if (!selectedMonth) {
-            return <p className="rounded-lg border border-white/[0.08] bg-white/[0.03] p-3 text-sm text-white/52">Nenhum mês disponivel.</p>;
+            return <p className={EMPTY_STATE_CLASS_NAME}>Nenhum mês disponível para planejar.</p>;
         }
+
+        const incomeItems = selectedMonth.incomeItems.filter((item) => matchesSearch(item.label));
+        const inheritedItems = selectedMonth.inheritedItems.filter((item) => matchesSearch(item.label));
+        const movedInvoiceItems = selectedMonth.movedInvoiceItems.filter((item) => matchesSearch(item.label));
+        const simulatedIncomeItems = selectedMonth.simulatedIncomeItems.filter((item) => matchesSearch(item.label));
+        const simulatedExpenseItems = selectedMonth.simulatedExpenseItems.filter((item) => matchesSearch(item.description));
+        const wishItems = activeWishItems.filter((item) => matchesSearch(item.description.trim() || "Desejo"));
+        const noResults = normalizedQuery ? <p className={EMPTY_STATE_CLASS_NAME}>Nada encontrado para “{searchQuery.trim()}”.</p> : null;
 
         if (selectedPanel === "income") {
             return (
                 <>
-                    {selectedMonth.incomeItems.length === 0 ? <p className="rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-sm text-white/52">Nenhuma receita neste mês.</p> : null}
-                    {selectedMonth.incomeItems.map((item) => (
+                    {selectedMonth.incomeItems.length > 0 && incomeItems.length === 0 ? noResults : null}
+                    {selectedMonth.incomeItems.length === 0 ? <p className={EMPTY_STATE_CLASS_NAME}>Nenhuma receita prevista para este mês.</p> : null}
+                    {incomeItems.map((item) => (
                         <PlanningToggleRow
                             key={item.id}
                             toggleId={item.id}
@@ -262,8 +285,9 @@ export function PlanningDetailsAside({
         if (selectedPanel === "inherited_expenses") {
             return (
                 <>
-                    {selectedMonth.inheritedItems.length === 0 && selectedMonth.movedInvoiceItems.length === 0 ? <p className="rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-sm text-white/52">Você não tem despesas nesse mês.</p> : null}
-                    {selectedMonth.inheritedItems.map((item) => (
+                    {selectedMonth.inheritedItems.length + selectedMonth.movedInvoiceItems.length > 0 && inheritedItems.length + movedInvoiceItems.length === 0 ? noResults : null}
+                    {selectedMonth.inheritedItems.length === 0 && selectedMonth.movedInvoiceItems.length === 0 ? <p className={EMPTY_STATE_CLASS_NAME}>Nenhuma despesa prevista para este mês.</p> : null}
+                    {inheritedItems.map((item) => (
                         <PlanningToggleRow
                             key={item.id}
                             toggleId={item.id}
@@ -283,7 +307,7 @@ export function PlanningDetailsAside({
                             }
                         />
                     ))}
-                    {selectedMonth.movedInvoiceItems.map((item) => (
+                    {movedInvoiceItems.map((item) => (
                         <PlanningListRow
                             key={item.id}
                             active={false}
@@ -292,8 +316,7 @@ export function PlanningDetailsAside({
                             iconName={null}
                             iconTone="expense"
                             customIcon={CalendarClock}
-                            valueClassName=""
-                            onContextMenu={(event) =>
+                                                        onContextMenu={(event) =>
                                 handleProjectionContextMenu(event, {
                                     itemType: "expense",
                                     variant: "normal",
@@ -306,18 +329,19 @@ export function PlanningDetailsAside({
             );
         }
 
-        const hasSimulatedIncomes = selectedMonth.simulatedIncomeItems.length > 0;
-        const hasSimulatedExpenses = selectedMonth.simulatedExpenseItems.length > 0;
-        const hasWishlistItems = activeWishItems.length > 0;
-        const hasProjectionItems = hasSimulatedIncomes || hasSimulatedExpenses || hasWishlistItems;
+        const hasProjectionItems = selectedMonth.simulatedIncomeItems.length + selectedMonth.simulatedExpenseItems.length + activeWishItems.length > 0;
+        const hasSimulatedIncomes = simulatedIncomeItems.length > 0;
+        const hasSimulatedExpenses = simulatedExpenseItems.length > 0;
+        const hasWishlistItems = wishItems.length > 0;
 
         return (
             <>
-                {!hasProjectionItems ? <p className="rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-sm text-white/52">Você não criou nenhuma projeção nesse mês.</p> : null}
+                {hasProjectionItems && !hasSimulatedIncomes && !hasSimulatedExpenses && !hasWishlistItems ? noResults : null}
+                {!hasProjectionItems ? <p className={EMPTY_STATE_CLASS_NAME}>Nenhuma projeção neste mês. Use “Nova receita” para simular uma entrada.</p> : null}
 
                 {hasSimulatedIncomes ? (
                     <PlanningDetailsSection title="Receitas" tone="income">
-                        {selectedMonth.simulatedIncomeItems.map((item) => (
+                        {simulatedIncomeItems.map((item) => (
                             <PlanningListRow
                                 key={item.id}
                                 active={!item.isDisabled}
@@ -326,7 +350,7 @@ export function PlanningDetailsAside({
                                 iconName={item.iconName}
                                 iconTone="income"
                                 customIcon={ArrowUpRight}
-                                valueClassName={getAmountClassName("income", item.amount)}
+                                valueClassName={item.amount < 0 ? "text-red-200" : undefined}
                                 onClick={item.source === "simulated_income" ? () => onToggleSimulatedIncome(item) : undefined}
                                 onContextMenu={
                                     item.source === "simulated_income"
@@ -345,7 +369,7 @@ export function PlanningDetailsAside({
 
                 {hasSimulatedExpenses ? (
                     <PlanningDetailsSection title="Despesas" tone="expense">
-                        {selectedMonth.simulatedExpenseItems.map((expense) => (
+                        {simulatedExpenseItems.map((expense) => (
                             <PlanningListRow
                                 key={expense.id}
                                 active={!expense.isDisabled}
@@ -354,7 +378,7 @@ export function PlanningDetailsAside({
                                 iconName={null}
                                 iconTone="expense"
                                 customIcon={ArrowDownRight}
-                                valueClassName={getAmountClassName("simulation", expense.amount)}
+                                
                                 onClick={() => onToggleExpense(expense.id)}
                                 onContextMenu={(event) =>
                                     handleProjectionContextMenu(event, {
@@ -369,8 +393,8 @@ export function PlanningDetailsAside({
                 ) : null}
 
                 {hasWishlistItems ? (
-                    <PlanningDetailsSection title="Lista de Desejos" tone="wishlist">
-                        {activeWishItems.map((item) => {
+                    <PlanningDetailsSection title="Lista de desejos" tone="wishlist">
+                        {wishItems.map((item) => {
                             const selection = wishlistSelectionByWishItemId.get(item.id);
                             return (
                                 <PlanningToggleRow
@@ -402,33 +426,19 @@ export function PlanningDetailsAside({
     return (
         <>
             <aside
-                className="flex max-h-[calc(100vh-2rem)] w-full shrink-0 flex-col overflow-hidden rounded-lg border border-white/[0.08] bg-[#111111] p-3 text-left xl:sticky xl:top-4 xl:max-w-[360px]"
+                className="flex max-h-[calc(100vh-2rem)] w-full shrink-0 flex-col overflow-hidden rounded-lg border border-white/[0.08] bg-surface p-4 text-left xl:sticky xl:top-4 xl:max-w-[360px]"
             >
-            <div className="shrink-0">
-                <div className="flex items-center justify-between">
-                    <div className="flex gap-2 items-center">
-                        <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-fuchsia-500/12 text-fuchsia-200">
-                            <Columns3Cog size={18} />
-                        </span>
-                        <div>
-                            <p className="text-lg font-medium text-white">{selectedPanelTitle}</p>
-                            <p className="text-xs text-white/42">{selectedMonth?.monthLabel ?? fallbackMonth?.monthLabel ?? "Mês atual"}</p>
-                        </div>
-                    </div>
-                    <div>
-                        {selectedPanel === "projections" && selectedMonth ? (
-                            <button
-                                type="button"
-                                onClick={() => onAddIncome(selectedMonth)}
-                                className="inline-flex items-center justify-center gap-2 rounded-full border border-emerald-300/25 bg-emerald-500/10 px-3 py-3 text-xs font-medium uppercase tracking-[0.08em] text-emerald-100 transition-colors hover:bg-emerald-500/16"
-                            >
-                                <Plus size={13} />
-                            </button>
-                        ) : null}
-                    </div>
-                </div>
+            <PlanningDetailsHeader
+                title={selectedPanelTitle}
+                monthLabel={selectedMonth?.monthLabel ?? fallbackMonth?.monthLabel ?? "Mês atual"}
+                panel={selectedPanel}
+                month={selectedMonth}
+                onAddIncome={selectedPanel === "projections" && selectedMonth ? () => onAddIncome(selectedMonth) : undefined}
+            />
+            <div className="mt-4 shrink-0">
+                <IconTextField ariaLabel="Buscar itens" value={searchQuery} onChange={setSearchQuery} placeholder="Buscar pelo nome" icon={Search} bareIcon />
             </div>
-            <div className={`elegant-scrollbar mt-4 flex min-h-0 max-h-165 flex-1 flex-col overflow-y-auto overflow-x-hidden pr-1 ${selectedPanel === "projections" ? "gap-3" : "gap-1"}`}>
+            <div className={`ghost-scrollbar ghost-scrollbar--edge-aware -mr-1 mt-3 flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto overflow-x-hidden overscroll-contain pr-1`}>
                 {renderContent()}
             </div>
             </aside>

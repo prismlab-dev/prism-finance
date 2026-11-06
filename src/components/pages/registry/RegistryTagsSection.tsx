@@ -6,6 +6,7 @@ import { useModal } from "../../../context/ModalContext";
 import { AddTag } from "../../modal/AddTag";
 import { RegistryListItemEntrance } from "./RegistryListItemEntrance";
 import { RegistrySectionHeader } from "./RegistrySectionHeader";
+import { readableTint } from "../../../lib/colorContrast";
 
 export function RegistryTagsSection() {
     const tags = useFinanceTags();
@@ -77,7 +78,7 @@ function TagCard({ tag, onEdit }: { tag: FinanceTag; onEdit: () => void }) {
             >
                 <span
                     className="inline-flex min-w-0 items-center gap-0.5 rounded-full py-1 pl-2.5 pr-3 text-sm font-medium"
-                    style={{ color, backgroundColor: `${color}1f`, boxShadow: `inset 0 0 0 1px ${color}40` }}
+                    style={{ color: readableTint(color), backgroundColor: `${color}1f`, boxShadow: `inset 0 0 0 1px ${color}40` }}
                 >
                     <span aria-hidden="true" className="opacity-80">#</span>
                     <span className="truncate text-white/90">{tag.name}</span>

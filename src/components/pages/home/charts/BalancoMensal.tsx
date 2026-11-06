@@ -176,7 +176,7 @@ export function BalancoMensal({ monthKey, transactions: scopedTransactions, hide
     ];
 
     return (
-        <div className={`w-full rounded-2xl border border-white/[0.08] bg-[#111111] p-4 sm:p-5 ${className}`}>
+        <div className={`w-full rounded-2xl border border-white/[0.08] bg-surface p-4 sm:p-5 ${className}`}>
             <div className="flex items-start justify-between gap-3">
                 <div>
                     <p className="text-lg font-medium text-white">Balanço do mês</p>

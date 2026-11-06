@@ -48,7 +48,7 @@ export function PlanningSimulatorPanel({
     const hasMoreInstallments = simulation.installments.length > visibleInstallments.length;
 
     return (
-        <section className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#111111] p-4 text-left shadow-[0_24px_60px_-32px_rgba(0,0,0,0.9)]">
+        <section className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-surface p-4 text-left shadow-[0_24px_60px_-32px_rgba(0,0,0,0.9)]">
             <div className="pointer-events-none absolute -right-10 -top-12 h-32 w-32 rounded-full bg-orange-500/10 blur-3xl" />
             <div className="pointer-events-none absolute -left-16 -bottom-16 h-36 w-36 rounded-full bg-yellow-500/10 blur-3xl" />
 

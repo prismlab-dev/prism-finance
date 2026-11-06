@@ -85,7 +85,7 @@ export function TransferForm({ prefill, transaction, activeTab = "simple" }: Tra
     };
 
     return (
-        <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-white/[0.09] bg-[#131313] p-4 text-white shadow-[0_26px_70px_-38px_rgba(0,0,0,0.95)]">
+        <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-white/[0.09] bg-surface p-4 text-white shadow-[0_26px_70px_-38px_rgba(0,0,0,0.95)]">
             <header className="flex shrink-0 items-center justify-between gap-3">
                 <h1 className="ml-1 text-sm uppercase opacity-50">{form.isEditing ? "Editando transferência" : "Nova transferência"}</h1>
                 <button type="button" onClick={closeModal} disabled={submitting} className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/[0.12] bg-white/[0.03] text-white/70 transition-colors hover:border-white/[0.22] hover:text-white disabled:opacity-55" aria-label="Fechar modal"><X size={15} /></button>

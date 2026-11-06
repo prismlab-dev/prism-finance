@@ -62,6 +62,7 @@ Transactions are single, installment, or recurring; installment/recurring ones b
 
 ## Working rules
 
+- Never commit or push directly to `main` (blocked by `.githooks/pre-commit` and `pre-push`). Always create a new branch first and open a PR to `main`.
 - Inspect the relevant implementation before editing; prefer minimal, focused changes and existing patterns over new abstractions. Don't refactor unrelated code unless asked.
 - Keep strict typing; avoid `any` and never silence TS errors to make a build pass. Derive types from existing domain models.
 - Don't duplicate business rules between frontend and database — the DB already enforces the financial invariants.

@@ -51,7 +51,7 @@ export function RecentTransactionsPanel({ transactions }: RecentTransactionsPane
     }, [recentPaidTransactions]);
 
     return (
-        <section className="rounded-2xl border border-white/[0.08] bg-[#111111] p-4">
+        <section className="rounded-2xl border border-white/[0.08] bg-surface p-4">
             <div className="mb-3 flex items-center justify-between gap-3">
                 <p className="text-lg font-medium text-white">Movimentações recentes</p>
                 <button
@@ -73,7 +73,7 @@ export function RecentTransactionsPanel({ transactions }: RecentTransactionsPane
                             <li key={group.label} className="relative pl-6">
                                 {!isLast && <span className="absolute bottom-0 left-[5px] top-4 w-px bg-white/[0.08]" />}
                                 <span
-                                    className={`absolute left-0 top-[5px] h-[11px] w-[11px] rounded-full border-2 border-[#111111] ${index === 0 ? "bg-white" : "bg-neutral-600"}`}
+                                    className={`absolute left-0 top-[5px] h-[11px] w-[11px] rounded-full border-2 border-surface ${index === 0 ? "bg-white" : "bg-neutral-600"}`}
                                 />
                                 <p className={`pl-2 text-sm first-letter:uppercase ${index === 0 ? "font-medium text-white" : "text-neutral-400"}`}>{group.label}</p>
                                 <div className={`mt-1 ${isLast ? "" : "pb-4"}`}>

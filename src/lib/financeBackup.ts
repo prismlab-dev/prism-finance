@@ -227,7 +227,7 @@ export function parseFinanceBackupFile(raw: unknown): FinanceBackupFile {
     }
 
     if (raw.kind !== FINANCE_BACKUP_KIND) {
-        throw new Error("Este arquivo nao parece ser um backup do Prism.");
+        throw new Error("Este arquivo nao parece ser um backup do Silus.");
     }
 
     if (raw.version !== FINANCE_BACKUP_VERSION) {

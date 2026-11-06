@@ -56,7 +56,7 @@ export function HeaderProfileMenu({ onOpenSettings, onSignOut, userName, userPho
                 onClick={() => setIsOpen((current) => !current)}
                 aria-haspopup="menu"
                 aria-expanded={isOpen}
-                className="flex items-center gap-2 rounded-[10px] border border-white/[0.08] bg-white/[0.03] px-2 py-1.5 text-left transition-colors hover:bg-white/[0.07]"
+                className="flex items-center gap-2 rounded-[10px] px-2 py-1.5 text-left transition-colors hover:bg-white/[0.05]"
             >
                 <span className="inline-flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-neutral-700 text-xs font-semibold text-white">
                     {userPhotoUrl ? <img src={userPhotoUrl} alt={`Foto de ${userName}`} className="h-full w-full object-cover" /> : userInitial}

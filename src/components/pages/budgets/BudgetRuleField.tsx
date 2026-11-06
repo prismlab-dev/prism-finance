@@ -219,7 +219,7 @@ export function BudgetRuleField({ include, exclude, options, labelOf, onAdd, onR
                 overlayRef={overlayRef}
                 isOpen={isOpen}
                 preferredMaxHeight={340}
-                className="rounded-xl border border-white/[0.1] bg-[#101010] p-1.5 shadow-[0_24px_60px_-30px_rgba(0,0,0,0.95)]"
+                className="rounded-xl border border-white/[0.1] bg-surface p-1.5 shadow-[0_24px_60px_-30px_rgba(0,0,0,0.95)]"
             >
                 <ul id={listId} role="listbox" aria-label="Regras disponíveis" className="elegant-scrollbar max-h-72 overflow-y-auto pr-1">
                     {results.map((result, index) => {

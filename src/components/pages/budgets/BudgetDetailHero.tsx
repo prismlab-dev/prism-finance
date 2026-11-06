@@ -54,7 +54,7 @@ export function BudgetDetailHero({ progress, color, paceRatio }: BudgetDetailHer
         { key: "forecast", label: "Previsto", amount: forecastIn, style: { background: hatch(`${fill}8c`, `${fill}40`) }, labelClassName: "text-white" },
         { key: "spent-over", label: "Passou", amount: spentOver, style: { backgroundColor: OVER_COLOR }, labelClassName: "text-black/75" },
         { key: "forecast-over", label: "Vai passar", amount: forecastOver, style: { background: hatch(`${OVER_COLOR}99`, `${OVER_COLOR}40`) }, labelClassName: "text-red-100" },
-        { key: "free", label: "Livre", amount: Math.max(0, free), style: { background: hatch("rgba(255,255,255,0.07)", "rgba(255,255,255,0.03)") }, labelClassName: "text-white/60" },
+        { key: "free", label: "Livre", amount: Math.max(0, free), style: { background: hatch("color-mix(in oklab, var(--color-white) 7%, transparent)", "color-mix(in oklab, var(--color-white) 3%, transparent)") }, labelClassName: "text-white/60" },
     ].filter((segment) => segment.amount > 0);
     const capPercent = (cap / scale) * 100;
     const isOver = projected > cap;
@@ -100,7 +100,7 @@ export function BudgetDetailHero({ progress, color, paceRatio }: BudgetDetailHer
                             <span className="absolute inset-y-0 w-[3px] -translate-x-1/2 bg-white shadow-[0_0_0_2px_#0a0a0a]" />
                             {/* Etiqueta no topo da faixa (os rótulos dos segmentos ficam embaixo); vira para a direita se o teto estiver muito à esquerda. */}
                             <span
-                                className={`absolute top-1.5 whitespace-nowrap rounded-md bg-[#0a0a0a]/85 px-1.5 py-0.5 text-[10px] font-medium text-white ${
+                                className={`absolute top-1.5 whitespace-nowrap rounded-md bg-canvas/85 px-1.5 py-0.5 text-[10px] font-medium text-white ${
                                     capPercent < 25 ? "left-2.5" : "right-2.5"
                                 }`}
                             >

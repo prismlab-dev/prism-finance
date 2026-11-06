@@ -50,7 +50,7 @@ export function ConfirmActionModal({
 
     return (
         <ModalStructure height="auto" width="420px">
-            <div className="rounded-2xl border border-white/[0.08] bg-[#171717] p-5 text-white shadow-[0_24px_60px_-32px_rgba(0,0,0,0.9)]">
+            <div className="rounded-2xl border border-white/[0.08] bg-raised p-5 text-white shadow-[0_24px_60px_-32px_rgba(0,0,0,0.9)]">
                 <div className="space-y-2">
                     <h2 className="text-lg font-semibold text-white">{title}</h2>
                     <p className="text-sm leading-6 text-white/65">{description}</p>

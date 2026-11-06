@@ -34,5 +34,25 @@ export function resolveSupabaseAuthErrorMessage(error: unknown, fallback: string
         return "Cadastro desabilitado no Supabase.";
     }
 
+    if (message.includes("email address has already been registered") || message.includes("email_exists")) {
+        return "Este e-mail já está em uso por outra conta.";
+    }
+
+    if (message.includes("invalid format") || message.includes("unable to validate email")) {
+        return "Digite um e-mail válido.";
+    }
+
+    if (message.includes("identity is already linked") || message.includes("identity_already_exists")) {
+        return "Esta conta Google já está vinculada a outro usuário do Prism.";
+    }
+
+    if (message.includes("manual linking is disabled")) {
+        return "A vinculação de contas está desativada no Supabase.";
+    }
+
+    if (message.includes("at least 2 identities") || message.includes("single_identity_not_deletable")) {
+        return "Mantenha pelo menos uma forma de entrar na conta.";
+    }
+
     return fallback;
 }

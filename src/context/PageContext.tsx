@@ -26,6 +26,8 @@ export type PageNavigationIntent =
           tab: TransactionsIntentTab;
           selectedMonth?: string;
           targetTransactionId?: string;
+          // Rola até a linha e destaca, sem abrir o modal de edição.
+          highlightTransactionId?: string;
       }
     | {
           page: "statement";

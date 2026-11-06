@@ -7,6 +7,7 @@ import {
     getPlanningRowAmountClassName,
     getPlanningRowHoverClassName,
     getPlanningRowIconClassName,
+    getPlanningRowMarkerClassName,
     getPlanningRowStateClassName,
     PLANNING_ROW_BASE_CLASS_NAME,
 } from "./planningRowStyles";
@@ -18,7 +19,7 @@ interface PlanningListRowProps {
     iconName: string | null;
     iconTone: ItemIconTone;
     customIcon?: LucideIcon;
-    valueClassName: string;
+    valueClassName?: string;
     onClick?: () => void;
     onContextMenu?: (event: MouseEvent) => void;
 }
@@ -38,15 +39,16 @@ export function PlanningListRow({ active = true, label, amount, iconName, iconTo
     const amountClassName = getPlanningRowAmountClassName(iconTone, active, valueClassName);
 
     return (
-        <button type="button" onClick={onClick} onContextMenu={onContextMenu} className={rowClassName} title={onClick ? (active ? "Ignorar" : "Ativar") : undefined}>
-            <div className="flex min-w-0 items-center gap-2">
-                <span className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${iconClassName}`}>
-                    <Icon size={13} />
+        <button type="button" onClick={onClick} onContextMenu={onContextMenu} className={rowClassName} title={onClick ? (active ? "Ignorar" : "Ativar") : undefined} aria-pressed={onClick ? active : undefined}>
+            <div className="flex min-w-0 items-center gap-2.5">
+                <span className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${iconClassName}`}>
+                    <Icon size={14} />
                 </span>
-                <p className={`truncate text-xs ${active ? "font-medium" : ""}`}>{label}</p>
+                <p className={`truncate text-[13px] ${active ? "font-medium" : ""}`}>{label}</p>
             </div>
             <div className="flex items-center gap-1.5">
-                <span className={`shrink-0 text-xs font-medium ${amountClassName}`}>{formatCurrency(amount)}</span>
+                <span className={`shrink-0 text-[13px] font-medium tabular-nums ${amountClassName}`}>{formatCurrency(amount)}</span>
+                {onClick ? <span className={`h-2 w-2 shrink-0 rounded-full border ${getPlanningRowMarkerClassName(iconTone, active)}`} aria-hidden /> : null}
             </div>
         </button>
     );

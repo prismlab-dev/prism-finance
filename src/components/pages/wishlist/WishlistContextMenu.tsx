@@ -94,7 +94,7 @@ export function WishlistContextMenu({ state, actions, onSelect, onClose }: Wishl
             ref={menuRef}
             role="menu"
             aria-label="Acoes do item da lista de desejos"
-            className="fixed z-[220] w-[240px] overflow-hidden rounded-2xl border border-white/[0.1] bg-[#101113]/95 p-2 text-white shadow-2xl backdrop-blur-xl"
+            className="fixed z-[220] w-[240px] overflow-hidden rounded-2xl border border-white/[0.1] bg-surface/95 p-2 text-white shadow-2xl backdrop-blur-xl"
             style={{ left: position.left, top: position.top }}
         >
             {sections.map((section, sectionIndex) => (

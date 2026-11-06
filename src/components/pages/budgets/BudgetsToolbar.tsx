@@ -26,7 +26,7 @@ export function BudgetsToolbar({ monthKey, onMonthChange, onCreate }: BudgetsToo
                 <button
                     type="button"
                     onClick={onCreate}
-                    className="inline-flex h-[40px] items-center gap-2 rounded-xl bg-white px-3.5 text-sm font-semibold text-black transition-colors hover:bg-white/85"
+                    className="inline-flex h-[40px] items-center gap-2 rounded-xl bg-white px-3.5 text-sm font-semibold text-canvas transition-colors hover:bg-white/85"
                 >
                     <Plus size={15} />
                     Novo orçamento

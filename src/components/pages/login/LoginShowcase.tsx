@@ -72,8 +72,8 @@ export function LoginShowcase() {
 
     return (
         <div ref={stageRef} className="relative flex flex-1 items-center justify-center [--px:0] [--py:0]">
-        <figure aria-label="Exemplo de um mês no Prism" className="relative w-[calc(100%-10rem)] max-w-[600px]">
-            <div className="flex overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0e0e10] transition-transform duration-500 ease-out" style={parallax(6)}>
+        <figure aria-label="Exemplo de um mês no Silus" className="relative w-[calc(100%-10rem)] max-w-[600px]">
+            <div className="flex overflow-hidden rounded-2xl border border-white/[0.08] bg-canvas transition-transform duration-500 ease-out" style={parallax(6)}>
                 <div className="flex w-12 shrink-0 flex-col items-center gap-3 border-r border-white/[0.06] py-4" aria-hidden>
                     <Hexagon size={18} className="mb-2" />
                     {[true, false, false, false].map((isActive, index) => (
@@ -83,7 +83,7 @@ export function LoginShowcase() {
 
                 <div className="flex-1 space-y-3 p-4">
                     <div className="grid grid-cols-2 gap-3">
-                        <div className="rounded-2xl border border-white/[0.08] bg-[#111111] p-4">
+                        <div className="rounded-2xl border border-white/[0.08] bg-surface p-4">
                             <div className="flex items-start justify-between gap-2">
                                 <span className="text-sm font-medium">Balanço do mês</span>
                                 <span className="text-sm font-semibold tabular-nums text-emerald-300">
@@ -126,7 +126,7 @@ export function LoginShowcase() {
                             </div>
                         </div>
 
-                        <div className="rounded-2xl border border-white/[0.08] bg-[#111111] p-4">
+                        <div className="rounded-2xl border border-white/[0.08] bg-surface p-4">
                             <div className="flex items-start justify-between gap-2">
                                 <span className="text-sm font-medium">Gastos por categoria</span>
                                 <span className="text-sm font-semibold tabular-nums">{formatAmount(SPENDING)}</span>
@@ -173,7 +173,7 @@ export function LoginShowcase() {
                         </div>
                     </div>
 
-                    <div className="rounded-2xl border border-white/[0.08] bg-[#111111] p-4">
+                    <div className="rounded-2xl border border-white/[0.08] bg-surface p-4">
                         <figcaption className="mb-3 text-base font-medium">Movimentações de outubro</figcaption>
                         <ul>
                             {ENTRIES.map(({ key, label, installment, detail, amount }) => {
@@ -355,7 +355,7 @@ function Widget({ className, depth, icon: Icon, color, title, meta, active, chil
                 borderColor: lit ? `${color}59` : undefined,
                 backgroundImage: `radial-gradient(120% 80% at 0% 0%, ${color}${lit ? "1f" : "0d"}, transparent 60%)`,
             }}
-            className={`absolute overflow-hidden rounded-[18px] border border-white/[0.09] bg-[#161618] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition-[translate,transform,border-color] duration-500 ease-out motion-reduce:transition-none ${
+            className={`absolute overflow-hidden rounded-[18px] border border-white/[0.09] bg-raised p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition-[translate,transform,border-color] duration-500 ease-out motion-reduce:transition-none ${
                 lit ? "-translate-y-1" : ""
             } ${className}`}
         >

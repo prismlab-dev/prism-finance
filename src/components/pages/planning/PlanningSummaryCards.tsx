@@ -91,7 +91,7 @@ export function PlanningSummaryCards({ summary }: PlanningSummaryCardsProps) {
             {cards.map((card) => (
                 <article
                     key={card.id}
-                    className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#111111] p-4 text-left"
+                    className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-surface p-4 text-left"
                 >
                     <div className="pointer-events-none absolute -bottom-24 -right-20 h-36 w-36 rounded-full bg-white/[0.05] blur-3xl" />
                     <p className="text-[10px] uppercase tracking-[0.14em] text-white/38">{card.label}</p>

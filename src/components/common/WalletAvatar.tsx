@@ -1,6 +1,7 @@
 import { CreditCard as CreditCardIcon, Wallet as WalletIcon } from "lucide-react";
 import type { Wallet } from "../../context/FinanceContext";
 import { DEFAULT_CREDIT_CARD_ICON, isDefaultWalletIcon, normalizeWalletColor, normalizeWalletIcon } from "../../lib/walletVisual";
+import { contentColorOn } from "../../lib/colorContrast";
 
 interface WalletAvatarProps {
     wallet: Pick<Wallet, "icon" | "name" | "color">;
@@ -9,7 +10,7 @@ interface WalletAvatarProps {
     iconStrokeWidth?: number;
 }
 
-const BASE_CLASS = "inline-flex items-center justify-center overflow-hidden";
+const BASE_CLASS = "inline-flex shrink-0 items-center justify-center overflow-hidden";
 
 export function WalletAvatar({ wallet, className = "h-10 w-10 rounded-xl border border-white/10", iconSize = 18, iconStrokeWidth = 1.8 }: WalletAvatarProps) {
     const resolvedIcon = normalizeWalletIcon(wallet.icon);
@@ -19,7 +20,7 @@ export function WalletAvatar({ wallet, className = "h-10 w-10 rounded-xl border 
     if (resolvedIcon === DEFAULT_CREDIT_CARD_ICON) {
         return (
             <span className={mergedClassName} style={{ backgroundColor: resolvedColor }}>
-                <CreditCardIcon size={iconSize} strokeWidth={iconStrokeWidth} className="text-white" aria-hidden="true" />
+                <CreditCardIcon size={iconSize} strokeWidth={iconStrokeWidth} style={{ color: contentColorOn(resolvedColor) }} aria-hidden="true" />
             </span>
         );
     }
@@ -27,7 +28,7 @@ export function WalletAvatar({ wallet, className = "h-10 w-10 rounded-xl border 
     if (isDefaultWalletIcon(resolvedIcon)) {
         return (
             <span className={mergedClassName} style={{ backgroundColor: resolvedColor }}>
-                <WalletIcon size={iconSize} strokeWidth={iconStrokeWidth} className="text-white" aria-hidden="true" />
+                <WalletIcon size={iconSize} strokeWidth={iconStrokeWidth} style={{ color: contentColorOn(resolvedColor) }} aria-hidden="true" />
             </span>
         );
     }

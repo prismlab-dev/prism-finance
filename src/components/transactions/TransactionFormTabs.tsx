@@ -30,18 +30,11 @@ export function TransactionFormTabs({ activeTab, onChange }: TransactionFormTabs
                         {isActive ? (
                             <motion.span
                                 layoutId="transaction-modal-active-tab"
-                                className="absolute inset-0 rounded-full bg-white/[0.12] shadow-[0_10px_24px_-16px_rgba(255,255,255,0.55)]"
+                                className="absolute inset-0 rounded-full bg-white/[0.12] shadow-[0_10px_24px_-16px_color-mix(in_oklab,var(--color-white)_55%,transparent)]"
                                 transition={{ type: "spring", stiffness: 520, damping: 42 }}
                             />
                         ) : null}
-                        <motion.span
-                            className="relative z-10"
-                            animate={{ color: isActive ? "#ffffff" : "rgba(255,255,255,0.52)" }}
-                            whileHover={{ color: "rgba(255,255,255,0.8)" }}
-                            transition={{ duration: 0.18 }}
-                        >
-                            {label}
-                        </motion.span>
+                        <span className={`relative z-10 transition-colors duration-[180ms] ${isActive ? "text-white" : "text-white/52 hover:text-white/80"}`}>{label}</span>
                     </button>
                 );
             })}

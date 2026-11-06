@@ -1,7 +1,7 @@
-import type { Transaction, TransactionStatus } from "../../../context/FinanceContext";
+import type { Category, Transaction, TransactionStatus } from "../../../context/FinanceContext";
 import { parseAppDate } from "../../../lib/localDate";
 
-export type SortField = "date" | "value" | "status" | "category" | "beneficiary";
+export type SortField = "date" | "value" | "status" | "wallet" | "description" | "category" | "beneficiary";
 export type SortDirection = "asc" | "desc";
 export type SortMode = `${SortField}-${SortDirection}`;
 export type TransactionsTabKey = "income" | "spending" | "transfer";
@@ -10,6 +10,11 @@ export type TransactionsDateMode = "month" | "period";
 export interface SelectOption {
     value: string;
     label: string;
+}
+
+export interface CategoryFilterOption extends SelectOption {
+    level: 0 | 1;
+    parentLabel?: string;
 }
 
 export interface TagOption {
@@ -70,6 +75,8 @@ export const SORT_DEFAULT_DIRECTION: Record<SortField, SortDirection> = {
     date: "desc",
     value: "desc",
     status: "asc",
+    wallet: "asc",
+    description: "asc",
     category: "asc",
     beneficiary: "asc",
 };
@@ -150,7 +157,84 @@ export const currencyFormatter = new Intl.NumberFormat("pt-BR", {
     minimumFractionDigits: 2,
 });
 
-export function hasActiveAdvancedFilters(filters: TransactionsFilterState): boolean {
+export type AdvancedFilterValues = Pick<TransactionsFilterState, "selectedCategoryKey" | "selectedBeneficiary" | "selectedStatus" | "selectedTagIds" | "minAmount" | "maxAmount">;
+
+export const EMPTY_ADVANCED_FILTERS: AdvancedFilterValues = {
+    selectedCategoryKey: "all",
+    selectedBeneficiary: "all",
+    selectedStatus: "all",
+    selectedTagIds: [],
+    minAmount: "",
+    maxAmount: "",
+};
+
+export function buildAdvancedFilterOptions(
+    transactions: Transaction[],
+    categories: Category[],
+): { categoryOptions: CategoryFilterOption[]; tagOptions: TagOption[]; beneficiaryOptions: string[] } {
+    const categoryLabelByKey = new Map<string, string>();
+    const tagMap = new Map<string, TagOption>();
+    const beneficiaries = new Set<string>();
+
+    transactions.forEach((transaction) => {
+        categoryLabelByKey.set(getTransactionCategoryKey(transaction), getTransactionCategoryLabel(transaction));
+        transaction.tags.forEach((tag) => {
+            if (!tagMap.has(tag.id)) tagMap.set(tag.id, { id: tag.id, name: tag.name, color: tag.color });
+        });
+        const beneficiary = transaction.beneficiary.trim();
+        if (beneficiary) beneficiaries.add(beneficiary);
+    });
+
+    // Group used subcategories under their parent; the parent option also matches its subcategories.
+    const categoryById = new Map(categories.map((category) => [category.id, category]));
+    const childrenByRootKey = new Map<string, CategoryFilterOption[]>();
+    const roots: CategoryFilterOption[] = [];
+    const byLabel = (a: SelectOption, b: SelectOption) => a.label.localeCompare(b.label, "pt-BR");
+    const ensureRoot = (key: string, label: string) => {
+        if (!childrenByRootKey.has(key)) {
+            childrenByRootKey.set(key, []);
+            roots.push({ value: key, label, level: 0 });
+        }
+    };
+
+    categoryLabelByKey.forEach((label, key) => {
+        const category = categoryById.get(key.slice("id:".length));
+        const parent = category?.parentId ? categoryById.get(category.parentId) : undefined;
+        if (!parent) {
+            ensureRoot(key, label);
+            return;
+        }
+        const rootKey = `id:${parent.id}`;
+        ensureRoot(rootKey, parent.name);
+        childrenByRootKey.get(rootKey)?.push({ value: key, label: category?.name ?? label, level: 1, parentLabel: parent.name });
+    });
+
+    return {
+        categoryOptions: roots.sort(byLabel).flatMap((root) => [root, ...(childrenByRootKey.get(root.value) ?? []).sort(byLabel)]),
+        tagOptions: Array.from(tagMap.values()).sort((a, b) => a.name.localeCompare(b.name, "pt-BR")),
+        beneficiaryOptions: Array.from(beneficiaries).sort((a, b) => a.localeCompare(b, "pt-BR")),
+    };
+}
+
+export function buildCategoryParentKeyMap(categories: Category[]): Map<string, string> {
+    return new Map(categories.filter((category) => category.parentId).map((category) => [`id:${category.id}`, `id:${category.parentId}`]));
+}
+
+export function matchesAdvancedFilters(transaction: Transaction, filters: AdvancedFilterValues, parentKeyByCategoryKey?: ReadonlyMap<string, string>): boolean {
+    const minValue = parseNumberish(filters.minAmount);
+    const maxValue = parseNumberish(filters.maxAmount);
+    const categoryKey = getTransactionCategoryKey(transaction);
+    return (
+        (filters.selectedCategoryKey === "all" || categoryKey === filters.selectedCategoryKey || parentKeyByCategoryKey?.get(categoryKey) === filters.selectedCategoryKey) &&
+        (filters.selectedBeneficiary === "all" || transaction.beneficiary === filters.selectedBeneficiary) &&
+        (filters.selectedStatus === "all" || transaction.status === filters.selectedStatus) &&
+        (filters.selectedTagIds.length < 1 || filters.selectedTagIds.some((tagId) => transaction.tagIds.includes(tagId))) &&
+        (minValue === null || transaction.value >= minValue) &&
+        (maxValue === null || transaction.value <= maxValue)
+    );
+}
+
+export function hasActiveAdvancedFilters(filters: AdvancedFilterValues): boolean {
     return (
         filters.selectedCategoryKey !== "all" ||
         filters.selectedBeneficiary !== "all" ||
@@ -231,7 +315,7 @@ function compareByText(aValue: string, bValue: string): number {
     });
 }
 
-export function compareTransactions(a: Transaction, b: Transaction, sortMode: SortMode): number {
+export function compareTransactions(a: Transaction, b: Transaction, sortMode: SortMode, walletNameById?: ReadonlyMap<string, string>): number {
     const field = getSortField(sortMode);
     const direction = getSortDirection(sortMode);
 
@@ -252,6 +336,18 @@ export function compareTransactions(a: Transaction, b: Transaction, sortMode: So
         const statusComparison = STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status);
         if (statusComparison !== 0) {
             return direction === "asc" ? statusComparison : -statusComparison;
+        }
+
+        return compareByDateDesc(a, b);
+    }
+
+    if (field === "wallet" || field === "description") {
+        const textComparison =
+            field === "wallet"
+                ? compareByText(walletNameById?.get(a.inWallet) ?? "", walletNameById?.get(b.inWallet) ?? "")
+                : compareByText(a.description.trim(), b.description.trim());
+        if (textComparison !== 0) {
+            return direction === "asc" ? textComparison : -textComparison;
         }
 
         return compareByDateDesc(a, b);

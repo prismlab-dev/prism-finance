@@ -33,6 +33,7 @@ import { TransactionDetailsField } from "./TransactionDetailsField";
 import { TransactionFieldIcon } from "./TransactionFieldIcon";
 import type { TransactionFormTab } from "./TransactionFormTabs";
 import { FIELD_ICON_TRIGGER_CLASS, FIELD_LABEL_CLASS } from "./transactionForm.constants";
+import { FormActionButtons, useSaveAndContinue } from "./SaveAndContinue";
 import { getTransactionSubmitErrorMessage } from "./transactionSubmitError";
 import { FooterButton } from "./TransactionForm";
 import { useTransactionDetails } from "./useTransactionDetails";
@@ -87,7 +88,19 @@ function normalizeIgnoredInstallmentsCountInput(value: string, installmentCount:
     return Math.max(0, Math.min(installmentCount - 1, safeValue));
 }
 
-export function CardSpendingForm({ transaction = null, prefill, activeTab, onInstallmentPreviewOpenChange }: CardSpendingFormProps) {
+export function CardSpendingForm(props: CardSpendingFormProps) {
+    const { formKey, justSaved, markSaved } = useSaveAndContinue();
+    return <CardSpendingFormBody key={formKey} {...props} justSaved={justSaved} onSavedAndContinue={markSaved} />;
+}
+
+function CardSpendingFormBody({
+    transaction = null,
+    prefill,
+    activeTab,
+    onInstallmentPreviewOpenChange,
+    justSaved,
+    onSavedAndContinue,
+}: CardSpendingFormProps & { justSaved: boolean; onSavedAndContinue: () => void }) {
     const { closeModal } = useModal();
     const { addTransaction, deleteTransactionWithScope, updateTransaction } = useFinanceActions();
     const creditCards = useFinanceCreditCards();
@@ -611,7 +624,7 @@ export function CardSpendingForm({ transaction = null, prefill, activeTab, onIns
         return true;
     };
 
-    const runAction = async (action: () => Promise<boolean>, persistDetails = false) => {
+    const runAction = async (action: () => Promise<boolean>, persistDetails = false, completion: "close" | "continue" = "close") => {
         if (submitting) {
             return;
         }
@@ -640,6 +653,10 @@ export function CardSpendingForm({ transaction = null, prefill, activeTab, onIns
                 }
             }
 
+            if (completion === "continue") {
+                onSavedAndContinue();
+                return;
+            }
             closeModal();
             return;
         } catch (error) {
@@ -653,7 +670,7 @@ export function CardSpendingForm({ transaction = null, prefill, activeTab, onIns
     return (
         <>
             {installmentPreviewOpen && installmentPreviewData && <InstallmentPreviewModal data={installmentPreviewData} onClose={() => setInstallmentPreviewOpen(false)} />}
-            <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-white/[0.09] bg-[#131313] p-4 text-white shadow-[0_26px_70px_-38px_rgba(0,0,0,0.95)]">
+            <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-white/[0.09] bg-surface p-4 text-white shadow-[0_26px_70px_-38px_rgba(0,0,0,0.95)]">
                     <header className="flex shrink-0 items-center justify-between">
                         <h1 className="text-sm ml-1 uppercase opacity-50">{isEditing ? (isSeriesTransaction ? "Editando gasto da série" : "Editando gasto no cartão") : "Novo gasto no cartão"}</h1>
                         <div className="flex items-center gap-2">
@@ -848,7 +865,7 @@ export function CardSpendingForm({ transaction = null, prefill, activeTab, onIns
                     </div>
 
                 <footer className="mt-4 flex shrink-0 flex-col gap-3 border-t border-white/[0.06] pt-4">
-                    <div className="flex justify-between">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                         <div className="flex gap-1">
                             {isEditing && (
                                 <>
@@ -864,23 +881,16 @@ export function CardSpendingForm({ transaction = null, prefill, activeTab, onIns
                                 </>
                             )}
                         </div>
-                        <div className="flex items-center gap-1">
-                            <button
-                                type="button"
-                                onClick={closeModal}
-                                disabled={submitting}
-                                className="inline-flex min-w-24 items-center justify-center rounded-xl border border-white/[0.12] bg-white/[0.03] px-4 py-2 text-sm font-medium text-white/70 transition-colors hover:border-white/[0.2] hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => void runAction(submit, true)}
-                                disabled={submitting}
-                                className="inline-flex min-w-28 items-center justify-center rounded-xl border border-emerald-400/35 bg-emerald-500/15 px-4 py-2 text-sm font-semibold text-emerald-100 transition-colors hover:border-emerald-400/55 hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-60"
-                            >
-                                {submitting ? "Salvando..." : transactionSaved ? "Salvar detalhes" : "Salvar e fechar"}
-                            </button>
+                        <div className="flex justify-end">
+                            <FormActionButtons
+                                submitting={submitting}
+                                justSaved={justSaved}
+                                submitLabel={transactionSaved ? "Salvar detalhes" : "Salvar e fechar"}
+                                onCancel={closeModal}
+                                onSubmit={() => void runAction(submit, true)}
+                                onContinue={isEditing ? undefined : () => void runAction(submit, true, "continue")}
+                                continueDisabled={transactionSaved}
+                            />
                         </div>
                     </div>
                 </footer>

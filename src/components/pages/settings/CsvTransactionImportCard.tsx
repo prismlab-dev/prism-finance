@@ -1,5 +1,8 @@
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
-import { FileSpreadsheet, FileUp, ShieldAlert } from "lucide-react";
+import { FileSpreadsheet, FileUp, TextCursorInput } from "lucide-react";
+import { SETTINGS_PRIMARY_BUTTON_CLASS, SETTINGS_SECONDARY_BUTTON_CLASS, SettingsFeedback, SettingsSection } from "./SettingsSection";
+import { IconTextField } from "../../transactions/IconTextField";
+import { SingleSelectCombobox } from "../../transactions/SingleSelectCombobox";
 import { useFinance } from "../../../context/FinanceContext";
 import {
     buildBankStatementTransactionDrafts,
@@ -34,14 +37,14 @@ function ImportPreviewStats({ preview }: { preview: BankStatementCsvImportResult
     ];
 
     return (
-        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+        <dl className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3">
             {items.map((item) => (
-                <div key={item.label} className="rounded-xl border border-white/[0.08] bg-black/20 px-3 py-2">
-                    <p className="text-xs uppercase tracking-[0.18em] text-white/40">{item.label}</p>
-                    <p className="mt-1 text-sm font-semibold text-white">{item.value}</p>
+                <div key={item.label} className="min-w-0">
+                    <dt className="truncate text-xs text-white/40">{item.label}</dt>
+                    <dd className="mt-0.5 text-sm font-semibold tabular-nums text-white">{item.value}</dd>
                 </div>
             ))}
-        </div>
+        </dl>
     );
 }
 
@@ -49,6 +52,7 @@ export function CsvTransactionImportCard() {
     const { user, profile, finance, favoriteWalletId, wallets, loading, addTransaction } = useFinance();
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const availableWallets = useMemo(() => wallets.filter((wallet) => wallet.isActive), [wallets]);
+    const walletOptions = useMemo(() => availableWallets.map((wallet) => ({ id: wallet.id, label: wallet.name, searchText: wallet.name })), [availableWallets]);
     const availableWalletIds = useMemo(() => new Set(availableWallets.map((wallet) => wallet.id)), [availableWallets]);
     const [selectedWalletId, setSelectedWalletId] = useState(() => getDefaultWalletId(availableWalletIds, favoriteWalletId));
     const [preview, setPreview] = useState<BankStatementCsvImportResult | null>(null);
@@ -156,119 +160,72 @@ export function CsvTransactionImportCard() {
     };
 
     return (
-        <article className="rounded-lg border border-white/[0.08] bg-[#101010] p-4">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-                <div className="max-w-2xl">
-                    <div className="flex items-center gap-2 text-white">
-                        <FileSpreadsheet size={18} />
-                        <h3 className="text-lg font-semibold">Importar extrato CSV</h3>
-                    </div>
-                    <p className="mt-2 text-sm text-white/55">
-                        Registre transacoes a partir de um extrato com data, titulo, descricao, entrada e saida. A importacao adiciona lancamentos ao estado atual.
-                    </p>
-                </div>
-                <div className="flex flex-wrap gap-3">
-                    <input ref={fileInputRef} type="file" accept=".csv,text/csv" onChange={handleFileChange} className="hidden" />
-                    <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={!finance || loading || availableWallets.length < 1}
-                        className="inline-flex items-center gap-2 rounded-xl border border-sky-300/35 bg-sky-500/15 px-4 py-2 text-sm font-medium text-sky-100 transition-colors hover:border-sky-300/55 hover:bg-sky-500/20 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                        <FileUp size={16} />
-                        Importar extrato CSV
-                    </button>
-                </div>
-            </div>
-
-            {feedback ? (
-                <div
-                    className={`mt-4 rounded-xl border px-4 py-3 text-sm ${
-                        feedback.type === "error"
-                            ? "border-rose-400/35 bg-rose-500/10 text-rose-100"
-                            : "border-emerald-400/30 bg-emerald-500/10 text-emerald-100"
-                    }`}
+        <SettingsSection title="Importar extrato" description="Adiciona transações de um extrato CSV com data, título, descrição, entrada e saída. Nada do que já existe é apagado.">
+            <div className="space-y-4">
+                <input ref={fileInputRef} type="file" accept=".csv,text/csv" onChange={handleFileChange} className="hidden" />
+                <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={!finance || loading || availableWallets.length < 1}
+                    className={SETTINGS_SECONDARY_BUTTON_CLASS}
                 >
-                    {feedback.message}
-                </div>
-            ) : null}
+                    <FileSpreadsheet size={16} aria-hidden />
+                    Escolher arquivo CSV
+                </button>
+                {availableWallets.length < 1 ? <p className="text-sm text-white/45">Crie uma carteira antes de importar um extrato.</p> : null}
 
-            {preview ? (
-                <div className="mt-5 rounded-2xl border border-sky-300/25 bg-sky-400/10 p-4">
-                    <div className="flex items-start gap-3">
-                        <ShieldAlert size={18} className="mt-0.5 text-sky-100" />
-                        <div className="min-w-0">
-                            <p className="text-sm font-semibold text-sky-100">CSV pronto para importacao</p>
-                            <p className="mt-1 text-sm text-sky-50/80">
-                                Escolha a carteira e confirme para registrar as transacoes como pagas.
-                            </p>
-                        </div>
-                    </div>
+                <SettingsFeedback feedback={feedback} />
 
-                    <div className="mt-4">
+                {preview ? (
+                    <div className="max-w-2xl space-y-4 rounded-2xl border border-white/[0.08] bg-surface p-4">
+                        <p className="text-sm text-white/70">Confira o resumo, escolha a carteira e confirme. As transações entram como pagas.</p>
                         <ImportPreviewStats preview={preview} />
-                    </div>
 
-                    {preview.skippedRows.length > 0 ? (
-                        <div className="mt-4 rounded-xl border border-amber-300/25 bg-amber-400/10 px-4 py-3 text-sm text-amber-50/85">
-                            <p className="font-medium text-amber-100">Linhas ignoradas</p>
-                            <ul className="mt-2 space-y-1">
-                                {preview.skippedRows.slice(0, 5).map((message) => (
-                                    <li key={message}>{message}</li>
-                                ))}
-                            </ul>
-                            {preview.skippedRows.length > 5 ? <p className="mt-2">Mais {preview.skippedRows.length - 5} linhas foram ignoradas.</p> : null}
+                        {preview.skippedRows.length > 0 ? (
+                            <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-sm text-white/60">
+                                <p className="font-medium text-white/80">Linhas que não serão importadas</p>
+                                <ul className="mt-2 space-y-1">
+                                    {preview.skippedRows.slice(0, 5).map((message) => (
+                                        <li key={message}>{message}</li>
+                                    ))}
+                                </ul>
+                                {preview.skippedRows.length > 5 ? <p className="mt-2">E mais {preview.skippedRows.length - 5}.</p> : null}
+                            </div>
+                        ) : null}
+
+                        <div className="grid max-w-xl gap-3 sm:grid-cols-2">
+                            <SingleSelectCombobox
+                                hideLabel
+                                label="Carteira de destino"
+                                value={selectedWalletId}
+                                placeholder="Carteira de destino"
+                                emptyMessage="Nenhuma carteira ativa."
+                                options={walletOptions}
+                                onChange={setSelectedWalletId}
+                                renderOptionContent={(option) => <span className="truncate text-sm text-white">{option.label}</span>}
+                            />
+                            <IconTextField
+                                ariaLabel={`Digite ${CSV_IMPORT_CONFIRMATION_TEXT} para confirmar`}
+                                icon={TextCursorInput}
+                                value={confirmation}
+                                onChange={setConfirmation}
+                                placeholder={`Digite ${CSV_IMPORT_CONFIRMATION_TEXT}`}
+                                disabled={isImporting}
+                            />
                         </div>
-                    ) : null}
 
-                    <label className="mt-4 block text-sm text-white/78">
-                        <span className="mb-2 block">Carteira de destino</span>
-                        <select
-                            value={selectedWalletId}
-                            onChange={(event) => setSelectedWalletId(event.target.value)}
-                            className="w-full rounded-xl border border-white/[0.1] bg-black/20 px-3 py-2 text-white outline-none transition-colors focus:border-sky-200/40"
-                        >
-                            {availableWallets.map((wallet) => (
-                                <option key={wallet.id} value={wallet.id} className="bg-[#101010] text-white">
-                                    {wallet.name}
-                                </option>
-                            ))}
-                        </select>
-                    </label>
-
-                    <label className="mt-4 block text-sm text-white/78">
-                        <span className="mb-2 block">
-                            Digite <strong>{CSV_IMPORT_CONFIRMATION_TEXT}</strong> para confirmar
-                        </span>
-                        <input
-                            type="text"
-                            value={confirmation}
-                            onChange={(event) => setConfirmation(event.target.value)}
-                            className="w-full rounded-xl border border-white/[0.1] bg-black/20 px-3 py-2 text-white outline-none transition-colors focus:border-sky-200/40"
-                            placeholder={CSV_IMPORT_CONFIRMATION_TEXT}
-                        />
-                    </label>
-
-                    <div className="mt-4 flex flex-wrap gap-3">
-                        <button
-                            type="button"
-                            onClick={handleConfirmImport}
-                            disabled={!canImport}
-                            className="inline-flex items-center gap-2 rounded-xl border border-sky-300/30 bg-sky-400/15 px-4 py-2 text-sm font-medium text-sky-50 transition-colors hover:border-sky-300/45 hover:bg-sky-400/20 disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                            <FileUp size={16} />
-                            {isImporting ? "Importando..." : "Confirmar importacao CSV"}
-                        </button>
-                        <button
-                            type="button"
-                            onClick={resetPreview}
-                            className="inline-flex items-center gap-2 rounded-xl border border-white/[0.12] bg-white/[0.03] px-4 py-2 text-sm text-white transition-colors hover:border-white/[0.18] hover:bg-white/[0.06]"
-                        >
-                            Cancelar
-                        </button>
+                        <div className="flex flex-wrap gap-2">
+                            <button type="button" onClick={handleConfirmImport} disabled={!canImport} className={SETTINGS_PRIMARY_BUTTON_CLASS}>
+                                <FileUp size={16} aria-hidden />
+                                {isImporting ? "Importando..." : "Importar transações"}
+                            </button>
+                            <button type="button" onClick={resetPreview} disabled={isImporting} className={SETTINGS_SECONDARY_BUTTON_CLASS}>
+                                Cancelar
+                            </button>
+                        </div>
                     </div>
-                </div>
-            ) : null}
-        </article>
+                ) : null}
+            </div>
+        </SettingsSection>
     );
 }

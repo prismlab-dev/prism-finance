@@ -90,7 +90,7 @@ export function UpcomingPanel({ transactions }: { transactions: Transaction[] })
     const totalOut = days.reduce((sum, day) => sum + day.out, 0);
 
     return (
-        <section className="rounded-2xl border border-white/[0.08] bg-[#111111] p-4">
+        <section className="rounded-2xl border border-white/[0.08] bg-surface p-4">
             <div className="mb-4 flex items-baseline justify-between gap-3">
                 <p className="text-lg font-medium text-white">Esta semana</p>
                 {totalOut > 0 && <p className="text-sm tabular-nums text-neutral-400">R$ {formatCurrencyBRL(totalOut)} a pagar</p>}

@@ -18,5 +18,5 @@ export function SkeletonLine({ className = "" }: SkeletonBlockProps) {
 }
 
 export function SkeletonPanel({ children, className = "" }: SkeletonPanelProps) {
-    return <section className={`rounded-2xl border border-white/[0.08] bg-[#111111] p-4 shadow-[0_24px_60px_-32px_rgba(0,0,0,0.9)] ${className}`}>{children}</section>;
+    return <section className={`rounded-2xl border border-white/[0.08] bg-surface p-4 shadow-[0_24px_60px_-32px_rgba(0,0,0,0.9)] ${className}`}>{children}</section>;
 }

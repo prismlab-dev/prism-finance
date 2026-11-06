@@ -31,7 +31,7 @@ export function BudgetCard({ progress, name, iconName, color, index, onOpen }: B
             transition={{ duration: 0.25, delay: Math.min(index, 8) * 0.03 }}
             onClick={onOpen}
             aria-label={`Abrir orçamento ${name}`}
-            className="group relative flex w-full flex-col gap-5 overflow-hidden rounded-2xl border border-white/[0.08] bg-[#111111] p-5 text-left transition-colors hover:border-white/[0.18] focus-visible:border-white/[0.32] focus-visible:outline-none"
+            className="group relative flex w-full flex-col gap-5 overflow-hidden rounded-2xl border border-white/[0.08] bg-surface p-5 text-left transition-colors hover:border-white/[0.18] focus-visible:border-white/[0.32] focus-visible:outline-none"
         >
             <span
                 aria-hidden

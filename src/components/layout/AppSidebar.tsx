@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect } from "react";
+import { useAppearance } from "../../lib/appearance";
 import { SidebarContent } from "./SidebarContent";
 
 interface AppSidebarProps {
@@ -8,6 +9,8 @@ interface AppSidebarProps {
 }
 
 export function AppSidebar({ isMobileOpen, onCloseMobile }: AppSidebarProps) {
+    const isLumen = useAppearance().layout === "lumen";
+
     useEffect(() => {
         if (!isMobileOpen) {
             return undefined;
@@ -70,8 +73,10 @@ export function AppSidebar({ isMobileOpen, onCloseMobile }: AppSidebarProps) {
             </AnimatePresence>
 
             <aside className="hidden shrink-0 transition-[width] duration-300 ease-out laptop:block laptop:w-[72px] desktop:w-[240px]">
-                <section className="elegant-scrollbar fixed inset-y-0 left-0 z-30 h-dvh overflow-y-auto bg-zinc-950/70 p-2 transition-[width] duration-300 ease-out laptop:w-[72px] desktop:w-[240px]">
-                    <SidebarContent variant="responsive" />
+                <section
+                    className={`fixed bottom-0 left-0 z-30 overflow-hidden ${isLumen ? "bg-zinc-950" : "bg-zinc-950/70"} p-2 ${isLumen ? "top-[var(--app-header-offset,0px)]" : "top-0"} transition-[width] duration-300 ease-out laptop:w-[72px] desktop:w-[240px]`}
+                >
+                    <SidebarContent variant="responsive" showBrand={!isLumen} />
                 </section>
             </aside>
         </>

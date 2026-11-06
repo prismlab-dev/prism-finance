@@ -1,16 +1,19 @@
-import { useEffect, useMemo, useState, type MouseEvent } from "react";
-import { ArrowDown, ArrowUp, Circle, CircleSlash, Link2, Repeat2 } from "lucide-react";
+import { Fragment, useEffect, useMemo, useState, type MouseEvent, type ReactNode } from "react";
+import { ChevronDown, ChevronsUpDown, ChevronUp, CircleSlash, Link2, Repeat2 } from "lucide-react";
 import { type Beneficiary, type Transaction, type Wallet, useFinanceActions, useFinanceBeneficiaries, useFinanceSession, useFinanceTransactionGroups } from "../../../context/FinanceContext";
 import { useModal } from "../../../context/ModalContext";
 import { getCategoryIconComponent } from "../../../lib/categoryIcons";
 import { useLocalPreferenceSection } from "../../../lib/localPreferences";
 import { getTransactionCategoryDisplay, getTransactionCategoryDisplayLabel } from "../../../lib/transactionCategory";
 import { BeneficiaryAvatar } from "../../common/BeneficiaryAvatar";
-import { TableColumnToggleButton } from "../../common/TableColumnToggleButton";
+import { TableColumnToggleBar } from "../../common/TableColumnToggleButton";
+import { ColumnResizeHandle } from "../../common/ColumnResizeHandle";
+import { normalizeColumnOrder, normalizeColumnWidths } from "../../common/tableColumnOrder";
 import { WalletAvatar } from "../../common/WalletAvatar";
 import { BulkTransactionEditModal } from "../../modal/BulkTransactionEditModal";
 import { ConfirmActionModal } from "../../modal/ConfirmActionModal";
 import { BulkHeaderCheckbox, BulkRowCheckbox, FloatingTransactionBulkFooter } from "../../transactions/TransactionBulkSelectionControls";
+import { TransactionDetailIndicators, useTransactionDetailFlags } from "../../transactions/TransactionDetailIndicators";
 import { TransactionContextMenu, type TransactionContextMenuState } from "../../transactions/TransactionContextMenu";
 import { buildTransactionContextActions, type TransactionContextAction } from "../../transactions/transactionContextActions";
 import { formatCurrencyBRL, formatTransactionDate, getTransactionTypeMeta, resolveTransactionWallet } from "../../transactions/transactionView";
@@ -41,8 +44,14 @@ interface TransactionsListPanelProps {
     onAction: (transaction: Transaction, action: TransactionContextAction) => void;
 }
 
+type TableColumnKey = "status" | "wallet" | "date" | "description" | "category" | "tags" | "beneficiary" | "value";
+const DEFAULT_COLUMN_ORDER: TableColumnKey[] = ["status", "wallet", "date", "description", "category", "tags", "beneficiary", "value"];
+
 interface TransactionsTableViewPreferences {
+    columnWidths: Partial<Record<TableColumnKey, number>>;
+    columnOrder: TableColumnKey[];
     showStatus: boolean;
+    showWallet: boolean;
     showDate: boolean;
     showDescription: boolean;
     showCategory: boolean;
@@ -51,9 +60,23 @@ interface TransactionsTableViewPreferences {
     showValue: boolean;
 }
 
+const COLUMN_VISIBILITY_KEY: Record<TableColumnKey, Exclude<keyof TransactionsTableViewPreferences, "columnOrder" | "columnWidths">> = {
+    status: "showStatus",
+    wallet: "showWallet",
+    date: "showDate",
+    description: "showDescription",
+    category: "showCategory",
+    tags: "showTags",
+    beneficiary: "showBeneficiary",
+    value: "showValue",
+};
+
 const TRANSACTIONS_TABLE_VIEW_PREFERENCES_SECTION = "transactions.table-view";
 const DEFAULT_TRANSACTIONS_TABLE_VIEW_PREFERENCES: TransactionsTableViewPreferences = {
+    columnOrder: DEFAULT_COLUMN_ORDER,
+    columnWidths: {},
     showStatus: true,
+    showWallet: true,
     showDate: true,
     showDescription: true,
     showCategory: true,
@@ -72,7 +95,10 @@ function normalizeTransactionsTableViewPreferences(value: unknown): Transactions
     }
 
     return {
+        columnOrder: normalizeColumnOrder(value.columnOrder, DEFAULT_COLUMN_ORDER),
+        columnWidths: normalizeColumnWidths(value.columnWidths, DEFAULT_COLUMN_ORDER),
         showStatus: typeof value.showStatus === "boolean" ? value.showStatus : DEFAULT_TRANSACTIONS_TABLE_VIEW_PREFERENCES.showStatus,
+        showWallet: typeof value.showWallet === "boolean" ? value.showWallet : DEFAULT_TRANSACTIONS_TABLE_VIEW_PREFERENCES.showWallet,
         showDate: typeof value.showDate === "boolean" ? value.showDate : DEFAULT_TRANSACTIONS_TABLE_VIEW_PREFERENCES.showDate,
         showDescription: typeof value.showDescription === "boolean" ? value.showDescription : DEFAULT_TRANSACTIONS_TABLE_VIEW_PREFERENCES.showDescription,
         showCategory: typeof value.showCategory === "boolean" ? value.showCategory : DEFAULT_TRANSACTIONS_TABLE_VIEW_PREFERENCES.showCategory,
@@ -106,6 +132,7 @@ interface SortableHeaderProps {
     field: SortField;
     sortMode: SortMode;
     align?: "left" | "right";
+    resizeHandle?: ReactNode;
     onSortModeChange: (sortMode: SortMode) => void;
 }
 
@@ -139,7 +166,7 @@ function getAriaSort(field: SortField, sortMode: SortMode): "ascending" | "desce
     return getSortDirection(sortMode) === "asc" ? "ascending" : "descending";
 }
 
-function SortableHeader({ label, field, sortMode, align = "left", onSortModeChange }: SortableHeaderProps) {
+function SortableHeader({ label, field, sortMode, align = "left", resizeHandle, onSortModeChange }: SortableHeaderProps) {
     const active = getSortField(sortMode) === field;
     const direction = getSortDirection(sortMode);
     const ariaSort = getAriaSort(field, sortMode);
@@ -153,21 +180,22 @@ function SortableHeader({ label, field, sortMode, align = "left", onSortModeChan
         onSortModeChange(buildSortMode(field, direction === "asc" ? "desc" : "asc"));
     };
 
-    const Icon = !active ? Circle : direction === "asc" ? ArrowUp : ArrowDown;
+    const Icon = !active ? ChevronsUpDown : direction === "asc" ? ChevronUp : ChevronDown;
 
     return (
         <th
             aria-sort={ariaSort}
-            className={`overflow-hidden whitespace-nowrap border-b border-white/[0.08] px-3 py-2 text-[11px] uppercase tracking-[0.08em] text-white/45 ${align === "right" ? "text-right" : "text-left"}`}
+            className={`relative overflow-hidden whitespace-nowrap border-b border-white/[0.08] px-3 py-2 text-[11px] uppercase tracking-[0.08em] text-white/45 ${align === "right" ? "text-right" : "text-left"}`}
         >
             <button
                 type="button"
                 onClick={handleClick}
-                className={`inline-flex w-full min-w-0 items-center gap-1.5 transition-colors hover:text-white/80 ${align === "right" ? "justify-end" : "justify-start"}`}
+                className={`group inline-flex w-full min-w-0 items-center gap-1 transition-colors hover:text-white/80 ${align === "right" ? "justify-end" : "justify-start"}`}
             >
                 <span className="truncate uppercase">{label}</span>
-                <Icon size={12} className={active ? "text-white/80" : "text-white/35"} />
+                <Icon size={13} strokeWidth={2.25} aria-hidden className={`shrink-0 transition-colors ${active ? "text-white/85" : "text-white/20 group-hover:text-white/55"}`} />
             </button>
+            {resizeHandle}
         </th>
     );
 }
@@ -192,9 +220,6 @@ function NoDestinationWalletCell() {
     );
 }
 
-function TableControlButton({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
-    return <TableColumnToggleButton label={label} active={active} onClick={onClick} />;
-}
 
 
 function TransactionsTable({ tabs, activeTab, wallets, beneficiariesById, transactionGroupsById, sortMode, onSortModeChange, onAction, selectedMonth }: TransactionsTableProps) {
@@ -202,6 +227,7 @@ function TransactionsTable({ tabs, activeTab, wallets, beneficiariesById, transa
     const transactions = activeTabConfig?.transactions ?? [];
     const [contextMenu, setContextMenu] = useState<TransactionContextMenuState | null>(null);
     const { user } = useFinanceSession();
+    const detailFlags = useTransactionDetailFlags(user?.uid);
     const { openModal } = useModal();
     const { updateTransactionsBulk } = useFinanceActions();
     const bulkSelection = useTransactionBulkSelection(transactions);
@@ -212,9 +238,36 @@ function TransactionsTable({ tabs, activeTab, wallets, beneficiariesById, transa
         DEFAULT_TRANSACTIONS_TABLE_VIEW_PREFERENCES,
         normalizeTransactionsTableViewPreferences,
     );
-    const { showStatus, showDate, showDescription, showCategory, showTags, showBeneficiary, showValue } = viewPreferences;
+    const { columnOrder, columnWidths, showStatus, showWallet: showWalletPreference, showDate, showDescription, showCategory, showTags, showBeneficiary, showValue } = viewPreferences;
 
-    const toggleViewPreference = (key: keyof TransactionsTableViewPreferences) => {
+    // Em transferências, a coluna Origem já exibe a carteira.
+    const showWallet = showWalletPreference && activeTab !== "transfer";
+
+    const columnLabels: Record<TableColumnKey, string> = {
+        status: "Status",
+        wallet: "Carteira",
+        date: "Data",
+        description: "Descrição",
+        category: activeTab === "transfer" ? "Origem" : "Categoria",
+        tags: "Tags",
+        beneficiary: activeTab === "transfer" ? "Destino" : "Beneficiário",
+        value: "Valor",
+    };
+
+    const resizeHandle = (key: TableColumnKey) => (
+        <ColumnResizeHandle
+            onWidthChange={(width) => setViewPreferences((current) => ({ ...current, columnWidths: { ...current.columnWidths, [key]: width } }))}
+            onReset={() =>
+                setViewPreferences((current) => {
+                    const nextWidths = { ...current.columnWidths };
+                    delete nextWidths[key];
+                    return { ...current, columnWidths: nextWidths };
+                })
+            }
+        />
+    );
+
+    const toggleViewPreference = (key: Exclude<keyof TransactionsTableViewPreferences, "columnOrder" | "columnWidths">) => {
         setViewPreferences((current) => ({
             ...current,
             [key]: !current[key],
@@ -355,15 +408,14 @@ function TransactionsTable({ tabs, activeTab, wallets, beneficiariesById, transa
                     </span>
                 </div>
                 <div className="flex flex-wrap items-center justify-end gap-2">
-                    <div className="hidden flex-wrap items-center gap-0.5 rounded-lg border border-white/[0.07] bg-black/30 p-0.5 sm:flex" role="group" aria-label="Colunas visíveis">
-                        <TableControlButton label="Status" active={showStatus} onClick={() => toggleViewPreference("showStatus")} />
-                        <TableControlButton label="Data" active={showDate} onClick={() => toggleViewPreference("showDate")} />
-                        <TableControlButton label="Descrição" active={showDescription} onClick={() => toggleViewPreference("showDescription")} />
-                        <TableControlButton label="Categoria" active={showCategory} onClick={() => toggleViewPreference("showCategory")} />
-                        <TableControlButton label="Tags" active={showTags} onClick={() => toggleViewPreference("showTags")} />
-                        <TableControlButton label="Beneficiário" active={showBeneficiary} onClick={() => toggleViewPreference("showBeneficiary")} />
-                        <TableControlButton label="Valor" active={showValue} onClick={() => toggleViewPreference("showValue")} />
-                    </div>
+                    <TableColumnToggleBar
+                        columns={columnOrder
+                            .filter((key) => key !== "wallet" || activeTab !== "transfer")
+                            .map((key) => ({ key, label: columnLabels[key], active: viewPreferences[COLUMN_VISIBILITY_KEY[key]] }))}
+                        order={columnOrder}
+                        onToggle={(key) => toggleViewPreference(COLUMN_VISIBILITY_KEY[key])}
+                        onOrderChange={(nextOrder) => setViewPreferences((current) => ({ ...current, columnOrder: nextOrder }))}
+                    />
                 </div>
             </div>
 
@@ -377,13 +429,20 @@ function TransactionsTable({ tabs, activeTab, wallets, beneficiariesById, transa
                     <table className="finance-table w-full max-w-full table-fixed border-separate border-spacing-0 text-sm text-white/85">
                         <colgroup>
                             {selectionMode && <col className="w-[4%]" />}
-                            {showStatus && <col className="w-[17%]" />}
-                            {showDate && <col className="w-[10%]" />}
-                            {showDescription && <col />}
-                            {showCategory && <col className="w-[14%]" />}
-                            {showTags && <col className="w-[10%]" />}
-                            {showBeneficiary && <col className="w-[13%]" />}
-                            {showValue && <col className="w-[12%]" />}
+                            {columnOrder.map((column) => (
+                                <Fragment key={column}>
+                                    {({
+                                        status: showStatus && <col style={{ width: `${columnWidths.status ?? 12}%` }} />,
+                                        wallet: showWallet && <col style={{ width: `${columnWidths.wallet ?? 14}%` }} />,
+                                        date: showDate && <col style={{ width: `${columnWidths.date ?? 10}%` }} />,
+                                        description: showDescription && <col />,
+                                        category: showCategory && <col style={{ width: `${columnWidths.category ?? 14}%` }} />,
+                                        tags: showTags && <col style={{ width: `${columnWidths.tags ?? 10}%` }} />,
+                                        beneficiary: showBeneficiary && <col style={{ width: `${columnWidths.beneficiary ?? 13}%` }} />,
+                                        value: showValue && <col style={{ width: `${columnWidths.value ?? 12}%` }} />,
+                                    } satisfies Record<TableColumnKey, ReactNode>)[column]}
+                                </Fragment>
+                            ))}
                         </colgroup>
                         <thead>
                             <tr>
@@ -397,21 +456,24 @@ function TransactionsTable({ tabs, activeTab, wallets, beneficiariesById, transa
                                         />
                                     </th>
                                 )}
-                                {showStatus && <SortableHeader label="Status" field="status" sortMode={sortMode} onSortModeChange={onSortModeChange} />}
-                                {showDate && <SortableHeader label="Data" field="date" sortMode={sortMode} onSortModeChange={onSortModeChange} />}
-                                {showDescription && (
-                                    <th className="overflow-hidden whitespace-nowrap border-b border-white/[0.08] px-3 py-2 text-left text-[11px] uppercase tracking-[0.08em] text-white/45">
-                                        Descrição
-                                    </th>
-                                )}
-                                {showCategory && <SortableHeader label={activeTab === "transfer" ? "Origem" : "Categoria"} field="category" sortMode={sortMode} onSortModeChange={onSortModeChange} />}
-                                {showTags && (
-                                    <th className="overflow-hidden whitespace-nowrap border-b border-white/[0.08] px-3 py-2 text-left text-[11px] uppercase tracking-[0.08em] text-white/45">Tags</th>
-                                )}
-                                {showBeneficiary && (
-                                    <SortableHeader label={activeTab === "transfer" ? "Destino" : "Beneficiário"} field="beneficiary" sortMode={sortMode} onSortModeChange={onSortModeChange} />
-                                )}
-                                {showValue && <SortableHeader label="Valor" field="value" sortMode={sortMode} align="right" onSortModeChange={onSortModeChange} />}
+                                {columnOrder.map((column) => (
+                                    <Fragment key={column}>
+                                        {({
+                                            status: showStatus && <SortableHeader label="Status" field="status" sortMode={sortMode} resizeHandle={resizeHandle("status")} onSortModeChange={onSortModeChange} />,
+                                            wallet: showWallet && <SortableHeader label="Carteira" field="wallet" sortMode={sortMode} resizeHandle={resizeHandle("wallet")} onSortModeChange={onSortModeChange} />,
+                                            date: showDate && <SortableHeader label="Data" field="date" sortMode={sortMode} resizeHandle={resizeHandle("date")} onSortModeChange={onSortModeChange} />,
+                                            description: showDescription && <SortableHeader label="Descrição" field="description" sortMode={sortMode} onSortModeChange={onSortModeChange} />,
+                                            category: showCategory && <SortableHeader label={activeTab === "transfer" ? "Origem" : "Categoria"} field="category" sortMode={sortMode} resizeHandle={resizeHandle("category")} onSortModeChange={onSortModeChange} />,
+                                            tags: showTags && (
+                                        <th className="relative overflow-hidden whitespace-nowrap border-b border-white/[0.08] px-3 py-2 text-left text-[11px] uppercase tracking-[0.08em] text-white/45">Tags{resizeHandle("tags")}</th>
+                                    ),
+                                            beneficiary: showBeneficiary && (
+                                        <SortableHeader label={activeTab === "transfer" ? "Destino" : "Beneficiário"} field="beneficiary" sortMode={sortMode} resizeHandle={resizeHandle("beneficiary")} onSortModeChange={onSortModeChange} />
+                                    ),
+                                            value: showValue && <SortableHeader label="Valor" field="value" sortMode={sortMode} align="right" resizeHandle={resizeHandle("value")} onSortModeChange={onSortModeChange} />,
+                                        } satisfies Record<TableColumnKey, ReactNode>)[column]}
+                                    </Fragment>
+                                ))}
                             </tr>
                         </thead>
                         <tbody>
@@ -441,6 +503,7 @@ function TransactionsTable({ tabs, activeTab, wallets, beneficiariesById, transa
                                 return (
                                     <tr
                                         key={transaction.id}
+                                        data-transaction-id={transaction.id}
                                         onClick={() => handleRowClick(transaction)}
                                         onContextMenu={(event) => handleRowContextMenu(event, transaction)}
                                         className={`${selectionMode && canBulkEdit ? "cursor-pointer" : "cursor-context-menu"} transition-colors ${
@@ -458,113 +521,122 @@ function TransactionsTable({ tabs, activeTab, wallets, beneficiariesById, transa
                                                 />
                                             </td>
                                         )}
-                                        {showStatus && (
-                                            <td className="overflow-hidden whitespace-nowrap border-b border-white/[0.04] px-3 py-2.5">
-                                                <div className="flex min-w-0 items-center gap-2 overflow-hidden whitespace-nowrap">
-                                                    <div className="flex shrink-0 items-center gap-2">
-                                                        <WalletAvatar wallet={wallet} className="h-7 w-7 rounded-lg border border-white/[0.1]" iconSize={14} iconStrokeWidth={1.8} />
-                                                    </div>
-                                                    <span
-                                                        className={`inline-flex shrink-0 items-center gap-1 rounded-md border px-2 py-0.5 text-[11px]/4 font-medium ${statusBadgeClass}`}
-                                                    >
-                                                        {statusLabel}
-                                                    </span>
-                                                    {seriesIndicator?.kind === "installment" && <span className="text-xs text-white/45">{seriesIndicator.label}</span>}
-                                                    {seriesIndicator?.kind === "recurring" && (
-                                                        <span className="inline-flex text-white/45" role="img" title="Transacao recorrente" aria-label="Transacao recorrente">
-                                                            <Repeat2 strokeWidth={2} size={15} />
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </td>
-                                        )}
-                                        {showDate && (
-                                            <td className="overflow-hidden whitespace-nowrap border-b border-white/[0.04] px-3 py-2.5">
-                                                <span className="font-medium text-white/85">{formatTransactionDate(transaction.date, "dd")}</span>
-                                                <span className="text-white/40">{formatTransactionDate(transaction.date, "/MM/yyyy")}</span>
-                                            </td>
-                                        )}
-                                        {showDescription && (
-                                            <td className="truncate border-b border-white/[0.04] px-3 py-2.5 text-[14px] font-medium text-white">
-                                                <div className="flex min-w-0 max-w-full items-center gap-1.5">
-                                                    <span className="truncate">{transaction.description || "Sem descrição."}</span>
-                                                    {transaction.systemKind === "invoice_payment" && (
-                                                        <span className="inline-flex shrink-0 text-violet-300" role="img" title="Pagamento vinculado à fatura" aria-label="Pagamento vinculado à fatura">
-                                                            <Link2 size={13} />
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </td>
-                                        )}
-                                        {showCategory && (
-                                            <td className="overflow-hidden whitespace-nowrap border-b border-white/[0.04] px-3 py-2.5 text-white/70">
-                                                {transaction.type === "transfer" ? (
-                                                    <WalletTableCell wallet={wallet} />
-                                                ) : (
-                                                    <div className="flex min-w-0 max-w-full items-center gap-2">
+                                        {columnOrder.map((column) => (
+                                            <Fragment key={column}>
+                                                {({
+                                                    status: showStatus && (
+                                                <td className="overflow-hidden whitespace-nowrap border-b border-white/[0.04] px-3 py-2.5">
+                                                    <div className="flex min-w-0 items-center gap-2 overflow-hidden whitespace-nowrap">
                                                         <span
-                                                            className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg"
-                                                            style={{ color: categoryColor, backgroundColor: categoryBackground }}
+                                                            className={`inline-flex shrink-0 items-center gap-1 rounded-md border px-2 py-0.5 text-[11px]/4 font-medium ${statusBadgeClass}`}
                                                         >
-                                                            <CategoryIcon size={14} />
+                                                            {statusLabel}
                                                         </span>
-                                                        <span className="truncate">{getTransactionCategoryDisplayLabel(transaction.category)}</span>
-                                                    </div>
-                                                )}
-                                            </td>
-                                        )}
-                                        {showTags && (
-                                            <td className="overflow-hidden whitespace-nowrap border-b border-white/[0.04] px-3 py-2.5 text-white/70">
-                                                {visibleTags.length < 1 ? (
-                                                    <span className="text-white/25">—</span>
-                                                ) : (
-                                                    <div className="flex min-w-0 max-w-full flex-nowrap items-center gap-1.5 overflow-hidden">
-                                                        {visibleTags.map((tag) => (
-                                                            <span
-                                                                key={tag.id}
-                                                                className="min-w-0 max-w-[96px] truncate rounded-md px-2 py-0.5 text-[11px]/4 font-medium uppercase text-white/80"
-                                                                style={{ backgroundColor: `${tag.color ?? "#64748B"}26` }}
-                                                            >
-                                                                {tag.name}
-                                                            </span>
-                                                        ))}
-                                                        {hiddenTagsCount > 0 && (
-                                                            <span className="shrink-0 rounded-full border border-white/10 bg-white/[0.03] px-2 py-0.5 text-[10px] font-medium text-white/55">
-                                                                +{hiddenTagsCount}
+                                                        {seriesIndicator?.kind === "installment" && <span className="text-xs text-white/45">{seriesIndicator.label}</span>}
+                                                        {seriesIndicator?.kind === "recurring" && (
+                                                            <span className="inline-flex text-white/45" role="img" title="Transacao recorrente" aria-label="Transacao recorrente">
+                                                                <Repeat2 strokeWidth={2} size={15} />
                                                             </span>
                                                         )}
                                                     </div>
-                                                )}
-                                            </td>
-                                        )}
-                                        {showBeneficiary && (
-                                            <td className="overflow-hidden whitespace-nowrap border-b border-white/[0.04] px-3 py-2.5 text-white/70">
-                                                {transaction.type === "transfer" ? (
-                                                    destinationWallet ? (
-                                                        <WalletTableCell wallet={destinationWallet} />
-                                                    ) : (
-                                                        <NoDestinationWalletCell />
-                                                    )
-                                                ) : (
-                                                    <div className="flex min-w-0 max-w-full items-center gap-2 text-white/70">
-                                                        <BeneficiaryAvatar
-                                                            beneficiary={{
-                                                                name: beneficiary?.name ?? "BeneficiÃ¡rio",
-                                                                avatarImage: beneficiary?.avatarImage ?? null,
-                                                                avatarColor: beneficiary?.avatarColor ?? "#374151",
-                                                            }}
-                                                        />
-                                                        <span className="truncate">{beneficiary?.name?.split(" ")?.[0] ?? ""}</span>
+                                                </td>
+                                            ),
+                                                    wallet: showWallet && (
+                                                <td className="overflow-hidden border-b border-white/[0.04] px-3 py-2.5">
+                                                    <WalletTableCell wallet={wallet} />
+                                                </td>
+                                            ),
+                                                    date: showDate && (
+                                                <td className="overflow-hidden whitespace-nowrap border-b border-white/[0.04] px-3 py-2.5">
+                                                    <span className="font-medium text-white/85">{formatTransactionDate(transaction.date, "dd")}</span>
+                                                    <span className="text-white/40">{formatTransactionDate(transaction.date, "/MM/yyyy")}</span>
+                                                </td>
+                                            ),
+                                                    description: showDescription && (
+                                                <td className="truncate border-b border-white/[0.04] px-3 py-2.5 text-[14px] font-medium text-white">
+                                                    <div className="flex min-w-0 max-w-full items-center gap-1.5">
+                                                        <span className="truncate">{transaction.description || "Sem descrição."}</span>
+                                                        <TransactionDetailIndicators flags={detailFlags} transactionId={transaction.id} />
+                                                        {transaction.systemKind === "invoice_payment" && (
+                                                            <span className="inline-flex shrink-0 text-violet-300" role="img" title="Pagamento vinculado à fatura" aria-label="Pagamento vinculado à fatura">
+                                                                <Link2 size={13} />
+                                                            </span>
+                                                        )}
                                                     </div>
-                                                )}
-                                            </td>
-                                        )}
-                                        {showValue && (
-                                            <td className={`overflow-hidden whitespace-nowrap border-b border-white/[0.04] px-3 py-2.5 text-right font-semibold ${typeMeta.amountColorClass}`}>
-                                                <span className="mr-1 text-xs font-normal opacity-50">R$</span>
-                                                {formatCurrencyBRL(transaction.value)}
-                                            </td>
-                                        )}
+                                                </td>
+                                            ),
+                                                    category: showCategory && (
+                                                <td className="overflow-hidden whitespace-nowrap border-b border-white/[0.04] px-3 py-2.5 text-white/70">
+                                                    {transaction.type === "transfer" ? (
+                                                        <WalletTableCell wallet={wallet} />
+                                                    ) : (
+                                                        <div className="flex min-w-0 max-w-full items-center gap-2">
+                                                            <span
+                                                                className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg"
+                                                                style={{ color: categoryColor, backgroundColor: categoryBackground }}
+                                                            >
+                                                                <CategoryIcon size={14} />
+                                                            </span>
+                                                            <span className="truncate">{getTransactionCategoryDisplayLabel(transaction.category)}</span>
+                                                        </div>
+                                                    )}
+                                                </td>
+                                            ),
+                                                    tags: showTags && (
+                                                <td className="overflow-hidden whitespace-nowrap border-b border-white/[0.04] px-3 py-2.5 text-white/70">
+                                                    {visibleTags.length < 1 ? (
+                                                        <span className="text-white/25">—</span>
+                                                    ) : (
+                                                        <div className="flex min-w-0 max-w-full flex-nowrap items-center gap-1.5 overflow-hidden">
+                                                            {visibleTags.map((tag) => (
+                                                                <span
+                                                                    key={tag.id}
+                                                                    className="min-w-0 max-w-[96px] truncate rounded-md px-2 py-0.5 text-[11px]/4 font-medium uppercase text-white/80"
+                                                                    style={{ backgroundColor: `${tag.color ?? "#64748B"}26` }}
+                                                                >
+                                                                    {tag.name}
+                                                                </span>
+                                                            ))}
+                                                            {hiddenTagsCount > 0 && (
+                                                                <span className="shrink-0 rounded-full border border-white/10 bg-white/[0.03] px-2 py-0.5 text-[10px] font-medium text-white/55">
+                                                                    +{hiddenTagsCount}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </td>
+                                            ),
+                                                    beneficiary: showBeneficiary && (
+                                                <td className="overflow-hidden whitespace-nowrap border-b border-white/[0.04] px-3 py-2.5 text-white/70">
+                                                    {transaction.type === "transfer" ? (
+                                                        destinationWallet ? (
+                                                            <WalletTableCell wallet={destinationWallet} />
+                                                        ) : (
+                                                            <NoDestinationWalletCell />
+                                                        )
+                                                    ) : (
+                                                        <div className="flex min-w-0 max-w-full items-center gap-2 text-white/70">
+                                                            <BeneficiaryAvatar
+                                                                beneficiary={{
+                                                                    name: beneficiary?.name ?? "Beneficiário",
+                                                                    avatarImage: beneficiary?.avatarImage ?? null,
+                                                                    avatarColor: beneficiary?.avatarColor ?? "#374151",
+                                                                }}
+                                                            />
+                                                            <span className="truncate">{beneficiary?.name?.split(" ")?.[0] ?? ""}</span>
+                                                        </div>
+                                                    )}
+                                                </td>
+                                            ),
+                                                    value: showValue && (
+                                                <td className={`overflow-hidden whitespace-nowrap border-b border-white/[0.04] px-3 py-2.5 text-right font-semibold ${typeMeta.amountColorClass}`}>
+                                                    <span className="mr-1 text-xs font-normal opacity-50">R$</span>
+                                                    {formatCurrencyBRL(transaction.value)}
+                                                </td>
+                                            ),
+                                                } satisfies Record<TableColumnKey, ReactNode>)[column]}
+                                            </Fragment>
+                                        ))}
                                     </tr>
                                 );
                             })}

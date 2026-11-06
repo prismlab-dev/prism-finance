@@ -167,6 +167,7 @@ export async function saveTransactionDetails({ userId, transactionId, annotation
     }
 
     const refreshed = await loadTransactionDetails(userId, transactionId);
+    window.dispatchEvent(new Event(TRANSACTION_DETAILS_CHANGED_EVENT));
     return {
         annotation: refreshed.annotation,
         attachments: refreshed.attachments.length > 0 ? refreshed.attachments : uploadedAttachments,
@@ -180,4 +181,38 @@ export async function createTransactionAttachmentDownloadUrl(storagePath: string
         throw result.error;
     }
     return result.data.signedUrl;
+}
+
+export const TRANSACTION_DETAILS_CHANGED_EVENT = "prism:transaction-details-changed";
+
+export interface TransactionDetailFlags {
+    annotations: Map<string, string>;
+    attachmentNames: Map<string, string[]>;
+}
+
+export async function loadTransactionDetailFlags(userId: string): Promise<TransactionDetailFlags> {
+    const client = getSupabaseClient();
+    const [detailsResult, attachmentsResult] = await Promise.all([
+        client.from(DETAILS_TABLE).select("transaction_id, annotation").eq("user_id", userId).not("annotation", "is", null),
+        client.from(ATTACHMENTS_TABLE).select("transaction_id, file_name").eq("user_id", userId).order("created_at"),
+    ]);
+
+    if (detailsResult.error) {
+        throw detailsResult.error;
+    }
+    if (attachmentsResult.error) {
+        throw attachmentsResult.error;
+    }
+
+    const annotations = new Map<string, string>();
+    for (const row of (detailsResult.data ?? []) as { transaction_id: string; annotation: string | null }[]) {
+        if (row.annotation?.trim()) {
+            annotations.set(row.transaction_id, row.annotation);
+        }
+    }
+    const attachmentNames = new Map<string, string[]>();
+    for (const row of (attachmentsResult.data ?? []) as { transaction_id: string; file_name: string }[]) {
+        attachmentNames.set(row.transaction_id, [...(attachmentNames.get(row.transaction_id) ?? []), row.file_name]);
+    }
+    return { annotations, attachmentNames };
 }

@@ -6,7 +6,7 @@ import { useModal } from "../../context/ModalContext";
 
 export function ModalPanel({ children, className = "" }: { children: ReactNode; className?: string }) {
     return (
-        <div className={`flex max-h-full min-h-0 flex-col overflow-hidden rounded-xl border border-white/[0.09] bg-[#131313] p-4 text-white shadow-[0_26px_70px_-38px_rgba(0,0,0,0.95)] ${className}`.trim()}>
+        <div className={`flex max-h-full min-h-0 flex-col overflow-hidden rounded-xl border border-white/[0.09] bg-surface p-4 text-white shadow-[0_26px_70px_-38px_rgba(0,0,0,0.95)] ${className}`.trim()}>
             {children}
         </div>
     );

@@ -114,7 +114,7 @@ export function GastosPorCategoria() {
     const isDimmed = (groupKey: string, childKey?: string) => activeKey !== null && activeKey !== groupKey && activeKey !== childKey;
 
     return (
-        <div className="w-full rounded-2xl border border-white/[0.08] bg-[#111111] p-4 sm:p-5">
+        <div className="w-full rounded-2xl border border-white/[0.08] bg-surface p-4 sm:p-5">
             <div className="flex items-start justify-between gap-3">
                 <div>
                     <p className="text-lg font-medium text-white">Gastos por categoria</p>
