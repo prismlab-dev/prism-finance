@@ -1,8 +1,9 @@
-import { Database, UserRound, Users } from "lucide-react";
+import { Database, Palette, UserRound, Users } from "lucide-react";
 import { useFinanceSession } from "../../context/FinanceContext";
 import { useLocalPreferenceSection } from "../../lib/localPreferences";
 import { signOutSupabase } from "../../supabase/auth/authService";
 import { AccountSettingsTab } from "./settings/AccountSettingsTab";
+import { AppearanceSettingsTab } from "./settings/AppearanceSettingsTab";
 import { DataSettingsTab } from "./settings/DataSettingsTab";
 import { FamilySettingsTab } from "./settings/FamilySettingsTab";
 import { SettingsSidebarButton } from "./settings/SettingsSidebarButton";
@@ -17,6 +18,7 @@ const DEFAULT_SETTINGS_PAGE_PREFERENCES: SettingsPagePreferences = { activeTab: 
 
 const TABS: SettingsTab[] = [
     { id: "account", label: "Conta", icon: UserRound },
+    { id: "appearance", label: "Aparência", icon: Palette },
     { id: "family", label: "Família", icon: Users },
     { id: "data", label: "Dados", icon: Database },
 ];
@@ -42,7 +44,7 @@ export function SettingsPage() {
 
     return (
         <div className="flex min-h-[calc(100vh-8rem)] w-full flex-col gap-6 pb-10 lg:flex-row lg:gap-10">
-            <aside className="lg:sticky lg:top-[calc(var(--app-header-offset,5.5rem)+0.5rem)] lg:w-60 lg:shrink-0 lg:self-start">
+            <aside className="lg:sticky lg:top-[calc(var(--app-header-offset,5.5rem)+0.1rem)] lg:w-60 lg:shrink-0 lg:self-start">
                 <nav aria-label="Seções das configurações" className="-mx-3 flex gap-1 overflow-x-auto px-3 lg:mx-0 lg:flex-col lg:overflow-visible lg:px-0">
                     {TABS.map((tab) => (
                         <SettingsSidebarButton
@@ -57,7 +59,7 @@ export function SettingsPage() {
             </aside>
 
             <div className="min-w-0 flex-1">
-                {activeTab === "account" ? <AccountSettingsTab onSignOut={handleSignOut} /> : activeTab === "data" ? <DataSettingsTab /> : <FamilySettingsTab />}
+                {activeTab === "account" ? <AccountSettingsTab onSignOut={handleSignOut} /> : activeTab === "appearance" ? <AppearanceSettingsTab /> : activeTab === "data" ? <DataSettingsTab /> : <FamilySettingsTab />}
             </div>
         </div>
     );

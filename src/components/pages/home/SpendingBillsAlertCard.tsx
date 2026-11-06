@@ -1,115 +1,24 @@
 import { ChevronRight, ReceiptText, TriangleAlert } from "lucide-react";
-import { type ReactNode, useMemo } from "react";
-import { type Transaction, useFinanceCreditCardInvoices, useFinanceCreditCards } from "../../../context/FinanceContext";
-import { getCreditCardInvoiceReadState } from "../../../context/finance/invoiceStatus";
-import { getMonthKeyFromDateValue } from "../../../context/financeTypes";
+import type { ReactNode } from "react";
+import type { Transaction } from "../../../context/FinanceContext";
 import { usePage } from "../../../context/PageContext";
-import { parseAppDate } from "../../../lib/localDate";
 import { formatCurrencyBRL } from "../../transactions/transactionView";
+import { useAttentionAlerts } from "./useAttentionAlerts";
 
 interface SpendingBillsAlertCardProps {
     transactions: Transaction[];
 }
 
-interface OverdueInvoiceByCardAlert {
-    cardId: string;
-    cardName: string;
-    // Month key (YYYY-MM) used by statement navigation, based on due date.
-    selectedMonth: string;
-    selectedDueDate: string;
-    openAmount: number;
-    overdueInvoiceCount: number;
-}
-
-function isDateBeforeToday(dateValue: string, today: Date): boolean {
-    const parsedDate = parseAppDate(dateValue);
-    if (!parsedDate) {
-        return false;
-    }
-
-    const normalizedDate = new Date(parsedDate.getFullYear(), parsedDate.getMonth(), parsedDate.getDate());
-    return normalizedDate.getTime() < today.getTime();
-}
-
 export function SpendingBillsAlertCard({ transactions }: SpendingBillsAlertCardProps) {
     const { goToPage } = usePage();
-    const creditCards = useFinanceCreditCards();
-    const creditCardInvoices = useFinanceCreditCardInvoices();
+    const { overdueCount, overdueTotal, overdueInvoiceAlertsByCard, alertCount } = useAttentionAlerts(transactions);
 
-    const overdueNonCardSpendings = useMemo(() => {
-        const todayReference = new Date();
-        const today = new Date(todayReference.getFullYear(), todayReference.getMonth(), todayReference.getDate());
-
-        return transactions.filter((transaction) => {
-            if (transaction.type !== "spending") {
-                return false;
-            }
-
-            if (transaction.status !== "pending") {
-                return false;
-            }
-
-            if (transaction.paymentMethod === "credit_card") {
-                return false;
-            }
-
-            return isDateBeforeToday(transaction.date, today);
-        });
-    }, [transactions]);
-
-    const overdueInvoiceAlertsByCard = useMemo<OverdueInvoiceByCardAlert[]>(() => {
-        const cardById = new Map(creditCards.map((card) => [card.id, card]));
-        const cardNameById = new Map(creditCards.map((card) => [card.id, card.name]));
-        const alertsByCard = new Map<string, OverdueInvoiceByCardAlert>();
-
-        creditCardInvoices.forEach((invoice) => {
-            const card = cardById.get(invoice.creditCardId) ?? null;
-            const { openAmount, hasPendingBalance, visualStatus } = getCreditCardInvoiceReadState(invoice, card);
-            const isOverdue = hasPendingBalance && visualStatus === "overdue";
-            const invoiceDueMonth = getMonthKeyFromDateValue(invoice.dueDate);
-
-            if (!isOverdue) {
-                return;
-            }
-
-            const existing = alertsByCard.get(invoice.creditCardId);
-            if (!existing) {
-                alertsByCard.set(invoice.creditCardId, {
-                    cardId: invoice.creditCardId,
-                    cardName: cardNameById.get(invoice.creditCardId) ?? "Cartao removido",
-                    selectedMonth: invoiceDueMonth,
-                    selectedDueDate: invoice.dueDate,
-                    openAmount,
-                    overdueInvoiceCount: 1,
-                });
-                return;
-            }
-
-            const nextSelectedMonth = invoice.dueDate < existing.selectedDueDate ? invoiceDueMonth : existing.selectedMonth;
-            const nextSelectedDueDate = invoice.dueDate < existing.selectedDueDate ? invoice.dueDate : existing.selectedDueDate;
-
-            alertsByCard.set(invoice.creditCardId, {
-                ...existing,
-                selectedMonth: nextSelectedMonth,
-                selectedDueDate: nextSelectedDueDate,
-                openAmount: existing.openAmount + openAmount,
-                overdueInvoiceCount: existing.overdueInvoiceCount + 1,
-            });
-        });
-
-        return Array.from(alertsByCard.values()).sort((a, b) => a.selectedDueDate.localeCompare(b.selectedDueDate));
-    }, [creditCardInvoices, creditCards]);
-
-    if (overdueNonCardSpendings.length < 1 && overdueInvoiceAlertsByCard.length < 1) {
+    if (alertCount < 1) {
         return null;
     }
 
-    const overdueCount = overdueNonCardSpendings.length;
-    const overdueTotal = overdueNonCardSpendings.reduce((sum, transaction) => sum + transaction.value, 0);
-    const alertCount = (overdueCount > 0 ? 1 : 0) + overdueInvoiceAlertsByCard.length;
-
     return (
-        <section className="rounded-2xl border border-white/[0.08] bg-[#111111] p-4">
+        <section className="rounded-2xl border border-white/[0.08] bg-surface p-4">
             <div className="mb-3 flex items-center gap-2">
                 <span className="relative flex h-2 w-2">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-60 motion-reduce:hidden" />

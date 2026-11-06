@@ -89,7 +89,7 @@ export function StatementMonthSelector({ selectedMonth, onMonthChange, ariaLabel
     }, [isPickerOpen]);
 
     return (
-        <div ref={pickerRef} className=" relative inline-flex items-center gap-1 rounded-full border border-white/[0.12] bg-neutral-900 px-1 py-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]">
+        <div ref={pickerRef} className=" relative inline-flex items-center gap-1 rounded-full border border-white/[0.12] bg-neutral-900 px-1 py-1 shadow-[inset_0_1px_0_color-mix(in_oklab,var(--color-white)_10%,transparent)]">
             <button
                 type="button"
                 onClick={() => onMonthChange(shiftMonth(selectedMonth, -1))}
@@ -125,7 +125,7 @@ export function StatementMonthSelector({ selectedMonth, onMonthChange, ariaLabel
             </button>
 
             {isPickerOpen && (
-                <div className="absolute right-0 top-[calc(100%+0.5rem)] z-30 w-[240px] overflow-hidden rounded-2xl border border-white/[0.1] bg-[#0e0e0e]/95 p-2.5 shadow-[0_24px_60px_-30px_rgba(0,0,0,0.95)] backdrop-blur-xl">
+                <div className="absolute right-0 top-[calc(100%+0.5rem)] z-30 w-[240px] overflow-hidden rounded-2xl border border-white/[0.1] bg-canvas/95 p-2.5 shadow-[0_24px_60px_-30px_rgba(0,0,0,0.95)] backdrop-blur-xl">
 
                     <MonthGridPanel
                         selectedMonth={selectedMonth}

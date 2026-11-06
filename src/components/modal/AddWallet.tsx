@@ -344,7 +344,7 @@ export function AddWallet({ mode = "create", walletId, initialWallet }: AddWalle
                             title="Enviar ícone (opcional)"
                         >
                             <WalletAvatar wallet={previewWallet} className="h-[72px] w-[72px] rounded-xl border border-white/[0.12]" iconSize={30} iconStrokeWidth={1.7} />
-                            <span className="absolute bottom-1.5 right-1.5 inline-flex h-6 w-6 items-center justify-center rounded-full border border-white/[0.16] bg-[#131313] text-white/70 group-hover:text-white">
+                            <span className="absolute bottom-1.5 right-1.5 inline-flex h-6 w-6 items-center justify-center rounded-full border border-white/[0.16] bg-surface text-white/70 group-hover:text-white">
                                 <ImageUp size={12} />
                             </span>
                             <input id="wallet-file-upload" type="file" accept="image/*" onChange={handleFileUpload} className="sr-only" disabled={isProcessingUpload} aria-label="Enviar ícone" />

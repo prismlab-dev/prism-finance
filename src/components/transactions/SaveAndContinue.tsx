@@ -60,7 +60,7 @@ export function FormActionButtons({ submitting, justSaved, submitLabel, onCancel
                     type="button"
                     onClick={() => { setClicked("submit"); onSubmit(); }}
                     disabled={submitting}
-                    className={`${BASE} min-w-36 bg-white/[0.92] text-[#131313] hover:bg-white disabled:opacity-60`}
+                    className={`${BASE} min-w-36 bg-white/[0.92] text-surface hover:bg-white disabled:opacity-60`}
                 >
                     {loading("submit") ? <Saving /> : submitLabel}
                 </button>

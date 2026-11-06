@@ -93,7 +93,7 @@ export function BudgetFormModal({ initialBudget, ruleOptions, labelOf, monthLabe
             aside={
                 include.length > 0 ? (
                     // ponytail: só cabe fora do modal a partir de 2xl (760 + 2×356px); abaixo disso a prévia fica dentro.
-                    <div className="hidden rounded-xl border border-white/[0.09] bg-[#131313] shadow-[0_26px_70px_-38px_rgba(0,0,0,0.95)] 2xl:block">
+                    <div className="hidden rounded-xl border border-white/[0.09] bg-surface shadow-[0_26px_70px_-38px_rgba(0,0,0,0.95)] 2xl:block">
                         <BudgetRulesPreviewPanel preview={preview} monthLabel={monthLabel} budgetNameById={budgetNameById} />
                     </div>
                 ) : null

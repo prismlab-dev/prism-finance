@@ -41,7 +41,7 @@ export function PlanningReportsOverviewSection({ summary, categoryReports, headl
     const incomeMarker = summary.spending > summary.income && summary.income > 0 ? (summary.income / scale) * 100 : null;
     const segments = [
         ...top.map((category) => ({ key: category.key, label: category.label, amount: category.totalAmount, color: category.color })),
-        ...(restAmount > 0 ? [{ key: "rest", label: "Outras", amount: restAmount, color: "rgba(255,255,255,0.28)" }] : []),
+        ...(restAmount > 0 ? [{ key: "rest", label: "Outras", amount: restAmount, color: "color-mix(in oklab, var(--color-white) 28%, transparent)" }] : []),
     ];
 
     return (

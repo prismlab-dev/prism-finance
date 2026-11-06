@@ -19,7 +19,7 @@ export function WealthCard() {
     if (wallets.length === 0) return null;
 
     return (
-        <section className="rounded-2xl border border-white/[0.08] bg-[#111111] p-4 sm:p-5">
+        <section className="rounded-2xl border border-white/[0.08] bg-surface p-4 sm:p-5">
             <div className="flex items-start justify-between gap-3">
                 <div>
                     <p className="text-lg font-medium text-white">Patrimônio</p>

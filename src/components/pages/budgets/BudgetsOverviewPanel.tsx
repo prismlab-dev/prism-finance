@@ -33,7 +33,7 @@ export function BudgetsOverviewPanel({ overview, nameOf, colorOf, onOpen }: Budg
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
-            className="relative w-full overflow-hidden rounded-2xl border border-white/[0.08] bg-[#111111] p-5 lg:sticky lg:top-4 lg:w-[24%] lg:min-w-72 lg:shrink-0"
+            className="relative w-full overflow-hidden rounded-2xl border border-white/[0.08] bg-surface p-5 lg:sticky lg:top-4 lg:w-[24%] lg:min-w-72 lg:shrink-0"
         >
             <span aria-hidden className={`pointer-events-none absolute -right-16 -top-20 h-44 w-44 rounded-full blur-3xl ${isOver ? "bg-rose-500/15" : "bg-emerald-400/10"}`} />
 

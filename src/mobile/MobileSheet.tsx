@@ -41,7 +41,7 @@ export function MobileSheet({ open, onClose, title, children }: MobileSheetProps
             }}
             onClose={() => open && onClose()}
             onClick={(event) => event.target === event.currentTarget && onClose()}
-            className={`m-0 mt-auto w-full max-w-none rounded-t-3xl border-t border-white/[0.08] bg-[#141416] p-0 text-white backdrop:bg-black/60 motion-reduce:animate-none motion-reduce:backdrop:animate-none ${
+            className={`m-0 mt-auto w-full max-w-none rounded-t-3xl border-t border-white/[0.08] bg-surface p-0 text-white backdrop:bg-black/60 motion-reduce:animate-none motion-reduce:backdrop:animate-none ${
                 closing
                     ? "animate-[sheet-down_180ms_ease-in_forwards] backdrop:animate-[fade-out_180ms_ease-in_forwards]"
                     : "animate-[sheet-up_280ms_cubic-bezier(0.22,1,0.36,1)] backdrop:animate-[fade-in_200ms_ease-out]"

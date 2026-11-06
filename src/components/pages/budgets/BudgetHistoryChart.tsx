@@ -73,7 +73,7 @@ export function BudgetHistoryChart({ history, cap, color }: BudgetHistoryChartPr
                     </div>
                     <div className={`pointer-events-none absolute inset-x-0 top-0 ${CHART_HEIGHT_CLASS}`} aria-hidden>
                         <span className="absolute inset-x-0 z-10 border-t border-dashed border-white/45" style={{ bottom: `${(cap / peak) * 100}%` }}>
-                            <span className="absolute -top-5 right-0 rounded bg-[#111111] px-1 text-[10px] text-white/55">teto {compactFormatter.format(cap)}</span>
+                            <span className="absolute -top-5 right-0 rounded bg-surface px-1 text-[10px] text-white/55">teto {compactFormatter.format(cap)}</span>
                         </span>
                     </div>
                     <ol className="relative flex gap-1.5">
@@ -109,7 +109,7 @@ export function BudgetHistoryChart({ history, cap, color }: BudgetHistoryChartPr
                                                 <span className="block flex-1" style={{ background: `linear-gradient(to top, ${fill}4d, ${fill})` }} />
                                                 {isOver ? (
                                                     <span
-                                                        className="block shrink-0 border-b-2 border-[#111111]"
+                                                        className="block shrink-0 border-b-2 border-surface"
                                                         style={{ height: `${((point.amount - cap) / point.amount) * 100}%`, background: `linear-gradient(to top, ${OVER_COLOR}99, ${OVER_COLOR})` }}
                                                         title={`${formatReportCurrency(point.amount - cap)} acima do teto`}
                                                     />
@@ -117,7 +117,7 @@ export function BudgetHistoryChart({ history, cap, color }: BudgetHistoryChartPr
                                             </motion.span>
                                             {isActive ? (
                                                 <span
-                                                    className="absolute z-20 -translate-y-1.5 whitespace-nowrap rounded-md bg-white px-1.5 py-0.5 text-[10px] font-medium text-black"
+                                                    className="absolute z-20 -translate-y-1.5 whitespace-nowrap rounded-md bg-white px-1.5 py-0.5 text-[10px] font-medium text-canvas"
                                                     style={{ bottom: `${Math.max(1.5, (point.amount / peak) * 100)}%`, ...REPORT_MONO_STYLE }}
                                                 >
                                                     {compactFormatter.format(point.amount)}

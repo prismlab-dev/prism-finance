@@ -159,7 +159,7 @@ export function FamilySettingsTab() {
 
     return (
         <div className="space-y-6">
-            <header className="rounded-3xl border border-white/[0.08] bg-[#101010] p-5 sm:p-7">
+            <header className="rounded-3xl border border-white/[0.08] bg-surface p-5 sm:p-7">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                     <div className="min-w-0">
                         <h2 className="truncate text-2xl font-semibold tracking-tight text-white sm:text-[28px]">{family ? family.name : "Família"}</h2>
@@ -175,7 +175,7 @@ export function FamilySettingsTab() {
                                 <BeneficiaryAvatar
                                     key={member.uid}
                                     beneficiary={{ name: member.displayName, avatarImage: memberPhotoUrls[member.uid] ?? null, avatarColor: "#4B5563" }}
-                                    className="h-10 w-10 rounded-full border-2 border-[#101010]"
+                                    className="h-10 w-10 rounded-full border-2 border-surface"
                                     textClassName="text-sm font-semibold text-white"
                                 />
                             ))}
@@ -231,7 +231,7 @@ export function FamilySettingsTab() {
                 ) : (
                     <>
                         <SettingsSection title="Membros" description="Quem faz parte da família. Só o admin pode remover membros.">
-                            <ul className="divide-y divide-white/[0.06] rounded-2xl border border-white/[0.08] bg-[#101010]">
+                            <ul className="divide-y divide-white/[0.06] rounded-2xl border border-white/[0.08] bg-surface">
                                 {activeMembers.map((member) => {
                                     const isCurrentUser = member.uid === user?.uid;
                                     const canRemove = isAdmin && !isCurrentUser && member.role !== "admin";
@@ -289,7 +289,7 @@ export function FamilySettingsTab() {
                                     {pendingInvites.length === 0 ? (
                                         <p className="text-sm text-white/45">Nenhum convite pendente.</p>
                                     ) : (
-                                        <ul className="divide-y divide-white/[0.06] rounded-2xl border border-white/[0.08] bg-[#101010]">
+                                        <ul className="divide-y divide-white/[0.06] rounded-2xl border border-white/[0.08] bg-surface">
                                             {pendingInvites.map((invite) => (
                                                 <li key={invite.inviteId} className="flex flex-wrap items-center gap-3 px-4 py-3.5">
                                                     <div className="min-w-0 flex-1">

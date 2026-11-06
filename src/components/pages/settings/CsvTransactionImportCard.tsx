@@ -177,7 +177,7 @@ export function CsvTransactionImportCard() {
                 <SettingsFeedback feedback={feedback} />
 
                 {preview ? (
-                    <div className="max-w-2xl space-y-4 rounded-2xl border border-white/[0.08] bg-[#101010] p-4">
+                    <div className="max-w-2xl space-y-4 rounded-2xl border border-white/[0.08] bg-surface p-4">
                         <p className="text-sm text-white/70">Confira o resumo, escolha a carteira e confirme. As transações entram como pagas.</p>
                         <ImportPreviewStats preview={preview} />
 

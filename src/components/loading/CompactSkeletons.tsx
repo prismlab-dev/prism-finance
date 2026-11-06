@@ -26,7 +26,7 @@ export function ChartSkeleton() {
 
 export function ModalSkeleton() {
     return (
-        <div className="w-full max-w-lg rounded-2xl border border-white/[0.08] bg-[#111111] p-5 text-white">
+        <div className="w-full max-w-lg rounded-2xl border border-white/[0.08] bg-surface p-5 text-white">
             <div className="mb-5 flex items-center gap-3">
                 <SkeletonBlock className="h-10 w-10 rounded-xl" />
                 <div className="space-y-2">

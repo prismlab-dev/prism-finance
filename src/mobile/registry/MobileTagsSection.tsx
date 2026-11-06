@@ -3,6 +3,7 @@ import { AddTag } from "../../components/modal/AddTag";
 import { useFinanceTags } from "../../context/FinanceContext";
 import { useModal } from "../../context/ModalContext";
 import { MobileListToolbar } from "../MobileListToolbar";
+import { readableTint } from "../../lib/colorContrast";
 
 export function MobileTagsSection() {
     const tags = useFinanceTags();
@@ -35,7 +36,7 @@ export function MobileTagsSection() {
                                 type="button"
                                 onClick={() => openModal(<AddTag mode="edit" tagId={tag.id} />)}
                                 className={`inline-flex max-w-full items-center gap-0.5 rounded-full py-2 pl-3 pr-3.5 text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60 ${tag.isActive ? "" : "opacity-50"}`}
-                                style={{ color, backgroundColor: `${color}1f`, boxShadow: `inset 0 0 0 1px ${color}40` }}
+                                style={{ color: readableTint(color), backgroundColor: `${color}1f`, boxShadow: `inset 0 0 0 1px ${color}40` }}
                             >
                                 <span aria-hidden="true" className="opacity-80">
                                     #

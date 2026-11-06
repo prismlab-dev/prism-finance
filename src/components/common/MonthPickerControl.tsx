@@ -84,7 +84,7 @@ export function MonthPickerControl({ selectedMonth, onMonthChange, formatMonthLa
                 isOpen={isOpen}
                 overlayWidth={240}
                 align="center"
-                className="rounded-2xl border border-white/[0.1] bg-[#0e0e0e]/95 p-2.5 shadow-[0_24px_60px_-30px_rgba(0,0,0,0.95)] backdrop-blur-xl"
+                className="rounded-2xl border border-white/[0.1] bg-canvas/95 p-2.5 shadow-[0_24px_60px_-30px_rgba(0,0,0,0.95)] backdrop-blur-xl"
             >
                 <MonthGridPanel
                     selectedMonth={selectedMonth}

@@ -68,7 +68,7 @@ export function DayOfMonthField({ label, value, onChange, icon, disabled = false
                 <ChevronDown size={15} className={`shrink-0 text-white/65 transition-transform ${isOpen ? "rotate-180" : ""}`} />
             </button>
 
-            <AnchoredOverlay anchorRef={triggerRef} overlayRef={overlayRef} isOpen={isOpen && !disabled} overlayWidth={260} className="rounded-xl border border-white/[0.12] bg-[#141414] p-2 shadow-[0_20px_50px_-26px_rgba(0,0,0,0.95)]">
+            <AnchoredOverlay anchorRef={triggerRef} overlayRef={overlayRef} isOpen={isOpen && !disabled} overlayWidth={260} className="rounded-xl border border-white/[0.12] bg-surface p-2 shadow-[0_20px_50px_-26px_rgba(0,0,0,0.95)]">
                 <p className="px-1 pb-2 text-xs text-white/55">{label}</p>
                 <div className="grid grid-cols-7 gap-1" role="listbox" aria-label={label}>
                     {DAYS.map((day) => {

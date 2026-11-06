@@ -7,6 +7,7 @@ import { getCategoryIconComponent } from "../../../lib/categoryIcons";
 import { AddCategory } from "../../modal/AddCategory";
 import { RegistryListItemEntrance } from "./RegistryListItemEntrance";
 import { RegistrySectionHeader } from "./RegistrySectionHeader";
+import { readableTint } from "../../../lib/colorContrast";
 
 interface CategoryColumnProps {
     title: string;
@@ -148,7 +149,7 @@ function CategoryItem({ category, children, onEdit, onReorder }: CategoryItemPro
                     onClick={() => onEdit(category.id)}
                     className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-lg px-1.5 py-1.5 text-left outline-none transition-colors hover:bg-white/[0.03] focus-visible:ring-2 focus-visible:ring-white/35"
                 >
-                    <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ color, backgroundColor: `${color}22` }}>
+                    <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ color: readableTint(color), backgroundColor: `${color}22` }}>
                         <Icon size={17} />
                     </span>
                     <span className="min-w-0 flex-1 truncate font-medium text-white">{category.name}</span>
@@ -171,7 +172,7 @@ function CategoryItem({ category, children, onEdit, onReorder }: CategoryItemPro
                                         onClick={() => onEdit(child.id)}
                                         className={`flex w-full min-w-0 cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-sm text-white/75 outline-none transition-colors hover:bg-white/[0.03] hover:text-white focus-visible:ring-2 focus-visible:ring-white/35 ${child.isActive ? "" : "opacity-60"}`}
                                     >
-                                        <ChildIcon size={14} className="shrink-0" style={{ color: child.color ?? color }} />
+                                        <ChildIcon size={14} className="shrink-0" style={{ color: readableTint(child.color ?? color) }} />
                                         <span className="min-w-0 flex-1 truncate">{child.name}</span>
                                         {!child.isActive && <span className="shrink-0 rounded-full bg-white/[0.06] px-2 py-0.5 text-[11px] text-white/50">Inativo</span>}
                                     </button>

@@ -84,7 +84,7 @@ export function SignInMethodsSection({ email, identities, loading, redirectError
     return (
         <SettingsSection title="Formas de entrar" description="Conecte o Google para entrar com um clique. Seus dados continuam na mesma conta.">
             <div className="space-y-3">
-                <ul className="divide-y divide-white/[0.06] rounded-2xl border border-white/[0.08] bg-[#101010]" aria-busy={loading}>
+                <ul className="divide-y divide-white/[0.06] rounded-2xl border border-white/[0.08] bg-surface" aria-busy={loading}>
                     <MethodRow
                         icon={<Mail size={17} />}
                         name="E-mail e senha"

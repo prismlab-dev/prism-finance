@@ -6,9 +6,11 @@ import { FinanceProvider, useFinanceSession } from "./context/FinanceContext";
 import { ModalProvider } from "./context/ModalContext";
 import { AppPage, PageProvider, usePage } from "./context/PageContext";
 import "./lib/chart";
+import { initAppearance } from "./lib/appearance";
 import { initDemoMode } from "./lib/demoMode";
 import { useIsMobile } from "./mobile/useIsMobile";
 
+initAppearance();
 initDemoMode();
 
 const LoginPage = lazy(() => import("./components/pages/Login").then((module) => ({ default: module.LoginPage })));

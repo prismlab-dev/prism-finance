@@ -18,7 +18,7 @@ export function PlanningReportsCategoryModal({ title, totalAmount, categoryRepor
 
     return (
         <ModalStructure height="auto" width="560px">
-            <div className="flex max-h-[85vh] flex-col rounded-2xl border border-white/[0.09] bg-[#131313] p-5 text-left text-white shadow-[0_26px_70px_-38px_rgba(0,0,0,0.95)]">
+            <div className="flex max-h-[85vh] flex-col rounded-2xl border border-white/[0.09] bg-surface p-5 text-left text-white shadow-[0_26px_70px_-38px_rgba(0,0,0,0.95)]">
                 <header className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                         <h2 className="truncate text-base font-medium">{title}</h2>

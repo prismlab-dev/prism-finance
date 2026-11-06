@@ -39,7 +39,7 @@ function FullPageSkeletonScreen({ page }: PageSkeletonScreenProps) {
     const variant = resolveSkeletonVariant(page);
 
     return (
-        <div className="min-h-screen bg-[#0e0e10] text-white">
+        <div className="min-h-screen bg-canvas text-white">
             <div className="flex min-h-screen">
                 <SkeletonSidebar />
                 <div className="flex min-w-0 flex-1 flex-col">

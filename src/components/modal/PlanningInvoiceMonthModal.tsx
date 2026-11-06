@@ -30,7 +30,7 @@ export function PlanningInvoiceMonthModal({ label, amount, dueMonthKey, chargeMo
 
     return (
         <ModalStructure height="auto" width="480px">
-            <div className="rounded-xl border border-white/[0.09] bg-[#131313] p-4 text-white shadow-[0_26px_70px_-38px_rgba(0,0,0,0.95)]">
+            <div className="rounded-xl border border-white/[0.09] bg-surface p-4 text-white shadow-[0_26px_70px_-38px_rgba(0,0,0,0.95)]">
                 <header className="flex items-center justify-between gap-3">
                     <h2 className="ml-1 text-sm uppercase opacity-50">Mover cobrança da fatura</h2>
                     <button

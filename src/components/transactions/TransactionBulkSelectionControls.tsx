@@ -90,7 +90,7 @@ export function FloatingTransactionBulkFooter({ selectedCount, selectedAmount, o
                 transition={{ duration: 0.22, ease: "easeOut" }}
                 role="toolbar"
                 aria-label="Ações das transações selecionadas"
-                className="pointer-events-auto flex max-w-full flex-wrap items-center gap-2 rounded-2xl border border-white/[0.1] bg-neutral-900/85 p-1.5 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_24px_60px_-20px_rgba(0,0,0,0.95)] backdrop-blur-xl"
+                className="pointer-events-auto flex max-w-full flex-wrap items-center gap-2 rounded-2xl border border-white/[0.1] bg-neutral-900/85 p-1.5 text-white shadow-[inset_0_1px_0_color-mix(in_oklab,var(--color-white)_6%,transparent),0_24px_60px_-20px_rgba(0,0,0,0.95)] backdrop-blur-xl"
             >
                 <div className="flex items-center gap-2.5 py-1 pl-1.5 pr-3">
                     <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-lg bg-sky-400 px-1.5 text-sm font-semibold tabular-nums text-neutral-950">{selectedCount}</span>

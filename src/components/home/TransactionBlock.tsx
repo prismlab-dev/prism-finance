@@ -14,7 +14,7 @@ export function TransactionBlock({ transaction }: { transaction: Transaction }) 
     const typeMeta = getTransactionTypeMeta(transaction.type);
 
     return (
-        <div className="bg-[#1e1e1e] rounded-2xl p-3 flex items-center justify-between">
+        <div className="bg-raised rounded-2xl p-3 flex items-center justify-between">
             <WalletAvatar wallet={wallet} className="h-12 w-12 rounded-xl border border-white/[0.08]" iconSize={24} iconStrokeWidth={1.5} />
             <div className="w-2/6 text-left">
                 <h2 className="text-xl font-medium">{wallet.name}</h2>

@@ -4,12 +4,12 @@ import type { Wallet } from "../../../context/FinanceContext";
 import { AnchoredOverlay } from "../../transactions/AnchoredOverlay";
 import { MonthPickerControl } from "../../common/MonthPickerControl";
 import { WalletAvatar } from "../../common/WalletAvatar";
+import { DateField } from "../../transactions/DateField";
 import { MultiSelectCombobox } from "../../transactions/MultiSelectCombobox";
 import type { ComboboxOptionBase } from "../../transactions/SingleSelectCombobox";
 import {
     currencyFormatter,
     formatMonthLabel,
-    INPUT_CLASS,
     shiftMonth,
     type TransactionsDateMode,
     type TransactionsSummary,
@@ -84,7 +84,11 @@ function PeriodPickerControl({ dateFrom, dateTo, onDateFromChange, onDateToChang
         }
 
         const handleOutsideClick = (event: MouseEvent) => {
-            if (event.target instanceof Node && !triggerRef.current?.contains(event.target) && !overlayRef.current?.contains(event.target)) {
+            // Nested pickers (DateField) render in their own portal; clicks there must keep this popover open.
+            if (event.target instanceof Element && event.target.closest("[data-modal-overlay-root]")) {
+                return;
+            }
+            if (event.target instanceof Node && !triggerRef.current?.contains(event.target)) {
                 setIsOpen(false);
             }
         };
@@ -123,19 +127,13 @@ function PeriodPickerControl({ dateFrom, dateTo, onDateFromChange, onDateToChang
                 anchorRef={triggerRef}
                 overlayRef={overlayRef}
                 isOpen={isOpen}
-                overlayWidth={220}
+                overlayWidth={260}
                 align="center"
-                className="rounded-2xl border border-white/[0.12] bg-[#0e0e0e]/95 p-3 shadow-[0_30px_70px_-36px_rgba(0,0,0,0.95)] backdrop-blur-xl"
+                className="rounded-2xl border border-white/[0.12] bg-canvas/95 p-3 shadow-[0_30px_70px_-36px_rgba(0,0,0,0.95)] backdrop-blur-xl"
             >
                 <div className="flex flex-col gap-2.5">
-                    <label className="flex flex-col gap-1">
-                        <span className="text-[11px] uppercase tracking-[0.1em] text-white/45">De</span>
-                        <input type="date" value={dateFrom} onChange={(event) => onDateFromChange(event.target.value)} className={INPUT_CLASS} aria-label="Data inicial" />
-                    </label>
-                    <label className="flex flex-col gap-1">
-                        <span className="text-[11px] uppercase tracking-[0.1em] text-white/45">Ate</span>
-                        <input type="date" value={dateTo} onChange={(event) => onDateToChange(event.target.value)} className={INPUT_CLASS} aria-label="Data final" />
-                    </label>
+                    <DateField label="De" value={dateFrom} onChange={onDateFromChange} shortcuts={[]} required={false} />
+                    <DateField label="Até" value={dateTo} onChange={onDateToChange} shortcuts={[]} required={false} />
                 </div>
             </AnchoredOverlay>
         </div>

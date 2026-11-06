@@ -116,10 +116,10 @@ export function CommandPalette() {
                 aria-label="Busca global"
                 onMouseDown={(event) => event.stopPropagation()}
                 style={{
-                    borderColor: "rgba(255,255,255,0.09)",
-                    backgroundImage: "radial-gradient(90% 55% at 0% 0%, rgba(255,255,255,0.05), transparent 65%)",
+                    borderColor: "color-mix(in oklab, var(--color-white) 9%, transparent)",
+                    backgroundImage: "radial-gradient(90% 55% at 0% 0%, color-mix(in oklab, var(--color-white) 5%, transparent), transparent 65%)",
                 }}
-                className="command-palette-in relative flex max-h-[min(580px,78vh)] w-full max-w-[640px] flex-col overflow-hidden rounded-[18px] border bg-[#161618] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_40px_100px_-30px_rgba(0,0,0,0.95)] transition-[border-color,background-image] duration-300 motion-reduce:transition-none"
+                className="command-palette-in relative flex max-h-[min(580px,78vh)] w-full max-w-[640px] flex-col overflow-hidden rounded-[18px] border bg-raised shadow-[inset_0_1px_0_color-mix(in_oklab,var(--color-white)_6%,transparent),0_40px_100px_-30px_rgba(0,0,0,0.95)] transition-[border-color,background-image] duration-300 motion-reduce:transition-none"
             >
 
                 <label className="flex h-16 shrink-0 items-center gap-3 px-5">
@@ -143,7 +143,7 @@ export function CommandPalette() {
                 </label>
 
                 <div ref={listRef} id="command-palette-results" role="listbox"
-                    className="command-palette-scroll mx-2 mb-2 min-h-0 flex-1 overflow-y-auto rounded-2xl border border-white/[0.06] bg-[#111111] p-1.5">
+                    className="command-palette-scroll mx-2 mb-2 min-h-0 flex-1 overflow-y-auto rounded-2xl border border-white/[0.06] bg-surface p-1.5">
                     {results.length === 0 ? (
                         <div className="px-4 py-10 text-center">
                             <p className="text-sm text-white/70">Nada encontrado para “{query.trim()}”.</p>
@@ -245,7 +245,7 @@ function HighlightedLabel({ label, query }: { label: string; query: string }) {
 
 function Keycap({ children }: { children: string }) {
     return (
-        <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded-md border border-white/[0.1] border-b-white/[0.04] bg-[#1d1d20] px-1.5 font-sans text-[11px] font-medium text-neutral-300 shadow-[0_2px_0_#0b0b0c,inset_0_1px_0_rgba(255,255,255,0.06)]">
+        <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded-md border border-white/[0.1] border-b-white/[0.04] bg-raised px-1.5 font-sans text-[11px] font-medium text-neutral-300 shadow-[0_2px_0_#0b0b0c,inset_0_1px_0_color-mix(in_oklab,var(--color-white)_6%,transparent)]">
             {children}
         </kbd>
     );

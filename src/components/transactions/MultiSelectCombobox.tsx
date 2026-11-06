@@ -163,7 +163,7 @@ export function MultiSelectCombobox<T extends ComboboxOptionBase>({
                 <ChevronsUpDown size={15} className="ml-2 shrink-0 text-white/55" />
             </button>
 
-            <AnchoredOverlay anchorRef={triggerRef} overlayRef={overlayRef} isOpen={isOpen && !disabled} preferredMaxHeight={330} className="rounded-xl border border-white/[0.1] bg-[#101010] p-2 shadow-[0_24px_60px_-30px_rgba(0,0,0,0.95)]">
+            <AnchoredOverlay anchorRef={triggerRef} overlayRef={overlayRef} isOpen={isOpen && !disabled} preferredMaxHeight={330} className="rounded-xl border border-white/[0.1] bg-surface p-2 shadow-[0_24px_60px_-30px_rgba(0,0,0,0.95)]">
                     <div className="relative mb-2">
                         <Search size={14} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-white/40" />
                         <input

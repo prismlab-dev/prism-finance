@@ -118,7 +118,7 @@ function SeriesBody({ view, resolveAccount, currentTransactionId }: { view: Tran
             <div className="mt-4 overflow-hidden rounded-xl border border-white/[0.08]">
                 <div className="max-h-[46vh] overflow-auto">
                     <table className="min-w-full divide-y divide-white/[0.06] text-sm">
-                        <thead className="sticky top-0 bg-[#181818] text-[10px] uppercase tracking-[0.12em] text-white/45">
+                        <thead className="sticky top-0 bg-raised text-[10px] uppercase tracking-[0.12em] text-white/45">
                             <tr>
                                 <th className="px-3 py-2 text-left font-medium">#</th>
                                 <th className="px-3 py-2 text-left font-medium">Data</th>

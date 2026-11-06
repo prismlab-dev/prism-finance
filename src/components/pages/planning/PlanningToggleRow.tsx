@@ -7,6 +7,7 @@ import {
     getPlanningRowAmountClassName,
     getPlanningRowHoverClassName,
     getPlanningRowIconClassName,
+    getPlanningRowMarkerClassName,
     getPlanningRowStateClassName,
     PLANNING_ROW_BASE_CLASS_NAME,
 } from "./planningRowStyles";
@@ -37,15 +38,17 @@ export function PlanningToggleRow({ active, amount, label, iconTone, iconName, o
             onContextMenu={onContextMenu}
             className={rowClassName}
             title={active ? "Ignorar" : "Ativar"}
+            aria-pressed={active}
         >
-            <div className="flex items-center gap-2 truncate">
-                <span className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${iconClassName}`}>
-                    <Icon size={13} />
+            <div className="flex min-w-0 items-center gap-2.5">
+                <span className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${iconClassName}`}>
+                    <Icon size={14} />
                 </span>
-                <span className={`min-w-0 flex-1 truncate text-xs ${active ? "font-medium" : ""}`}>{label}</span>
+                <span className={`min-w-0 flex-1 truncate text-[13px] ${active ? "font-medium" : ""}`}>{label}</span>
             </div>
             <div className="flex items-center gap-1.5">
-                <span className={`shrink-0 text-xs font-medium ${amountClassName}`}>{formatCurrency(amount)}</span>
+                <span className={`shrink-0 text-[13px] font-medium tabular-nums ${amountClassName}`}>{formatCurrency(amount)}</span>
+                <span className={`h-2 w-2 shrink-0 rounded-full border ${getPlanningRowMarkerClassName(iconTone, active)}`} aria-hidden />
             </div>
         </button>
     );

@@ -35,7 +35,7 @@ export function MobileApp({ routes }: { routes: ReactNode }) {
     const reduceMotion = useReducedMotion();
 
     return (
-        <div className="min-h-dvh bg-[#0e0e10] pb-[calc(5.5rem+env(safe-area-inset-bottom))] text-white">
+        <div className="min-h-dvh bg-canvas pb-[calc(5.5rem+env(safe-area-inset-bottom))] text-white">
             <DisplayModal />
             <MobileHeader />
             <main className="min-w-0 px-3 pt-3">
@@ -117,7 +117,7 @@ function MobileTabBar() {
     return (
         <>
             <nav aria-label="Navegação principal" className="fixed inset-x-3 bottom-[calc(0.5rem+env(safe-area-inset-bottom))] z-40">
-                <div className="flex items-center rounded-[1.4rem] border border-white/[0.08] bg-[#17171a]/85 px-1 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.9)] backdrop-blur-xl">
+                <div className="flex items-center rounded-[1.4rem] border border-white/[0.08] bg-raised/85 px-1 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.9)] backdrop-blur-xl">
                     <TabButton to="/home" label="Início" icon={<Home size={20} />} active={pathname === "/home"} />
                     <TabButton to="/transactions" label="Transações" icon={<ArrowLeftRight size={20} />} active={pathname.startsWith("/transactions")} />
                     <div className="flex flex-1 justify-center py-1.5">
@@ -129,7 +129,7 @@ function MobileTabBar() {
                             whileTap={reduceMotion ? undefined : { scale: 0.9 }}
                             animate={{ rotate: sheet === "create" ? 45 : 0 }}
                             transition={reduceMotion ? { duration: 0 } : PILL_TRANSITION}
-                            className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-black shadow-[0_6px_20px_-6px_rgba(255,255,255,0.45)] outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+                            className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-canvas shadow-[0_6px_20px_-6px_color-mix(in_oklab,var(--color-white)_45%,transparent)] outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
                         >
                             <Plus size={24} strokeWidth={2.4} />
                         </motion.button>

@@ -4,16 +4,20 @@ import { useFinanceSession } from "../../context/FinanceContext";
 import { usePage } from "../../context/PageContext";
 import { resolveUserDisplayName } from "../../lib/userProfile";
 import { signOutSupabase } from "../../supabase/auth/authService";
+import type { LayoutId } from "../../lib/appearance";
+import { AppBrand } from "../layout/AppBrand";
 import { HeaderMetricsRow } from "./header/HeaderMetricsRow";
+import { HeaderNotifications } from "./header/HeaderNotifications";
 import { HeaderProfileMenu } from "./header/HeaderProfileMenu";
 import { HeaderSearchTrigger } from "./header/HeaderSearchTrigger";
 import { useHeaderAmounts } from "./header/useHeaderAmounts";
 
 interface HeaderProps {
     onOpenSidebar?: () => void;
+    layout?: LayoutId;
 }
 
-export function Header({ onOpenSidebar }: HeaderProps) {
+export function Header({ onOpenSidebar, layout = "classic" }: HeaderProps) {
     const { user, profile } = useFinanceSession();
     const { goToPage } = usePage();
 
@@ -54,16 +58,29 @@ export function Header({ onOpenSidebar }: HeaderProps) {
         }
     }
 
+    const isLumen = layout === "lumen";
+
     return (
-        <header ref={headerRef} className="pointer-events-none sticky top-2.5 z-20 mx-2 mb-2.5">
+        <header ref={headerRef} className={isLumen ? "sticky top-0 z-20" : "pointer-events-none sticky top-2.5 z-20 mx-2 mb-2.5"}>
             <div
-                className="pointer-events-auto rounded-[18px] border border-white/[0.08] px-3 py-2 bg-zinc-950/70"
+                className={
+                    isLumen
+                        ? "flex items-center bg-zinc-950 py-2 pr-3"
+                        : "pointer-events-auto rounded-[18px] border border-white/[0.08] px-3 py-2 bg-zinc-950/70"
+                }
                 style={{
                     backdropFilter: "blur(20px) saturate(180%)",
                     WebkitBackdropFilter: "blur(20px) saturate(180%)",
                 }}
             >
-                <div className="flex items-center justify-between gap-2 sm:gap-3">
+                {isLumen ? (
+                    // Marca alinhada à sidebar; no desktop os indicadores vêm logo em seguida.
+                    <div className="hidden shrink-0 items-center font-medium text-white laptop:flex laptop:w-[72px] laptop:justify-center desktop:w-auto desktop:justify-start desktop:pl-[18px] desktop:pr-6">
+                        <AppBrand compactAtLaptop showVersion={false} />
+                    </div>
+                ) : null}
+                {isLumen ? <div aria-hidden className="hidden h-5 w-px shrink-0 bg-white/[0.06] laptop:block" /> : null}
+                <div className={`flex items-center justify-between gap-2 sm:gap-3 ${isLumen ? "min-w-0 flex-1 pl-3 desktop:pl-5" : ""}`}>
                     <div className="flex min-w-0 items-center gap-2 sm:gap-3">
                         <button
                             type="button"
@@ -79,6 +96,7 @@ export function Header({ onOpenSidebar }: HeaderProps) {
                     </div>
                     <div className="flex shrink-0 items-center gap-2 sm:gap-3">
                         <HeaderSearchTrigger />
+                        <HeaderNotifications />
                         <HeaderProfileMenu onOpenSettings={handleOpenSettings} onSignOut={handleSwitchAccount} userName={userName} userPhotoUrl={userPhotoUrl} />
                     </div>
                 </div>

@@ -63,7 +63,7 @@ export function MobileHeader() {
     return (
         <header
             className={`sticky top-0 z-30 px-4 pt-[calc(0.75rem+env(safe-area-inset-top))] transition-[background-color,border-color] duration-300 motion-reduce:transition-none ${
-                collapsed ? "border-b border-white/[0.06] bg-[#0e0e10]/90 pb-3 backdrop-blur-xl" : "border-b border-transparent pb-4"
+                collapsed ? "border-b border-white/[0.06] bg-canvas/90 pb-3 backdrop-blur-xl" : "border-b border-transparent pb-4"
             }`}
         >
             <div className="flex items-center justify-between gap-3">

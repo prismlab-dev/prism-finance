@@ -12,7 +12,7 @@ function CycleDot({ isNext, color }: { isNext: boolean; color: string }) {
         <span
             aria-hidden="true"
             className="h-2 w-2 shrink-0 rounded-full border"
-            style={isNext ? { backgroundColor: color, borderColor: color, boxShadow: `0 0 0 3px ${color}33` } : { borderColor: "rgba(255,255,255,0.3)" }}
+            style={isNext ? { backgroundColor: color, borderColor: color, boxShadow: `0 0 0 3px ${color}33` } : { borderColor: "color-mix(in oklab, var(--color-white) 30%, transparent)" }}
         />
     );
 }

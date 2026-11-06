@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { WalletAvatar } from "../../components/common/WalletAvatar";
 import type { Wallet } from "../../context/FinanceContext";
 import { LABEL_CLASS, Money } from "../MobileHeader";
+import { contentColorOn } from "../../lib/colorContrast";
 
 type Asset = Pick<Wallet, "id" | "name" | "icon" | "color" | "isActive">;
 
@@ -52,8 +53,8 @@ export function MobileAssetList({ items, emptyMessage, onSelect }: { items: Mobi
                         <span className="relative shrink-0">
                             <WalletAvatar wallet={asset} className="h-11 w-11 rounded-xl border border-white/[0.12]" iconSize={20} iconStrokeWidth={1.7} />
                             {isFavorite && (
-                                <span className="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full ring-2 ring-[#0e0e10]" style={{ backgroundColor: asset.color }}>
-                                    <Star size={9} className="fill-white text-white" />
+                                <span className="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full ring-2 ring-canvas" style={{ backgroundColor: asset.color }}>
+                                    <Star size={9} className="fill-current" style={{ color: contentColorOn(asset.color) }} />
                                 </span>
                             )}
                         </span>

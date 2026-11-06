@@ -77,7 +77,7 @@ export function BalancePage() {
         <AuthShell mainClassName="text-white">
             <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-6 pb-10 lg:flex-row lg:items-start">
                 <section className="w-full lg:w-[80%]">
-                    <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#111111] p-4 shadow-[0_24px_60px_-32px_rgba(0,0,0,0.9)]">
+                    <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-surface p-4 shadow-[0_24px_60px_-32px_rgba(0,0,0,0.9)]">
                         <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-sky-500/10 blur-3xl" />
                         <div className="pointer-events-none absolute -bottom-20 -left-20 h-40 w-40 rounded-full bg-emerald-500/10 blur-3xl" />
 
@@ -184,7 +184,7 @@ export function BalancePage() {
                         </div>
                     </div>
 
-                    <div className="relative mt-3 overflow-hidden rounded-2xl border border-white/[0.08] bg-[#111111] p-4 shadow-[0_24px_60px_-32px_rgba(0,0,0,0.9)]">
+                    <div className="relative mt-3 overflow-hidden rounded-2xl border border-white/[0.08] bg-surface p-4 shadow-[0_24px_60px_-32px_rgba(0,0,0,0.9)]">
                         <div className="pointer-events-none absolute -right-12 -top-10 h-36 w-36 rounded-full bg-amber-500/12 blur-3xl" />
                         <div className="pointer-events-none absolute -bottom-20 -left-20 h-40 w-40 rounded-full bg-orange-500/10 blur-3xl" />
 
@@ -292,7 +292,7 @@ export function BalancePage() {
                             initial={{ opacity: 0, y: 12 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.2, delay: 0.05 + index * 0.04, ease: "easeOut" }}
-                            className="rounded-2xl border border-white/[0.08] bg-[#111111] p-4 text-left shadow-[0_24px_60px_-32px_rgba(0,0,0,0.9)]"
+                            className="rounded-2xl border border-white/[0.08] bg-surface p-4 text-left shadow-[0_24px_60px_-32px_rgba(0,0,0,0.9)]"
                         >
                             <p className="text-xs uppercase tracking-[0.2em] text-white/35">{metric.label}</p>
                             <p className="mt-1 text-lg font-medium text-white">{metric.value}</p>

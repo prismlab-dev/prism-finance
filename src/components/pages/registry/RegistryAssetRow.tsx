@@ -4,6 +4,7 @@ import { Star } from "lucide-react";
 import type { Wallet } from "../../../context/FinanceContext";
 import { WalletAvatar } from "../../common/WalletAvatar";
 import { getRegistryItemEntranceDelay, REGISTRY_ENTRANCE_EASE, REGISTRY_ITEM_ANIMATE, REGISTRY_ITEM_INITIAL } from "./registryMotion";
+import { contentColorOn } from "../../../lib/colorContrast";
 
 interface RegistryAssetRowProps {
     asset: Pick<Wallet, "name" | "icon" | "color" | "isActive">;
@@ -70,8 +71,8 @@ export function RegistryAssetRow({ asset, index, isFavorite, favoriteLabel, subt
                         iconStrokeWidth={1.7}
                     />
                     {isFavorite ? (
-                        <span className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full ring-2 ring-[#16161a]" style={{ backgroundColor: asset.color }} aria-hidden="true">
-                            <Star size={11} className="fill-white text-white" />
+                        <span className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full ring-2 ring-raised" style={{ backgroundColor: asset.color }} aria-hidden="true">
+                            <Star size={11} className="fill-current" style={{ color: contentColorOn(asset.color) }} />
                         </span>
                     ) : null}
                 </div>

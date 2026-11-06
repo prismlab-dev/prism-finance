@@ -18,7 +18,7 @@ function SilusMark() {
 }
 
 const inputClass =
-    "w-full rounded-xl border border-white/[0.08] bg-[#111111] py-3 pl-10 pr-3.5 text-[15px] text-white placeholder:text-neutral-600 outline-none transition hover:border-white/[0.14] focus:border-white/30 focus-visible:ring-4 focus-visible:ring-white/[0.06]";
+    "w-full rounded-xl border border-white/[0.08] bg-surface py-3 pl-10 pr-3.5 text-[15px] text-white placeholder:text-neutral-600 outline-none transition hover:border-white/[0.14] focus:border-white/30 focus-visible:ring-4 focus-visible:ring-white/[0.06]";
 
 export function LoginPage() {
     const { loading } = useFinanceSession();
@@ -131,11 +131,11 @@ export function LoginPage() {
     if (loading) return <LoadingPage />;
 
     return (
-        <div className="min-h-screen bg-[#0e0e10] text-white lg:grid lg:h-screen lg:grid-cols-[1.15fr_1fr] lg:overflow-hidden">
-            <aside className="relative m-3 hidden flex-col overflow-hidden rounded-[28px] border border-white/[0.06] bg-[#131316] lg:flex">
+        <div className="min-h-screen bg-canvas text-white lg:grid lg:h-screen lg:grid-cols-[1.15fr_1fr] lg:overflow-hidden">
+            <aside className="relative m-3 hidden flex-col overflow-hidden rounded-[28px] border border-white/[0.06] bg-surface lg:flex">
                 <div
                     aria-hidden
-                    className="pointer-events-none absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.07)_1px,transparent_1px)] [background-size:22px_22px] [mask-image:radial-gradient(ellipse_80%_60%_at_70%_100%,black,transparent)]"
+                    className="pointer-events-none absolute inset-0 bg-[radial-gradient(color-mix(in_oklab,var(--color-white)_7%,transparent)_1px,transparent_1px)] [background-size:22px_22px] [mask-image:radial-gradient(ellipse_80%_60%_at_70%_100%,black,transparent)]"
                 />
                 <div aria-hidden className="pointer-events-none absolute -right-24 bottom-0 h-[520px] w-[640px] rounded-full bg-emerald-400/[0.08] blur-[120px]" />
 
@@ -173,7 +173,7 @@ export function LoginPage() {
                                     type="button"
                                     onClick={() => void handleGoogleLogin()}
                                     disabled={isLoading}
-                                    className="flex w-full items-center justify-center gap-3 rounded-xl bg-white px-4 py-3.5 text-sm font-semibold text-[#0e0e10] transition hover:bg-neutral-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-70"
+                                    className="flex w-full items-center justify-center gap-3 rounded-xl bg-white px-4 py-3.5 text-sm font-semibold text-canvas transition hover:bg-neutral-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-70"
                                 >
                                     {authActionLoading === "google" ? <LoaderCircle size={18} aria-hidden className="animate-spin" /> : <GoogleIcon />}
                                     {authActionLoading === "google" ? "Conectando..." : "Continuar com Google"}
@@ -185,7 +185,7 @@ export function LoginPage() {
                                         setShowEmailForm(true);
                                     }}
                                     disabled={isLoading}
-                                    className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/[0.1] bg-[#111111] px-4 py-3.5 text-sm font-medium text-neutral-100 transition hover:border-white/20 hover:bg-white/[0.04] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-70"
+                                    className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/[0.1] bg-surface px-4 py-3.5 text-sm font-medium text-neutral-100 transition hover:border-white/20 hover:bg-white/[0.04] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-70"
                                 >
                                     <Mail size={18} aria-hidden className="text-neutral-400" />
                                     Continuar com e-mail
@@ -215,7 +215,7 @@ export function LoginPage() {
                                 <ArrowLeft size={16} aria-hidden />
                                 Outras formas de entrar
                             </button>
-                            <div className="relative mb-8 grid grid-cols-2 rounded-xl border border-white/[0.08] bg-[#111111] p-1 text-sm" role="tablist" aria-label="Modo de acesso">
+                            <div className="relative mb-8 grid grid-cols-2 rounded-xl border border-white/[0.08] bg-surface p-1 text-sm" role="tablist" aria-label="Modo de acesso">
                                 <span
                                     aria-hidden
                                     className={`absolute inset-y-1 left-1 w-[calc(50%-4px)] rounded-lg bg-white/[0.08] transition-transform duration-300 ease-out motion-reduce:transition-none ${isSignUpMode ? "translate-x-full" : ""}`}
@@ -320,7 +320,7 @@ export function LoginPage() {
                                 <button
                                     type="submit"
                                     disabled={isLoading}
-                                    className="mt-2 flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-semibold text-[#0e0e10] transition hover:bg-neutral-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-70"
+                                    className="mt-2 flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-semibold text-canvas transition hover:bg-neutral-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-70"
                                 >
                                     {authActionLoading === "email" && <LoaderCircle size={16} aria-hidden className="animate-spin" />}
                                     {authActionLoading === "email" ? (isSignUpMode ? "Criando conta..." : "Entrando...") : isSignUpMode ? "Criar conta" : "Entrar"}

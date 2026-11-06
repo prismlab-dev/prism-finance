@@ -23,7 +23,7 @@ export function AccountIdentityHeader({ userName, email, photoUrl, createdAt, ha
     const memberSince = formatMemberSince(createdAt);
 
     return (
-        <header className="relative overflow-hidden rounded-3xl border border-white/[0.08] bg-[#101010] p-5 sm:p-7">
+        <header className="relative overflow-hidden rounded-3xl border border-white/[0.08] bg-surface p-5 sm:p-7">
             <div aria-hidden className="pointer-events-none absolute -right-16 -top-24 h-64 w-64 rounded-full bg-emerald-500/[0.07] blur-3xl" />
             <div className="relative flex flex-wrap items-center gap-5">
                 <span className="inline-flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/[0.06] text-2xl font-semibold text-white ring-1 ring-white/[0.1] ring-offset-4 ring-offset-[#101010]">

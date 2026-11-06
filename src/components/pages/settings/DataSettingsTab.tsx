@@ -202,7 +202,7 @@ export function DataSettingsTab() {
 
     return (
         <div className="space-y-6">
-            <header className="rounded-3xl border border-white/[0.08] bg-[#101010] p-5 sm:p-7">
+            <header className="rounded-3xl border border-white/[0.08] bg-surface p-5 sm:p-7">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                     <div className="min-w-0">
                         <h2 className="text-2xl font-semibold tracking-tight text-white sm:text-[28px]">Seus dados</h2>
@@ -275,7 +275,7 @@ export function DataSettingsTab() {
                     {localBackups.length < 1 ? (
                         <p className="text-sm text-white/45">Nenhuma cópia guardada neste navegador ainda.</p>
                     ) : (
-                        <ul className="divide-y divide-white/[0.06] rounded-2xl border border-white/[0.08] bg-[#101010]">
+                        <ul className="divide-y divide-white/[0.06] rounded-2xl border border-white/[0.08] bg-surface">
                             {localBackups.map((backup) => (
                                 <li key={backup.id} className="flex flex-wrap items-center gap-3 px-4 py-3.5">
                                     <History size={17} aria-hidden className="shrink-0 text-white/45" />

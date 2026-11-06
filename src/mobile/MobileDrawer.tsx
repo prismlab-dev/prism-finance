@@ -27,7 +27,7 @@ export function MobileDrawer({ open, onClose, title, children }: MobileDrawerPro
                 role="dialog"
                 aria-modal="true"
                 aria-label={title}
-                className="absolute inset-y-0 right-0 flex w-[min(92vw,26rem)] animate-[drawer-in_220ms_cubic-bezier(0.22,1,0.36,1)] flex-col border-l border-white/[0.08] bg-[#141416] text-white motion-reduce:animate-none"
+                className="absolute inset-y-0 right-0 flex w-[min(92vw,26rem)] animate-[drawer-in_220ms_cubic-bezier(0.22,1,0.36,1)] flex-col border-l border-white/[0.08] bg-surface text-white motion-reduce:animate-none"
             >
                 <div className="flex items-center justify-between gap-3 border-b border-white/[0.06] px-4 pt-[calc(1rem+env(safe-area-inset-top))] pb-3">
                     <p className="truncate text-base font-medium">{title}</p>

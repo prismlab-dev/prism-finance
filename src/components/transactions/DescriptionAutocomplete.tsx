@@ -149,7 +149,7 @@ export function DescriptionAutocomplete({
                 aria-activedescendant={showSuggestions ? `${listboxId}-${suggestions[activeIndex]?.id}` : undefined}
             />
 
-            <AnchoredOverlay anchorRef={wrapperRef} overlayRef={overlayRef} isOpen={showSuggestions} preferredMaxHeight={360} className="rounded-xl border border-white/[0.12] bg-[#101010] p-1.5 shadow-[0_24px_60px_-28px_rgba(0,0,0,0.98)]">
+            <AnchoredOverlay anchorRef={wrapperRef} overlayRef={overlayRef} isOpen={showSuggestions} preferredMaxHeight={360} className="rounded-xl border border-white/[0.12] bg-surface p-1.5 shadow-[0_24px_60px_-28px_rgba(0,0,0,0.98)]">
                 <div id={listboxId} role="listbox" aria-label="Sugestões de transações" className="space-y-1">
                     {suggestions.map((suggestion, index) => {
                         const Icon = getCategoryIconComponent(suggestion.category.icon, suggestion.category.type);

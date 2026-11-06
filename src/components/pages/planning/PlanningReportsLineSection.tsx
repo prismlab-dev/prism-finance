@@ -129,7 +129,7 @@ export function PlanningReportsLineSection({ title, points, color }: PlanningRep
                                     </span>
                                 ) : null}
                                 <span
-                                    className={`absolute h-2.5 w-2.5 -translate-y-1/2 rounded-full border-2 border-[#111111] transition-transform ${point.dotClassName ?? ""} ${isActive || (!activeKey && point === last) ? "scale-150" : ""}`}
+                                    className={`absolute h-2.5 w-2.5 -translate-y-1/2 rounded-full border-2 border-surface transition-transform ${point.dotClassName ?? ""} ${isActive || (!activeKey && point === last) ? "scale-150" : ""}`}
                                     style={{ top: `${y(point.value)}%`, backgroundColor: point.dotClassName ? undefined : color }}
                                 />
                             </button>

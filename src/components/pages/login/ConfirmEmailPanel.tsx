@@ -58,7 +58,7 @@ export function ConfirmEmailPanel({ email, onBack }: ConfirmEmailPanelProps) {
                     type="button"
                     onClick={() => void handleResend()}
                     disabled={resending}
-                    className="flex items-center justify-center gap-2 rounded-xl border border-white/[0.1] bg-[#111111] px-4 py-3 text-sm font-medium text-neutral-100 transition hover:border-white/20 hover:bg-white/[0.04] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-70"
+                    className="flex items-center justify-center gap-2 rounded-xl border border-white/[0.1] bg-surface px-4 py-3 text-sm font-medium text-neutral-100 transition hover:border-white/20 hover:bg-white/[0.04] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-70"
                 >
                     {resending && <LoaderCircle size={16} aria-hidden className="animate-spin" />}
                     {resending ? "Reenviando..." : "Reenviar link"}

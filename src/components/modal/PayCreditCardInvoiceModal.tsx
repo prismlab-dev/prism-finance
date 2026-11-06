@@ -153,7 +153,7 @@ export function PayCreditCardInvoiceModal({ invoice, creditCard, defaultSettleWi
                 <ModalHeader title="Pagar fatura" disabled={submitting} />
 
                 <ModalBody>
-                    <div className="relative mt-2 overflow-hidden bg-[#1b1b1b] text-white [mask-image:radial-gradient(circle_at_8px_0,transparent_5px,#000_5.5px)] [mask-position:-8px_0] [mask-size:16px_100%] [mask-repeat:repeat-x]">
+                    <div className="relative mt-2 overflow-hidden bg-raised text-white [mask-image:radial-gradient(circle_at_8px_0,transparent_5px,#000_5.5px)] [mask-position:-8px_0] [mask-size:16px_100%] [mask-repeat:repeat-x]">
                         <div className="px-5 pb-4 pt-6">
                             <div className="flex flex-col items-center gap-1.5 text-center">
                                 <WalletAvatar wallet={creditCard} className="h-10 w-10 rounded-xl border border-white/[0.12]" iconSize={18} iconStrokeWidth={1.7} />
@@ -177,8 +177,8 @@ export function PayCreditCardInvoiceModal({ invoice, creditCard, defaultSettleWi
                         </div>
 
                         <div aria-hidden="true" className="relative h-4">
-                            <span className="absolute -left-2 top-0 h-4 w-4 rounded-full bg-[#131313]" />
-                            <span className="absolute -right-2 top-0 h-4 w-4 rounded-full bg-[#131313]" />
+                            <span className="absolute -left-2 top-0 h-4 w-4 rounded-full bg-surface" />
+                            <span className="absolute -right-2 top-0 h-4 w-4 rounded-full bg-surface" />
                             <span className="absolute inset-x-4 top-1/2 border-t border-dashed border-white/[0.18]" />
                         </div>
 

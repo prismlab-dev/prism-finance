@@ -330,7 +330,7 @@ export function AddBeneficiary({ mode = "create", beneficiaryId, initialBenefici
                                 className="h-[72px] w-[72px] rounded-full border border-white/10"
                                 textClassName="text-xl font-semibold text-white"
                             />
-                            <span className="absolute bottom-1.5 right-1.5 inline-flex h-6 w-6 items-center justify-center rounded-full border border-white/[0.16] bg-[#131313] text-white/70 group-hover:text-white">
+                            <span className="absolute bottom-1.5 right-1.5 inline-flex h-6 w-6 items-center justify-center rounded-full border border-white/[0.16] bg-surface text-white/70 group-hover:text-white">
                                 <ImageUp size={12} />
                             </span>
                             <input type="file" accept="image/*" onChange={handleFileUpload} className="sr-only" disabled={imageDisabled} aria-label="Enviar foto" />
