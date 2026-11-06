@@ -10,6 +10,8 @@ interface IconTextFieldProps {
     disabled?: boolean;
     maxLength?: number;
     icon?: LucideIcon;
+    type?: "text" | "password" | "email";
+    autoComplete?: string;
 }
 
 export function IconTextField({
@@ -20,12 +22,16 @@ export function IconTextField({
     disabled = false,
     maxLength,
     icon = TextAlignStart,
+    type = "text",
+    autoComplete,
 }: IconTextFieldProps) {
     return (
         <label className={`${FIELD_ICON_CONTROL_CLASS} flex min-h-[50px] items-center gap-2 ${disabled ? "opacity-60" : ""}`}>
             <TransactionFieldIcon icon={icon} />
             <input
                 aria-label={ariaLabel}
+                type={type}
+                autoComplete={autoComplete}
                 className={FIELD_EMBEDDED_INPUT_CLASS}
                 placeholder={placeholder}
                 value={value}

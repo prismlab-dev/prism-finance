@@ -3,6 +3,8 @@ import { useMemo, useState } from "react";
 import { useFinanceActions, useFinanceFamily, useFinanceSession } from "../../../context/FinanceContext";
 import { resolveUserDisplayName } from "../../../lib/userProfile";
 import { BeneficiaryAvatar } from "../../common/BeneficiaryAvatar";
+import { IconTextField } from "../../transactions/IconTextField";
+import { SETTINGS_DANGER_BUTTON_CLASS, SETTINGS_PRIMARY_BUTTON_CLASS, SETTINGS_SECONDARY_BUTTON_CLASS, SettingsFeedback, SettingsSection } from "./SettingsSection";
 
 type FamilyMemberPhotoMap = Record<string, string | null>;
 
@@ -156,203 +158,165 @@ export function FamilySettingsTab() {
     };
 
     return (
-        <section>
-            <article>
-                <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
-                    <div>
-                        <p className="text-xs uppercase tracking-[0.22em] text-emerald-100/55">SUA Familia</p>
-                        <h2 className="mt-2 text-2xl font-semibold text-white">{family ? family.name : "Conecte contas para compartilhar desejos"}</h2>
+        <div className="space-y-6">
+            <header className="rounded-3xl border border-white/[0.08] bg-[#101010] p-5 sm:p-7">
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div className="min-w-0">
+                        <h2 className="truncate text-2xl font-semibold tracking-tight text-white sm:text-[28px]">{family ? family.name : "Família"}</h2>
+                        <p className="mt-1 text-sm text-white/50">
+                            {family
+                                ? `${activeMembers.length} de ${family.maxMembers} membros. Você é ${isAdmin ? "admin" : "membro"}.`
+                                : "Junte até cinco contas para compartilhar a wishlist."}
+                        </p>
                     </div>
-                </div>
-            </article>
-
-            {feedback ? (
-                <div
-                    className={`rounded-2xl border px-4 py-3 text-sm ${
-                        feedback.type === "success" ? "border-emerald-400/25 bg-emerald-500/10 text-emerald-100" : "border-red-400/25 bg-red-500/10 text-red-100"
-                    }`}
-                >
-                    {feedback.message}
-                </div>
-            ) : null}
-
-            {!family ? (
-                <section className="grid gap-4 lg:grid-cols-[1fr_0.95fr]">
-                    <article className="rounded-[28px] border border-white/[0.08] bg-[#101010] p-5">
-                        <h3 className="text-lg font-semibold text-white">Criar nova familia</h3>
-                        <p className="mt-1 text-sm text-white/45">Voce se torna o admin do grupo e pode convidar ate quatro pessoas.</p>
-
-                        <label className="mt-5 flex flex-col gap-2 text-sm text-white/70">
-                            Nome da familia
-                            <input
-                                type="text"
-                                value={familyName}
-                                onChange={(event) => setFamilyName(event.target.value)}
-                                placeholder={`Familia de ${userName}`}
-                                disabled={!canCreateOrJoin || isCreatingFamily}
-                                className="rounded-2xl border border-white/[0.1] bg-white/[0.04] px-4 py-3 text-white outline-none transition-colors placeholder:text-white/30 focus:border-white/[0.22]"
-                            />
-                        </label>
-
-                        <button
-                            type="button"
-                            onClick={() => void handleCreateFamily()}
-                            disabled={!canCreateOrJoin || isCreatingFamily}
-                            className="mt-5 inline-flex items-center gap-2 rounded-2xl border border-emerald-400/30 bg-emerald-500/12 px-4 py-3 text-sm font-medium text-emerald-100 transition-colors hover:bg-emerald-500/16 disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                            <Users size={16} />
-                            {isCreatingFamily ? "Criando..." : "Criar familia"}
-                        </button>
-                    </article>
-
-                    <article className="rounded-[28px] border border-white/[0.08] bg-[#101010] p-5">
-                        <h3 className="text-lg font-semibold text-white">Entrar com convite</h3>
-                        <p className="mt-1 text-sm text-white/45">Cole um codigo manual compartilhado pelo admin da familia.</p>
-
-                        <label className="mt-5 flex flex-col gap-2 text-sm text-white/70">
-                            Codigo do convite
-                            <input
-                                type="text"
-                                value={inviteCodeInput}
-                                onChange={(event) => setInviteCodeInput(event.target.value)}
-                                placeholder="Insira o codigo aqui"
-                                disabled={!canCreateOrJoin || isJoiningFamily}
-                                className="rounded-2xl border border-white/[0.1] bg-white/[0.04] px-4 py-3 text-white outline-none transition-colors placeholder:text-white/30 focus:border-white/[0.22]"
-                            />
-                        </label>
-
-                        <button
-                            type="button"
-                            onClick={() => void handleJoinFamily()}
-                            disabled={!canCreateOrJoin || !inviteCodeInput.trim() || isJoiningFamily}
-                            className="mt-5 inline-flex items-center gap-2 rounded-2xl border border-cyan-400/30 bg-cyan-500/10 px-4 py-3 text-sm font-medium text-cyan-100 transition-colors hover:bg-cyan-500/16 disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                            <Link2 size={16} />
-                            {isJoiningFamily ? "Entrando..." : "Aceitar convite"}
-                        </button>
-                    </article>
-                </section>
-            ) : (
-                <section className="grid gap-4 lg:grid-cols-[1.08fr_0.92fr]">
-                    <article className="rounded-lg border border-white/[0.08] bg-[#101010] p-5">
-                        <div className="flex flex-wrap items-center justify-between gap-3">
-                            <div>
-                                <h3 className="text-lg font-semibold text-white">Membros da familia</h3>
-                            </div>
-                            <div className="flex items-center gap-2 rounded-2xl border border-white/[0.08] bg-white/[0.04] px-3 py-1">
-                                <p className="text-xs font-light text-white/60">
-                                    {activeMembers.length} de {family.maxMembers}
-                                </p>
-                            </div>
+                    {family ? (
+                        <div className="flex -space-x-2" aria-hidden>
+                            {activeMembers.slice(0, 5).map((member) => (
+                                <BeneficiaryAvatar
+                                    key={member.uid}
+                                    beneficiary={{ name: member.displayName, avatarImage: memberPhotoUrls[member.uid] ?? null, avatarColor: "#4B5563" }}
+                                    className="h-10 w-10 rounded-full border-2 border-[#101010]"
+                                    textClassName="text-sm font-semibold text-white"
+                                />
+                            ))}
                         </div>
+                    ) : null}
+                </div>
+            </header>
 
-                        <div className="mt-5 space-y-3">
-                            {activeMembers.map((member) => {
-                                const isCurrentUser = member.uid === user?.uid;
-                                const canRemove = isAdmin && !isCurrentUser && member.role !== "admin";
-                                const memberPhotoUrl = memberPhotoUrls[member.uid] ?? null;
+            <div className="px-1 sm:px-2">
+                <SettingsFeedback feedback={feedback} />
 
-                                return (
-                                    <div key={member.uid} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.03] px-4 py-4">
-                                        <div className="flex min-w-0 items-center gap-3">
+                {!family ? (
+                    <>
+                        <SettingsSection title="Criar família" description="Você vira o admin e pode convidar até quatro pessoas.">
+                            <div className="max-w-md space-y-3">
+                                <IconTextField
+                                    ariaLabel="Nome da família"
+                                    icon={Users}
+                                    value={familyName}
+                                    onChange={setFamilyName}
+                                    placeholder={`Família de ${userName}`}
+                                    disabled={!canCreateOrJoin || isCreatingFamily}
+                                />
+                                <button type="button" onClick={() => void handleCreateFamily()} disabled={!canCreateOrJoin || isCreatingFamily} className={SETTINGS_PRIMARY_BUTTON_CLASS}>
+                                    <Users size={16} aria-hidden />
+                                    {isCreatingFamily ? "Criando..." : "Criar família"}
+                                </button>
+                            </div>
+                        </SettingsSection>
+
+                        <SettingsSection title="Entrar com convite" description="Cole o código que o admin da família compartilhou com você.">
+                            <div className="max-w-md space-y-3">
+                                <IconTextField
+                                    ariaLabel="Código do convite"
+                                    icon={Link2}
+                                    value={inviteCodeInput}
+                                    onChange={setInviteCodeInput}
+                                    placeholder="Código do convite"
+                                    disabled={!canCreateOrJoin || isJoiningFamily}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => void handleJoinFamily()}
+                                    disabled={!canCreateOrJoin || !inviteCodeInput.trim() || isJoiningFamily}
+                                    className={SETTINGS_SECONDARY_BUTTON_CLASS}
+                                >
+                                    <Link2 size={16} aria-hidden />
+                                    {isJoiningFamily ? "Entrando..." : "Aceitar convite"}
+                                </button>
+                            </div>
+                        </SettingsSection>
+                    </>
+                ) : (
+                    <>
+                        <SettingsSection title="Membros" description="Quem faz parte da família. Só o admin pode remover membros.">
+                            <ul className="divide-y divide-white/[0.06] rounded-2xl border border-white/[0.08] bg-[#101010]">
+                                {activeMembers.map((member) => {
+                                    const isCurrentUser = member.uid === user?.uid;
+                                    const canRemove = isAdmin && !isCurrentUser && member.role !== "admin";
+
+                                    return (
+                                        <li key={member.uid} className="flex items-center gap-3 px-4 py-3.5">
                                             <BeneficiaryAvatar
-                                                beneficiary={{
-                                                    name: member.displayName,
-                                                    avatarImage: memberPhotoUrl,
-                                                    avatarColor: "#4B5563",
-                                                }}
-                                                className="h-11 w-11 shrink-0 rounded-full border border-white/[0.12]"
+                                                beneficiary={{ name: member.displayName, avatarImage: memberPhotoUrls[member.uid] ?? null, avatarColor: "#4B5563" }}
+                                                className="h-10 w-10 shrink-0 rounded-full border border-white/[0.12]"
                                                 textClassName="text-sm font-semibold text-white"
                                             />
-                                            <div className="min-w-0 flex flex-col gap-1">
-                                                <p className="truncate text-sm font-medium text-white">
+                                            <div className="min-w-0 flex-1">
+                                                <p className="flex items-center gap-2 truncate text-sm font-medium text-white">
                                                     {member.displayName}
-                                                    {isCurrentUser ? " (Eu)" : ""}
+                                                    {isCurrentUser ? <span className="font-normal text-white/40">(você)</span> : null}
+                                                    {member.role === "admin" ? (
+                                                        <span className="inline-flex items-center gap-1 rounded-full bg-white/[0.06] px-2 py-0.5 text-[11px] font-normal text-white/60">
+                                                            <ShieldUser size={12} aria-hidden />
+                                                            Admin
+                                                        </span>
+                                                    ) : null}
                                                 </p>
-                                                <p className="truncate text-xs text-white/45">{member.email ?? "Email indisponivel"}</p>
+                                                <p className="truncate text-sm text-white/45">{member.email ?? "E-mail indisponível"}</p>
                                             </div>
-                                        </div>
-
-                                        <div className="flex items-center gap-2">
-                                            {member.role === "admin" ? <ShieldUser className="opacity-60" strokeWidth={1.5} size={26} /> : null}
-
                                             {canRemove ? (
                                                 <button
                                                     type="button"
                                                     onClick={() => void handleRemoveMember(member.uid, member.displayName)}
                                                     disabled={removingMemberUid === member.uid}
-                                                    className="inline-flex h-7 w-7 items-center justify-center rounded-2xl border border-red-400/20 bg-red-500/10 text-red-100 transition-colors hover:bg-red-500/16 disabled:cursor-not-allowed disabled:opacity-60"
-                                                    title="Remover membro"
+                                                    className={SETTINGS_DANGER_BUTTON_CLASS}
                                                     aria-label={`Remover ${member.displayName}`}
                                                 >
-                                                    <X size={16} />
+                                                    <X size={15} aria-hidden />
+                                                    <span className="hidden sm:inline">Remover</span>
                                                 </button>
                                             ) : null}
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </article>
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+                        </SettingsSection>
 
-                    <div className="space-y-4">
                         {isAdmin ? (
-                            <article className="rounded-lg border border-white/[0.08] bg-[#101010] p-5">
-                                <div className="flex flex-wrap items-center justify-between gap-3">
-                                    <div>
-                                        <h3 className="text-lg font-semibold text-white">Convites</h3>
-                                    </div>
-
+                            <SettingsSection title="Convites" description="Gere um código e envie para quem você quer adicionar. Cada código vale para uma pessoa.">
+                                <div className="space-y-3">
                                     <button
                                         type="button"
                                         onClick={() => void handleGenerateInvite()}
                                         disabled={isGeneratingInvite || activeMembers.length >= family.maxMembers}
-                                        className="inline-flex items-center gap-2 rounded-2xl border border-emerald-400/30 bg-emerald-500/12 px-5 py-1.5 text-sm font-medium text-emerald-100 transition-colors hover:bg-emerald-500/16 disabled:cursor-not-allowed disabled:opacity-60"
+                                        className={SETTINGS_PRIMARY_BUTTON_CLASS}
                                     >
-                                        <UserPlus size={16} />
+                                        <UserPlus size={16} aria-hidden />
                                         {isGeneratingInvite ? "Gerando..." : "Gerar convite"}
                                     </button>
-                                </div>
-
-                                <div className="mt-5 space-y-3">
                                     {pendingInvites.length === 0 ? (
-                                        <div className="rounded-2xl border border-dashed border-white/[0.08] bg-white/[0.03] px-4 py-5 text-sm text-white/45">Nenhum convite pendente no momento.</div>
+                                        <p className="text-sm text-white/45">Nenhum convite pendente.</p>
                                     ) : (
-                                        pendingInvites.map((invite) => (
-                                            <div key={invite.inviteId} className="rounded-2xl border border-white/[0.08] bg-white/[0.03] px-4 py-4">
-                                                <div className="flex flex-wrap items-center justify-between gap-3">
-                                                    <div className="min-w-0">
-                                                        <p className="text-xs uppercase tracking-[0.16em] text-white/35">Codigo ativo</p>
-                                                        <p className="mt-2 break-all font-mono text-sm text-white">{invite.code}</p>
+                                        <ul className="divide-y divide-white/[0.06] rounded-2xl border border-white/[0.08] bg-[#101010]">
+                                            {pendingInvites.map((invite) => (
+                                                <li key={invite.inviteId} className="flex flex-wrap items-center gap-3 px-4 py-3.5">
+                                                    <div className="min-w-0 flex-1">
+                                                        <p className="break-all font-mono text-sm text-white">{invite.code}</p>
+                                                        <p className="mt-0.5 text-xs text-white/40">Criado em {new Date(invite.createdAt).toLocaleString("pt-BR")}</p>
                                                     </div>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => void handleCopyInvite(invite.inviteId, invite.code)}
-                                                        className="inline-flex items-center gap-2 rounded-2xl border border-white/[0.1] bg-white/[0.04] px-3 py-2 text-sm text-white/75 transition-colors hover:text-white"
-                                                    >
-                                                        <Copy size={15} />
+                                                    <button type="button" onClick={() => void handleCopyInvite(invite.inviteId, invite.code)} className={SETTINGS_SECONDARY_BUTTON_CLASS}>
+                                                        <Copy size={15} aria-hidden />
                                                         {copiedInviteId === invite.inviteId ? "Copiado" : "Copiar"}
                                                     </button>
-                                                </div>
-                                                <p className="mt-3 text-xs text-white/35">{new Date(invite.createdAt).toLocaleString("pt-BR")}</p>
-                                            </div>
-                                        ))
+                                                </li>
+                                            ))}
+                                        </ul>
                                     )}
                                 </div>
-                            </article>
+                            </SettingsSection>
                         ) : null}
 
-                        <article className="rounded-lg border border-white/[0.08] bg-[#101010] p-5">
-                            <h3 className="inline-flex items-center gap-1.5 text-lg font-semibold text-white">
-                                <Info size={20} /> Escopo compartilhado
-                            </h3>
-                            <p className="mt-1 text-sm text-white/45">
-                                Atualmente, os membros da familia enxergam apenas a wishlist. Carteiras, cartoes, transacoes e planejamento continuam privados.
+                        <SettingsSection title="O que é compartilhado" description="O que os membros conseguem ver da sua conta.">
+                            <p className="flex max-w-xl items-start gap-2 text-sm leading-relaxed text-white/60">
+                                <Info size={16} aria-hidden className="mt-0.5 shrink-0" />
+                                Só a wishlist. Carteiras, cartões, transações e planejamento continuam privados.
                             </p>
-                        </article>
-                    </div>
-                </section>
-            )}
-        </section>
+                        </SettingsSection>
+                    </>
+                )}
+            </div>
+        </div>
     );
 }

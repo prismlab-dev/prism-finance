@@ -1,4 +1,5 @@
 import { Menu } from "lucide-react";
+import { useEffect, useRef } from "react";
 import { useFinanceSession } from "../../context/FinanceContext";
 import { usePage } from "../../context/PageContext";
 import { resolveUserDisplayName } from "../../lib/userProfile";
@@ -17,6 +18,26 @@ export function Header({ onOpenSidebar }: HeaderProps) {
     const { goToPage } = usePage();
 
     const metricAmounts = useHeaderAmounts();
+    const headerRef = useRef<HTMLElement | null>(null);
+
+    // Publica até onde o header fixo cobre a tela, para outros elementos sticky ficarem abaixo dele.
+    useEffect(() => {
+        const header = headerRef.current;
+        if (!header) {
+            return;
+        }
+
+        const root = document.documentElement;
+        const observer = new ResizeObserver(() => {
+            const { top, marginBottom } = window.getComputedStyle(header);
+            root.style.setProperty("--app-header-offset", `${parseFloat(top) + header.offsetHeight + parseFloat(marginBottom)}px`);
+        });
+        observer.observe(header);
+        return () => {
+            observer.disconnect();
+            root.style.removeProperty("--app-header-offset");
+        };
+    }, []);
 
     const userName = profile?.displayName ?? resolveUserDisplayName(user);
     const userPhotoUrl = profile ? profile.photoURL : user?.photoURL?.trim() ? user.photoURL : null;
@@ -34,7 +55,7 @@ export function Header({ onOpenSidebar }: HeaderProps) {
     }
 
     return (
-        <header className="pointer-events-none sticky top-2.5 z-20 mx-2 mb-2.5">
+        <header ref={headerRef} className="pointer-events-none sticky top-2.5 z-20 mx-2 mb-2.5">
             <div
                 className="pointer-events-auto rounded-[18px] border border-white/[0.08] px-3 py-2 bg-zinc-950/70"
                 style={{

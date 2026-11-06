@@ -1,6 +1,7 @@
 import { Hexagon, X } from "lucide-react";
 import { FinanceSyncStatus } from "./FinanceSyncStatus";
 import { NavSection } from "./NavSection";
+import { version } from "../../../package.json";
 
 type SidebarContentVariant = "mobile" | "responsive";
 
@@ -23,18 +24,19 @@ export function SidebarContent({ variant, onClose }: SidebarContentProps) {
                 >
                     <div
                         className={[
-                            "flex min-w-0 items-center gap-2 transition-[gap] duration-300 ease-out",
-                            isResponsive ? "laptop:gap-0 desktop:gap-2" : "",
+                            "flex min-w-0 flex-1 items-center gap-2 transition-[gap] duration-300 ease-out",
+                            isResponsive ? "laptop:flex-none laptop:gap-0 desktop:flex-1 desktop:gap-2" : "",
                         ].join(" ")}
                     >
                         <Hexagon className="shrink-0" size={25} />
                         <h1
                             className={[
-                                "max-w-28 overflow-hidden whitespace-nowrap uppercase opacity-100 transition-[max-width,opacity] duration-300 ease-out text-xl",
-                                isResponsive ? "laptop:max-w-0 laptop:opacity-0 desktop:max-w-28 desktop:opacity-100" : "",
+                                "flex max-w-full flex-1 items-baseline justify-between overflow-hidden whitespace-nowrap uppercase leading-none opacity-100 transition-[max-width,opacity] duration-300 ease-out text-xl",
+                                isResponsive ? "laptop:max-w-0 laptop:opacity-0 desktop:max-w-full desktop:opacity-100" : "",
                             ].join(" ")}
                         >
                             Silus
+                            <span className="text-[11px] leading-none font-normal normal-case text-white/35 tabular-nums">v{version}</span>
                         </h1>
                     </div>
 

@@ -1,4 +1,4 @@
-import type { Session, User } from "@supabase/supabase-js";
+import type { Session, User, UserIdentity } from "@supabase/supabase-js";
 import type { AppUser } from "../../auth/appUser";
 import { getSupabaseClient } from "../supabaseClient";
 
@@ -165,4 +165,65 @@ export async function sendSupabasePasswordReset(email: string): Promise<void> {
     if (error) {
         throw error;
     }
+}
+
+export async function listSupabaseIdentities(): Promise<UserIdentity[]> {
+    const { data, error } = await getSupabaseClient().auth.getUserIdentities();
+
+    if (error) {
+        throw error;
+    }
+
+    return data.identities;
+}
+
+/** Vincula o Google à conta logada; redireciona para o Google e volta às configurações. */
+export async function linkGoogleIdentity(): Promise<void> {
+    const { error } = await getSupabaseClient().auth.linkIdentity({
+        provider: "google",
+        options: {
+            redirectTo: `${window.location.origin}/configuracoes`,
+            scopes: "openid email profile",
+            queryParams: {
+                prompt: "select_account",
+            },
+        },
+    });
+
+    if (error) {
+        throw error;
+    }
+}
+
+export async function unlinkSupabaseIdentity(identity: UserIdentity): Promise<void> {
+    const { error } = await getSupabaseClient().auth.unlinkIdentity(identity);
+
+    if (error) {
+        throw error;
+    }
+}
+
+/** Pede a troca de e-mail; só vale depois que o usuário confirma pelo link enviado. */
+export async function requestSupabaseEmailChange(newEmail: string): Promise<void> {
+    const { error } = await getSupabaseClient().auth.updateUser(
+        { email: newEmail },
+        { emailRedirectTo: `${window.location.origin}/configuracoes` }
+    );
+
+    if (error) {
+        throw error;
+    }
+}
+
+/** Apaga a conta logada e todos os dados dela no servidor; depois encerra a sessão local. */
+export async function deleteOwnSupabaseAccount(): Promise<void> {
+    const client = getSupabaseClient();
+    const { error } = await client.rpc("delete_own_account");
+
+    if (error) {
+        throw error;
+    }
+
+    // A sessão já não existe no servidor; limpa só a local.
+    await client.auth.signOut({ scope: "local" });
 }

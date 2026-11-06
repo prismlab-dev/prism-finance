@@ -1,7 +1,5 @@
-import { ChevronRight, Database, UserRound, Users } from "lucide-react";
-import { useMemo } from "react";
+import { Database, UserRound, Users } from "lucide-react";
 import { useFinanceSession } from "../../context/FinanceContext";
-import { usePage } from "../../context/PageContext";
 import { useLocalPreferenceSection } from "../../lib/localPreferences";
 import { signOutSupabase } from "../../supabase/auth/authService";
 import { AccountSettingsTab } from "./settings/AccountSettingsTab";
@@ -12,69 +10,27 @@ import type { SettingsTab, SettingsTabId } from "./settings/types";
 
 interface SettingsPagePreferences {
     activeTab: SettingsTabId;
-    emailAlertsEnabled: boolean;
-    monthlySummaryEnabled: boolean;
-    focusModeEnabled: boolean;
 }
 
 const SETTINGS_PAGE_PREFERENCES_SECTION = "settings";
-const DEFAULT_SETTINGS_PAGE_PREFERENCES: SettingsPagePreferences = {
-    activeTab: "account",
-    emailAlertsEnabled: true,
-    monthlySummaryEnabled: true,
-    focusModeEnabled: false,
-};
-const VALID_SETTINGS_TABS = new Set<SettingsTabId>(["account", "family", "data"]);
+const DEFAULT_SETTINGS_PAGE_PREFERENCES: SettingsPagePreferences = { activeTab: "account" };
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
-}
+const TABS: SettingsTab[] = [
+    { id: "account", label: "Conta", icon: UserRound },
+    { id: "family", label: "Família", icon: Users },
+    { id: "data", label: "Dados", icon: Database },
+];
 
 function normalizeSettingsPagePreferences(value: unknown): SettingsPagePreferences {
-    if (!isRecord(value)) {
-        return DEFAULT_SETTINGS_PAGE_PREFERENCES;
-    }
-
-    const activeTab = typeof value.activeTab === "string" ? value.activeTab : DEFAULT_SETTINGS_PAGE_PREFERENCES.activeTab;
-
-    return {
-        activeTab: VALID_SETTINGS_TABS.has(activeTab as SettingsTabId) ? (activeTab as SettingsTabId) : DEFAULT_SETTINGS_PAGE_PREFERENCES.activeTab,
-        emailAlertsEnabled: typeof value.emailAlertsEnabled === "boolean" ? value.emailAlertsEnabled : DEFAULT_SETTINGS_PAGE_PREFERENCES.emailAlertsEnabled,
-        monthlySummaryEnabled: typeof value.monthlySummaryEnabled === "boolean" ? value.monthlySummaryEnabled : DEFAULT_SETTINGS_PAGE_PREFERENCES.monthlySummaryEnabled,
-        focusModeEnabled: typeof value.focusModeEnabled === "boolean" ? value.focusModeEnabled : DEFAULT_SETTINGS_PAGE_PREFERENCES.focusModeEnabled,
-    };
+    const activeTab = typeof value === "object" && value !== null && "activeTab" in value ? value.activeTab : null;
+    const tab = TABS.find((entry) => entry.id === activeTab);
+    return { activeTab: tab?.id ?? DEFAULT_SETTINGS_PAGE_PREFERENCES.activeTab };
 }
 
 export function SettingsPage() {
     const { user } = useFinanceSession();
-    const { goToPage } = usePage();
     const [preferences, setPreferences] = useLocalPreferenceSection(user?.uid, SETTINGS_PAGE_PREFERENCES_SECTION, DEFAULT_SETTINGS_PAGE_PREFERENCES, normalizeSettingsPagePreferences);
-    const { activeTab, emailAlertsEnabled, monthlySummaryEnabled, focusModeEnabled } = preferences;
-
-    const tabs = useMemo<SettingsTab[]>(
-        () => [
-            {
-                id: "account",
-                label: "Detalhes da conta",
-                description: "Perfil ativo, sessão e preferências rápidas.",
-                icon: UserRound,
-            },
-            {
-                id: "family",
-                label: "Família",
-                description: "Espaço para vínculos, convites e permissões compartilhadas.",
-                icon: Users,
-            },
-            {
-                id: "data",
-                label: "Dados",
-                description: "Backups, importacao e restauracao de snapshots.",
-                icon: Database,
-            },
-        ],
-        []
-    );
-
+    const { activeTab } = preferences;
 
     async function handleSignOut() {
         try {
@@ -85,60 +41,24 @@ export function SettingsPage() {
     }
 
     return (
-        <>
-            <div className="mx-auto flex min-h-[calc(100vh-8rem)] flex-col gap-5">
-                <header className="flex flex-wrap items-end justify-between gap-3 text-left px-3">
-                    <div>
-                        <h1 className="mt-2 text-2xl font-semibold text-white">Configurações</h1>
-                    </div>
+        <div className="flex min-h-[calc(100vh-8rem)] w-full flex-col gap-6 pb-10 lg:flex-row lg:gap-10">
+            <aside className="lg:sticky lg:top-[calc(var(--app-header-offset,5.5rem)+0.5rem)] lg:w-60 lg:shrink-0 lg:self-start">
+                <nav aria-label="Seções das configurações" className="-mx-3 flex gap-1 overflow-x-auto px-3 lg:mx-0 lg:flex-col lg:overflow-visible lg:px-0">
+                    {TABS.map((tab) => (
+                        <SettingsSidebarButton
+                            key={tab.id}
+                            active={activeTab === tab.id}
+                            icon={tab.icon}
+                            label={tab.label}
+                            onClick={() => setPreferences((current) => ({ ...current, activeTab: tab.id }))}
+                        />
+                    ))}
+                </nav>
+            </aside>
 
-                    <button
-                        type="button"
-                        onClick={() => goToPage("home")}
-                        className="inline-flex items-center gap-2 rounded-full border border-white/[0.1] bg-white/[0.03] px-4 py-2 text-sm text-white/80 transition-colors hover:border-white/[0.16] hover:bg-white/[0.05] hover:text-white"
-                    >
-                        Voltar ao início
-                        <ChevronRight size={16} />
-                    </button>
-                </header>
-
-                <section className="flex min-w-0 flex-col justify-center gap-2 lg:flex-row">
-                    <aside className="w-full border-white/[0.08] p-2 lg:min-w-[280px] lg:max-w-[280px]">
-                        <nav className="flex gap-2 overflow-x-auto lg:block lg:space-y-1 lg:overflow-visible">
-                            {tabs.map((tab) => (
-                                <SettingsSidebarButton
-                                    key={tab.id}
-                                    active={activeTab === tab.id}
-                                    icon={tab.icon}
-                                    label={tab.label}
-                                    onClick={() => setPreferences((current) => ({ ...current, activeTab: tab.id }))}
-                                />
-                            ))}
-                        </nav>
-                    </aside>
-
-                    <div className="min-w-0 grow px-0 sm:px-3">
-                        {activeTab === "account" ? (
-                            <AccountSettingsTab
-                                emailAlertsEnabled={emailAlertsEnabled}
-                                focusModeEnabled={focusModeEnabled}
-                                monthlySummaryEnabled={monthlySummaryEnabled}
-                                onEmailAlertsChange={(enabled) => setPreferences((current) => ({ ...current, emailAlertsEnabled: enabled }))}
-                                onFocusModeChange={(enabled) => setPreferences((current) => ({ ...current, focusModeEnabled: enabled }))}
-                                onMonthlySummaryChange={(enabled) => setPreferences((current) => ({ ...current, monthlySummaryEnabled: enabled }))}
-                                onOpenRegistry={() => goToPage("registry")}
-                                onOpenTransactions={() => goToPage("transactions")}
-                                onOpenWishlist={() => goToPage("wishlist")}
-                                onSignOut={handleSignOut}
-                            />
-                        ) : activeTab === "data" ? (
-                            <DataSettingsTab />
-                        ) : (
-                            <FamilySettingsTab />
-                        )}
-                    </div>
-                </section>
+            <div className="min-w-0 flex-1">
+                {activeTab === "account" ? <AccountSettingsTab onSignOut={handleSignOut} /> : activeTab === "data" ? <DataSettingsTab /> : <FamilySettingsTab />}
             </div>
-        </>
+        </div>
     );
 }

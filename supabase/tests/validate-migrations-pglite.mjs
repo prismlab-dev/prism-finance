@@ -82,6 +82,7 @@ const migrationNames = [
     "026_paid_card_routing_guard.sql",
     "027_attachment_retry_upsert.sql",
     "028_explicit_invoice_precedence.sql",
+    "029_delete_own_account.sql",
 ];
 
 let legacyRecurrences;
@@ -541,4 +542,29 @@ if (
 console.log(`RUNTIME OK family RLS/share, CAS, batched ${bulkSize}-row projection (${bulkElapsedMs.toFixed(0)}ms), compact commits, cascades, direct transaction deletion, tombstones, safe legacy adapter, gap fallback and atomic load`);
 await validateRecurrenceRuntime(database, expectDatabaseError);
 await validateRecurrenceSyncRuntime(database, projectRoot, expectDatabaseError);
+await validateDeleteOwnAccount();
 await database.close();
+
+async function validateDeleteOwnAccount() {
+    const ownerId = "10000000-0000-0000-0000-000000000001";
+    await database.exec(`select set_config('request.jwt.claim.sub', '${ownerId}', false);`);
+    await database.query("select public.delete_own_account()");
+    await database.exec("reset role;");
+    const leftovers = await database.query(`
+        select
+            (select count(*)::integer from auth.users where id = $1) as users,
+            (select count(*)::integer from public.profiles where id = $1) as profiles,
+            (select count(*)::integer from public.wallets where user_id = $1) as wallets,
+            (select count(*)::integer from public.transactions where user_id = $1) as transactions,
+            (select count(*)::integer from public.ledger_entries where user_id = $1) as ledger,
+            (select count(*)::integer from public.families where owner_user_id = $1) as families,
+            (select count(*)::integer from auth.users where id = '10000000-0000-0000-0000-000000000002') as other_users
+    `, [ownerId]);
+    const row = leftovers.rows[0];
+    if (row.users || row.profiles || row.wallets || row.transactions || row.ledger || row.families || row.other_users !== 1) {
+        throw new Error(`delete_own_account left data behind: ${JSON.stringify(row)}`);
+    }
+    await database.exec("set role anon;");
+    await expectDatabaseError(() => database.query("select public.delete_own_account()"), "permission denied");
+    console.log("RUNTIME OK delete_own_account cascades user data and is denied to anon");
+}
