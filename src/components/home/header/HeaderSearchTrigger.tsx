@@ -1,5 +1,5 @@
 import { Search } from "lucide-react";
-import { OPEN_COMMAND_PALETTE_EVENT } from "../../common/commandPalette/CommandPalette";
+import { OPEN_COMMAND_PALETTE_EVENT } from "../../common/commandPalette/openCommandPalette";
 
 const SHORTCUT_LABEL = /Mac|iPhone|iPad/.test(navigator.userAgent) ? "⌘ K" : "Ctrl K";
 

@@ -105,7 +105,7 @@ function MainApp() {
     const isMobile = useIsMobile();
 
     useEffect(() => {
-        document.title = user ? `Silus | ${PAGE_TITLES[currentPage]}` : "Silus | Entrar";
+        document.title = user ? `Silus ・ ${PAGE_TITLES[currentPage]}` : "Silus ・ Entrar";
     }, [user, currentPage]);
 
     if (loading) return <LoadingPage />;
