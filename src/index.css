@@ -74,6 +74,68 @@ body::-webkit-scrollbar-thumb {
     background: var(--sb-thumb-hover-color);
 }
 
+.ghost-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+    transition: scrollbar-color 0.3s ease;
+    mask-image: linear-gradient(to bottom, transparent, #000 12px, #000 calc(100% - 12px), transparent);
+}
+
+.ghost-scrollbar:hover,
+.ghost-scrollbar:focus-within {
+    scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
+}
+
+.ghost-scrollbar::-webkit-scrollbar {
+    width: 3px;
+}
+
+.ghost-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.ghost-scrollbar::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 999px;
+}
+
+.ghost-scrollbar:hover::-webkit-scrollbar-thumb,
+.ghost-scrollbar:focus-within::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.16);
+}
+
+/* Sync status: a hairline of light that refracts while data moves. */
+.sync-card__beam {
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 1px;
+    background: transparent;
+    transition: background 0.5s ease;
+}
+
+.sync-card[data-state="error"] .sync-card__beam {
+    background: rgba(252, 211, 77, 0.55);
+}
+
+.sync-card[data-state="syncing"] .sync-card__beam {
+    background: linear-gradient(90deg, transparent, #7dd3fc, #c4b5fd, #f9a8d4, #fcd34d, #6ee7b7, transparent) 0 0 / 50% 100% no-repeat,
+        rgba(255, 255, 255, 0.06);
+    animation: sync-beam 1.8s cubic-bezier(0.6, 0, 0.4, 1) infinite;
+}
+
+@keyframes sync-beam {
+    from { background-position: -100% 0, 0 0; }
+    to { background-position: 200% 0, 0 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sync-card[data-state="syncing"] .sync-card__beam {
+        animation: none;
+        background: linear-gradient(90deg, #7dd3fc, #c4b5fd, #f9a8d4, #fcd34d, #6ee7b7);
+        opacity: 0.6;
+    }
+}
+
 @supports not selector(::-webkit-scrollbar) {
     body {
         scrollbar-color: var(--sb-thumb-color) var(--sb-track-color);

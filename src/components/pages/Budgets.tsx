@@ -20,6 +20,7 @@ import { ConfirmActionModal } from "../modal/ConfirmActionModal";
 import { BudgetCard } from "./budgets/BudgetCard";
 import { BudgetDetailView } from "./budgets/BudgetDetailView";
 import { BudgetsEmptyState } from "./budgets/BudgetsEmptyState";
+import { BudgetsOverviewPanel } from "./budgets/BudgetsOverviewPanel";
 import { BudgetsToolbar } from "./budgets/BudgetsToolbar";
 import { buildBudgetRuleOptions, createBudgetRuleResolver, getBudgetDisplayName } from "./budgets/budgetRuleOptions";
 import type { BudgetRuleSet } from "./budgets/budgetRules";
@@ -137,8 +138,8 @@ export function BudgetsPage() {
             {budgets.length === 0 ? (
                 <BudgetsEmptyState onCreate={() => openBudgetForm()} />
             ) : (
-                <>
-                    <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                <div className="flex flex-col-reverse gap-4 lg:flex-row lg:items-start">
+                    <section className="grid min-w-0 flex-1 content-start gap-4 sm:grid-cols-2 2xl:grid-cols-3">
                         {overview.progresses.map((progress, index) => {
                             const { iconName, color } = visualOf(progress.budget.include[0]);
 
@@ -155,7 +156,8 @@ export function BudgetsPage() {
                             );
                         })}
                     </section>
-                </>
+                    <BudgetsOverviewPanel overview={overview} nameOf={(id) => budgetNameById.get(id) ?? "Orçamento"} colorOf={(progress) => visualOf(progress.budget.include[0]).color} onOpen={openBudget} />
+                </div>
             )}
         </div>
     );

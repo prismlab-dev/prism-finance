@@ -1,10 +1,10 @@
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthShell } from "./components/layout/AuthShell";
 import { LoadingPage, PageSkeletonScreen } from "./components/pages/Loading";
 import { FinanceProvider, useFinanceSession } from "./context/FinanceContext";
 import { ModalProvider } from "./context/ModalContext";
-import { PageProvider, usePage } from "./context/PageContext";
+import { AppPage, PageProvider, usePage } from "./context/PageContext";
 import "./lib/chart";
 import { initDemoMode } from "./lib/demoMode";
 import { useIsMobile } from "./mobile/useIsMobile";
@@ -79,10 +79,34 @@ function App() {
     );
 }
 
+const PAGE_TITLES: Record<AppPage, string> = {
+    home: "Início",
+    spending: "Despesas",
+    income: "Receitas",
+    transfer: "Transferências",
+    transactions: "Transações",
+    planning: "Planejamento",
+    reports: "Relatórios",
+    budgets: "Orçamentos",
+    settings: "Configurações",
+    wallets: "Carteiras",
+    creditCards: "Cartões",
+    beneficiaries: "Beneficiários",
+    categories: "Categorias",
+    tags: "Tags",
+    statement: "Fatura",
+    registry: "Cadastros",
+    wishlist: "Lista de desejos",
+};
+
 function MainApp() {
     const { user, loading } = useFinanceSession();
     const { currentPage } = usePage();
     const isMobile = useIsMobile();
+
+    useEffect(() => {
+        document.title = user ? `Silus | ${PAGE_TITLES[currentPage]}` : "Silus | Entrar";
+    }, [user, currentPage]);
 
     if (loading) return <LoadingPage />;
 

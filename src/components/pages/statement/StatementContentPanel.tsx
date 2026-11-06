@@ -12,6 +12,7 @@ import { WalletAvatar } from "../../common/WalletAvatar";
 import { BulkTransactionEditModal } from "../../modal/BulkTransactionEditModal";
 import { STATUS_BADGE_CLASS, STATUS_LABELS } from "../transactions/transactionsPageShared";
 import { BulkHeaderCheckbox, BulkRowCheckbox, FloatingTransactionBulkFooter } from "../../transactions/TransactionBulkSelectionControls";
+import { TransactionDetailIndicators, useTransactionDetailFlags } from "../../transactions/TransactionDetailIndicators";
 import { TransactionContextMenu, type TransactionContextMenuState } from "../../transactions/TransactionContextMenu";
 import { buildTransactionContextActions, type TransactionContextAction } from "../../transactions/transactionContextActions";
 import { formatCurrencyBRL, formatTransactionDate } from "../../transactions/transactionView";
@@ -239,6 +240,7 @@ export function StatementContentPanel({
     const beneficiaries = useFinanceBeneficiaries();
     const transactionGroups = useFinanceTransactionGroups();
     const { user } = useFinanceSession();
+    const detailFlags = useTransactionDetailFlags(user?.uid);
     const { openModal } = useModal();
     const [viewPreferences, setViewPreferences] = useLocalPreferenceSection(
         user?.uid,
@@ -625,6 +627,7 @@ export function StatementContentPanel({
                                                     <td className="truncate border-b border-white/[0.04] px-3 py-2.5 text-[14px] font-medium text-white">
                                                         <div className="flex min-w-0 max-w-full items-center gap-1.5">
                                                             <span className="truncate">{transaction.description || "Sem descricao"}</span>
+                                                            <TransactionDetailIndicators flags={detailFlags} transactionId={transaction.id} />
                                                             {isInvoicePayment && (
                                                                 <span className="inline-flex shrink-0 text-violet-300" role="img" title="Pagamento vinculado à fatura" aria-label="Pagamento vinculado à fatura">
                                                                     <Link2 size={13} />

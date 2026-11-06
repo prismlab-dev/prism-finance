@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from "framer-motion";
+﻿import { AnimatePresence, motion } from "framer-motion";
 import { useEffect } from "react";
 import { SidebarContent } from "./SidebarContent";
 
@@ -70,7 +70,7 @@ export function AppSidebar({ isMobileOpen, onCloseMobile }: AppSidebarProps) {
             </AnimatePresence>
 
             <aside className="hidden shrink-0 transition-[width] duration-300 ease-out laptop:block laptop:w-[72px] desktop:w-[240px]">
-                <section className="elegant-scrollbar fixed inset-y-0 left-0 z-30 h-dvh overflow-y-auto bg-zinc-950/70 p-2 transition-[width] duration-300 ease-out laptop:w-[72px] desktop:w-[240px]">
+                <section className="fixed inset-y-0 left-0 z-30 h-dvh overflow-hidden bg-zinc-950/70 p-2 transition-[width] duration-300 ease-out laptop:w-[72px] desktop:w-[240px]">
                     <SidebarContent variant="responsive" />
                 </section>
             </aside>

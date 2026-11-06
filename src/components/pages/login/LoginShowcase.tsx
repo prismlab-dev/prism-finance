@@ -72,7 +72,7 @@ export function LoginShowcase() {
 
     return (
         <div ref={stageRef} className="relative flex flex-1 items-center justify-center [--px:0] [--py:0]">
-        <figure aria-label="Exemplo de um mês no Prism" className="relative w-[calc(100%-10rem)] max-w-[600px]">
+        <figure aria-label="Exemplo de um mês no Silus" className="relative w-[calc(100%-10rem)] max-w-[600px]">
             <div className="flex overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0e0e10] transition-transform duration-500 ease-out" style={parallax(6)}>
                 <div className="flex w-12 shrink-0 flex-col items-center gap-3 border-r border-white/[0.06] py-4" aria-hidden>
                     <Hexagon size={18} className="mb-2" />

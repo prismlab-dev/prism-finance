@@ -6,6 +6,7 @@ import { usePage } from "../../../context/PageContext";
 import { rankCommandItems } from "./rankCommandItems";
 import { useCommandItems, type CommandItem } from "./useCommandItems";
 
+export const OPEN_COMMAND_PALETTE_EVENT = "prism:open-command-palette";
 const MAX_RESULTS = 40;
 const currencyFormatter = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 const AMOUNT_TONE = { income: "text-emerald-300", spending: "text-white/80", neutral: "text-white/50" } as const;
@@ -45,8 +46,18 @@ export function CommandPalette() {
             }
         }
 
+        function handleOpenRequest() {
+            setIsOpen(true);
+            setQuery("");
+            setActiveIndex(0);
+        }
+
         document.addEventListener("keydown", handleShortcut);
-        return () => document.removeEventListener("keydown", handleShortcut);
+        window.addEventListener(OPEN_COMMAND_PALETTE_EVENT, handleOpenRequest);
+        return () => {
+            document.removeEventListener("keydown", handleShortcut);
+            window.removeEventListener(OPEN_COMMAND_PALETTE_EVENT, handleOpenRequest);
+        };
     }, []);
 
     // Sem busca: só as páginas. Com busca, grupos aparecem na ordem do seu melhor resultado.

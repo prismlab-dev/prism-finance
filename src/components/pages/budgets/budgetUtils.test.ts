@@ -93,7 +93,7 @@ describe("buildBudgetsOverview", () => {
             categories,
             transactions: [
                 spending("water", 120, "2026-10-05"),
-                spending("power", 200, "2026-10-20", { categoryId: "power" }),
+                spending("power", 200, "2026-10-20", { categoryId: "power", status: "pending" }),
                 spending("netflix", 50, "2026-10-10", { categoryId: "subscriptions" }),
                 spending("projected", 30, "2026-10-01", { isProjected: true }),
                 spending("cancelled", 999, "2026-10-02", { status: "cancelled" }),

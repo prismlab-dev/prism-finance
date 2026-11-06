@@ -84,8 +84,10 @@ function isInMonth(transaction: Transaction, monthKey: string): boolean {
     return getMonthKeyFromDateValue(transaction.date) === monthKey;
 }
 
-function isForecast(transaction: Transaction, today: string): boolean {
-    return Boolean(transaction.isProjected) || transaction.date.slice(0, 10) > today;
+/** Gasto = pago (carteira) ou lançado na fatura (cartão); o resto é previsto, independente da data. */
+function isForecast(transaction: Transaction): boolean {
+    if (transaction.isProjected) return true;
+    return transaction.creditCardId ? transaction.commitment === "forecast" : transaction.status !== "paid";
 }
 
 function getDaysLeftInMonth(monthKey: string, today: string): number | null {
@@ -109,10 +111,10 @@ function findMatchingBudgetIds(transaction: Transaction, budgets: PlanningBudget
     return budgets.filter((budget) => matchesBudgetRules(transaction, budget, context)).map((budget) => budget.id);
 }
 
-function toMonthEntries(matched: Transaction[], monthKey: string, today: string, alsoIn: (transaction: Transaction) => string[]): BudgetTransactionEntry[] {
+function toMonthEntries(matched: Transaction[], monthKey: string, alsoIn: (transaction: Transaction) => string[]): BudgetTransactionEntry[] {
     return matched
         .filter((transaction) => isInMonth(transaction, monthKey))
-        .map((transaction) => ({ transaction, isForecast: isForecast(transaction, today), alsoInBudgetIds: alsoIn(transaction) }))
+        .map((transaction) => ({ transaction, isForecast: isForecast(transaction), alsoInBudgetIds: alsoIn(transaction) }))
         .sort((a, b) => b.transaction.date.localeCompare(a.transaction.date) || b.transaction.value - a.transaction.value);
 }
 
@@ -132,7 +134,7 @@ export function buildBudgetsOverview({ budgets, categories, transactions, monthK
 
     const progresses = budgets.map((budget): BudgetProgress => {
         const matched = spending.filter((transaction) => matchesBudgetRules(transaction, budget, context));
-        const entries = toMonthEntries(matched, monthKey, today, (transaction) => (budgetIdsByTransactionId.get(transaction.id) ?? []).filter((id) => id !== budget.id));
+        const entries = toMonthEntries(matched, monthKey, (transaction) => (budgetIdsByTransactionId.get(transaction.id) ?? []).filter((id) => id !== budget.id));
         const { spent, forecast, projected } = sumEntries(entries);
 
         return {
@@ -156,7 +158,7 @@ export function buildBudgetsOverview({ budgets, categories, transactions, monthK
     progresses.sort((a, b) => STATUS_SEVERITY[b.status] - STATUS_SEVERITY[a.status] || b.projected / b.budget.amount - a.projected / a.budget.amount);
 
     const isBudgeted = (transaction: Transaction) => (budgetIdsByTransactionId.get(transaction.id) ?? []).length > 0;
-    const isPosted = (transaction: Transaction) => !isForecast(transaction, today);
+    const isPosted = (transaction: Transaction) => !isForecast(transaction);
 
     return {
         progresses,
@@ -180,11 +182,11 @@ export interface BudgetRulesPreview {
 export function previewBudgetRules(
     rules: BudgetRuleSet,
     otherBudgets: PlanningBudget[],
-    { categories, transactions, monthKey, today }: Omit<BudgetComputationInput, "budgets">,
+    { categories, transactions, monthKey }: Omit<BudgetComputationInput, "budgets">,
 ): BudgetRulesPreview {
     const context = buildBudgetRuleContext(categories);
     const matched = transactions.filter((transaction) => isBudgetSpending(transaction) && matchesBudgetRules(transaction, rules, context));
-    const entries = toMonthEntries(matched, monthKey, today, (transaction) => findMatchingBudgetIds(transaction, otherBudgets, context));
+    const entries = toMonthEntries(matched, monthKey, (transaction) => findMatchingBudgetIds(transaction, otherBudgets, context));
 
     return { entries, ...sumEntries(entries) };
 }

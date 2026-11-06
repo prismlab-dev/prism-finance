@@ -11,6 +11,7 @@ import { WalletAvatar } from "../../common/WalletAvatar";
 import { BulkTransactionEditModal } from "../../modal/BulkTransactionEditModal";
 import { ConfirmActionModal } from "../../modal/ConfirmActionModal";
 import { BulkHeaderCheckbox, BulkRowCheckbox, FloatingTransactionBulkFooter } from "../../transactions/TransactionBulkSelectionControls";
+import { TransactionDetailIndicators, useTransactionDetailFlags } from "../../transactions/TransactionDetailIndicators";
 import { TransactionContextMenu, type TransactionContextMenuState } from "../../transactions/TransactionContextMenu";
 import { buildTransactionContextActions, type TransactionContextAction } from "../../transactions/transactionContextActions";
 import { formatCurrencyBRL, formatTransactionDate, getTransactionTypeMeta, resolveTransactionWallet } from "../../transactions/transactionView";
@@ -202,6 +203,7 @@ function TransactionsTable({ tabs, activeTab, wallets, beneficiariesById, transa
     const transactions = activeTabConfig?.transactions ?? [];
     const [contextMenu, setContextMenu] = useState<TransactionContextMenuState | null>(null);
     const { user } = useFinanceSession();
+    const detailFlags = useTransactionDetailFlags(user?.uid);
     const { openModal } = useModal();
     const { updateTransactionsBulk } = useFinanceActions();
     const bulkSelection = useTransactionBulkSelection(transactions);
@@ -488,6 +490,7 @@ function TransactionsTable({ tabs, activeTab, wallets, beneficiariesById, transa
                                             <td className="truncate border-b border-white/[0.04] px-3 py-2.5 text-[14px] font-medium text-white">
                                                 <div className="flex min-w-0 max-w-full items-center gap-1.5">
                                                     <span className="truncate">{transaction.description || "Sem descrição."}</span>
+                                                    <TransactionDetailIndicators flags={detailFlags} transactionId={transaction.id} />
                                                     {transaction.systemKind === "invoice_payment" && (
                                                         <span className="inline-flex shrink-0 text-violet-300" role="img" title="Pagamento vinculado à fatura" aria-label="Pagamento vinculado à fatura">
                                                             <Link2 size={13} />

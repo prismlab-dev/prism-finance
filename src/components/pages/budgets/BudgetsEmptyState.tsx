@@ -15,7 +15,7 @@ export function BudgetsEmptyState({ onCreate }: { onCreate: () => void }) {
             <div className="max-w-lg">
                 <p className="text-2xl font-semibold tracking-tight text-white">Defina um teto para o que você gasta</p>
                 <p className="mt-2 text-sm leading-relaxed text-white/55">
-                    Escolha quais despesas entram — categorias, despesas recorrentes, tags, beneficiários ou um trecho da descrição — e quais ficam de fora. O Prism acompanha o
+                    Escolha quais despesas entram — categorias, despesas recorrentes, tags, beneficiários ou um trecho da descrição — e quais ficam de fora. O Silus acompanha o
                     lançado, o previsto e avisa antes de estourar.
                 </p>
                 <button

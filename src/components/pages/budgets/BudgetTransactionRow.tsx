@@ -16,21 +16,8 @@ interface BudgetTransactionRowProps {
 
 const FALLBACK_COLOR = "#737373";
 
-function parseDay(date: string): Date {
-    const [year, month, day] = date.slice(0, 10).split("-").map(Number);
-    return new Date(year, month - 1, day);
-}
 
-function daysFromToday(day: Date): number {
-    const now = new Date();
-    return Math.round((day.getTime() - new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()) / 86_400_000);
-}
 
-function describeCountdown(diff: number): string {
-    if (diff <= 0) return "Vence hoje";
-    if (diff === 1) return "Amanhã";
-    return `Em ${diff} dias`;
-}
 
 /** Linha de despesa: ícone e nome da categoria, carteira, valor. Pendentes ficam vazadas. */
 export function BudgetTransactionRow({ entry, sourceLabel, alsoInLabels = [], onOpen }: BudgetTransactionRowProps) {
@@ -38,7 +25,6 @@ export function BudgetTransactionRow({ entry, sourceLabel, alsoInLabels = [], on
     const category = getTransactionCategoryDisplay(transaction.category);
     const color = category.color ?? FALLBACK_COLOR;
     const SourceIcon = transaction.paymentMethod === "credit_card" ? CreditCard : Wallet;
-    const day = parseDay(transaction.date);
     const CategoryIcon = getCategoryIconComponent(category.icon, "expense");
 
     const content = (

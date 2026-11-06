@@ -87,7 +87,6 @@ export interface TransactionFormState {
     setTransactionMode: (value: TransactionMode) => void;
     setInstallmentCountInput: (value: string) => void;
     setEditScope: (value: TransactionSeriesScope) => void;
-    prepareNextSubmission: () => void;
     toggleTag: (tagId: string) => void;
     submit: () => Promise<boolean>;
     saveAndContinue: () => Promise<boolean>;
@@ -227,7 +226,7 @@ export function useTransactionForm({ type, transaction, mode = "default", prefil
     );
     const [recurrenceCountInput, setRecurrenceCountInput] = useState(() => sourceGroup?.recurrenceRule?.end.type === "count" ? String(sourceGroup.recurrenceRule.end.count) : "");
     const [editScope, setEditScopeState] = useState<TransactionSeriesScope>("single");
-    const [draftTransactionId, setDraftTransactionId] = useState(() => createId("tx"));
+    const [draftTransactionId] = useState(() => createId("tx"));
     const [hydratedTransactionId, setHydratedTransactionId] = useState<string | null>(null);
     const [hydratedPrefillCategoryId, setHydratedPrefillCategoryId] = useState<string | null>(null);
     const activeWallets = useMemo(() => wallets.filter((wallet) => wallet.isActive), [wallets]);
@@ -605,12 +604,6 @@ export function useTransactionForm({ type, transaction, mode = "default", prefil
         return true;
     };
 
-    const prepareNextSubmission = () => {
-        if (!transaction) {
-            setDraftTransactionId(createId("tx"));
-        }
-    };
-
     return {
         isEditing,
         isInvoicePaymentEdit,
@@ -653,7 +646,6 @@ export function useTransactionForm({ type, transaction, mode = "default", prefil
         setTransactionMode,
         setInstallmentCountInput,
         setEditScope,
-        prepareNextSubmission,
         toggleTag,
         saveAndContinue,
         submit,

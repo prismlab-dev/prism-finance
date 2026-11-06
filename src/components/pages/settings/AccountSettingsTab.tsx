@@ -184,7 +184,7 @@ export function AccountSettingsTab({ onSignOut }: AccountSettingsTabProps) {
         }
 
         if (!supportsPasswordChange || !user.email) {
-            setPasswordError("Esta conta nao usa senha do Prism. Entre com o provedor conectado para gerenciar o acesso.");
+            setPasswordError("Esta conta nao usa senha do Silus. Entre com o provedor conectado para gerenciar o acesso.");
             setPasswordSuccess("");
             return;
         }
@@ -277,7 +277,7 @@ export function AccountSettingsTab({ onSignOut }: AccountSettingsTabProps) {
                                     setProfileError("");
                                     setProfileSuccess("");
                                 }}
-                                placeholder="Como voce quer aparecer no Prism"
+                                placeholder="Como voce quer aparecer no Silus"
                                 maxLength={60}
                                 className="mt-2 w-full rounded-2xl border border-white/[0.1] bg-white/[0.03] px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-400/70"
                             />
@@ -433,7 +433,7 @@ export function AccountSettingsTab({ onSignOut }: AccountSettingsTabProps) {
                 <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
                         <h3 className="text-lg font-semibold text-white">Sessão atual</h3>
-                        <p className="mt-1 text-sm text-white/45">Ações relacionadas à conta autenticada no Prism Finance.</p>
+                        <p className="mt-1 text-sm text-white/45">Ações relacionadas à conta autenticada no Silus.</p>
                     </div>
 
                     <button

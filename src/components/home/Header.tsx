@@ -5,6 +5,7 @@ import { resolveUserDisplayName } from "../../lib/userProfile";
 import { signOutSupabase } from "../../supabase/auth/authService";
 import { HeaderMetricsRow } from "./header/HeaderMetricsRow";
 import { HeaderProfileMenu } from "./header/HeaderProfileMenu";
+import { HeaderSearchTrigger } from "./header/HeaderSearchTrigger";
 import { useHeaderAmounts } from "./header/useHeaderAmounts";
 
 interface HeaderProps {
@@ -55,7 +56,10 @@ export function Header({ onOpenSidebar }: HeaderProps) {
                             <HeaderMetricsRow amounts={metricAmounts} />
                         </div>
                     </div>
-                    <HeaderProfileMenu onOpenSettings={handleOpenSettings} onSignOut={handleSwitchAccount} userName={userName} userPhotoUrl={userPhotoUrl} />
+                    <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+                        <HeaderSearchTrigger />
+                        <HeaderProfileMenu onOpenSettings={handleOpenSettings} onSignOut={handleSwitchAccount} userName={userName} userPhotoUrl={userPhotoUrl} />
+                    </div>
                 </div>
             </div>
         </header>

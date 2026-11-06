@@ -18,11 +18,11 @@ function GoogleIcon() {
     );
 }
 
-function PrismMark() {
+function SilusMark() {
     return (
         <div className="relative flex items-center gap-2 font-medium text-white">
             <Hexagon size={25} />
-            <span className="uppercase">Prism</span>
+            <span className="uppercase">Silus</span>
         </div>
     );
 }
@@ -161,7 +161,7 @@ export function LoginPage() {
                 <div aria-hidden className="pointer-events-none absolute -top-40 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-emerald-400/[0.06] blur-[90px] lg:hidden" />
 
                 <div className="relative">
-                    <PrismMark />
+                    <SilusMark />
                 </div>
 
                 <div className="relative mx-auto my-auto w-full max-w-sm py-10">
@@ -175,7 +175,7 @@ export function LoginPage() {
                         />
                     ) : !showEmailForm ? (
                         <>
-                            <h2 className="text-[2rem] font-semibold leading-tight tracking-[-0.025em]">Entre no Prism</h2>
+                            <h2 className="text-[2rem] font-semibold leading-tight tracking-[-0.025em]">Entre no Silus</h2>
                             <p className="mt-2 text-sm text-neutral-400">Primeira vez aqui? Sua conta é criada no mesmo passo.</p>
 
                             <div className="mt-8 flex flex-col gap-3">

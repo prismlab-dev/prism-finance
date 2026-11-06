@@ -13,8 +13,8 @@ export function SidebarContent({ variant, onClose }: SidebarContentProps) {
     const isResponsive = variant === "responsive";
 
     return (
-        <div className="flex h-full flex-col justify-between gap-1">
-            <div className="mt-2 flex flex-col gap-1">
+        <div className="flex h-full min-h-0 flex-col gap-1">
+            <div className="mt-2 flex shrink-0 flex-col gap-1">
                 <div
                     className={[
                         "flex min-h-10 items-center gap-2 px-2.5 pb-2 pt-1.5 font-medium text-white",
@@ -30,11 +30,11 @@ export function SidebarContent({ variant, onClose }: SidebarContentProps) {
                         <Hexagon className="shrink-0" size={25} />
                         <h1
                             className={[
-                                "max-w-28 overflow-hidden whitespace-nowrap uppercase opacity-100 transition-[max-width,opacity] duration-300 ease-out",
+                                "max-w-28 overflow-hidden whitespace-nowrap uppercase opacity-100 transition-[max-width,opacity] duration-300 ease-out text-xl",
                                 isResponsive ? "laptop:max-w-0 laptop:opacity-0 desktop:max-w-28 desktop:opacity-100" : "",
                             ].join(" ")}
                         >
-                            Prism
+                            Silus
                         </h1>
                     </div>
 
@@ -51,10 +51,16 @@ export function SidebarContent({ variant, onClose }: SidebarContentProps) {
                 </div>
 
                 <Divider />
+            </div>
+
+            <div className="ghost-scrollbar min-h-0 flex-1 py-1 overflow-y-auto overflow-x-hidden overscroll-contain">
                 <NavSection compactAtLaptop={isResponsive} indicatorLayoutId={`nav-indicator-${variant}`} onNavigate={onClose} />
             </div>
 
-            <FinanceSyncStatus compactAtLaptop={isResponsive} />
+            <div className="shrink-0 pt-2">
+                <Divider />
+                <FinanceSyncStatus compactAtLaptop={isResponsive} />
+            </div>
         </div>
     );
 }
