@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { getAppearance, LAYOUTS, setAppearance, THEMES, type Appearance } from "../../../lib/appearance";
 import { AppearancePreview } from "./AppearancePreview";
+import { HomeLayoutEditor } from "./HomeLayoutEditor";
 import { SettingsSection } from "./SettingsSection";
 
 type Option<T extends string> = { id: T; label: string; available: boolean; description?: string };
@@ -85,6 +86,9 @@ export function AppearanceSettingsTab() {
                         );
                     })}
                 </div>
+            </SettingsSection>
+            <SettingsSection title="Página inicial" description="Escolha quais widgets aparecem na Home e em que coluna. Vale só para este dispositivo.">
+                <HomeLayoutEditor />
             </SettingsSection>
         </div>
     );

@@ -1,4 +1,5 @@
 import { getPageFromPathname, type AppPage } from "../../context/PageContext";
+import { useAppearance } from "../../lib/appearance";
 import { SkeletonBlock, SkeletonLine, SkeletonPanel } from "./SkeletonPrimitives";
 
 interface PageSkeletonScreenProps {
@@ -37,6 +38,22 @@ export function PageSkeletonScreen({ page }: PageSkeletonScreenProps) {
 
 function FullPageSkeletonScreen({ page }: PageSkeletonScreenProps) {
     const variant = resolveSkeletonVariant(page);
+    const isLumen = useAppearance().layout === "lumen";
+
+    if (isLumen) {
+        // Espelha o AuthShell no layout Lumen: header no topo, sidebar abaixo dele e conteúdo em cartão.
+        return (
+            <div className="flex h-dvh flex-col bg-zinc-950 text-white">
+                <SkeletonHeader isLumen />
+                <div className="flex min-h-0 min-w-0 flex-1">
+                    <SkeletonSidebar isLumen />
+                    <main className="mx-2 mb-2 min-h-0 min-w-0 flex-1 overflow-y-auto rounded-xl bg-canvas px-2 pb-4 pt-2 laptop:ml-0">
+                        <PageSkeletonContent variant={variant} />
+                    </main>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-canvas text-white">
@@ -53,16 +70,22 @@ function FullPageSkeletonScreen({ page }: PageSkeletonScreenProps) {
     );
 }
 
-function SkeletonSidebar() {
+function SkeletonSidebar({ isLumen = false }: { isLumen?: boolean }) {
     return (
         <aside className="hidden shrink-0 laptop:block laptop:w-[72px] desktop:w-[240px]">
-            <div className="fixed inset-y-0 left-0 flex h-dvh flex-col justify-between bg-zinc-950/70 p-2 laptop:w-[72px] desktop:w-[240px]">
+            <div
+                className={`flex flex-col justify-between p-2 laptop:w-[72px] desktop:w-[240px] ${isLumen ? "h-full bg-zinc-950" : "fixed inset-y-0 left-0 h-dvh bg-zinc-950/70"}`}
+            >
                 <div>
-                    <div className="flex items-center justify-center gap-2 px-2.5 pb-2 pt-3 desktop:justify-start">
-                        <SkeletonBlock className="h-7 w-7 rounded-md" />
-                        <SkeletonLine className="hidden w-20 desktop:block" />
-                    </div>
-                    <div className="my-2 h-px bg-zinc-500/20" />
+                    {isLumen ? null : (
+                        <>
+                            <div className="flex items-center justify-center gap-2 px-2.5 pb-2 pt-3 desktop:justify-start">
+                                <SkeletonBlock className="h-7 w-7 rounded-md" />
+                                <SkeletonLine className="hidden w-20 desktop:block" />
+                            </div>
+                            <div className="my-2 h-px bg-zinc-500/20" />
+                        </>
+                    )}
                     <div className="space-y-1">
                         {Array.from({ length: 7 }, (_, index) => (
                             <SkeletonBlock key={index} className="h-10 rounded-xl" />
@@ -75,11 +98,17 @@ function SkeletonSidebar() {
     );
 }
 
-function SkeletonHeader() {
+function SkeletonHeader({ isLumen = false }: { isLumen?: boolean }) {
     return (
-        <header className="sticky top-2.5 z-20 mx-2 mb-2.5">
-            <div className="rounded-[18px] border border-white/[0.08] bg-zinc-950/70 px-3 py-2">
-                <div className="flex items-center justify-between gap-3">
+        <header className={isLumen ? "z-20 shrink-0" : "sticky top-2.5 z-20 mx-2 mb-2.5"}>
+            <div className={isLumen ? "flex items-center bg-zinc-950 py-2 pr-3" : "rounded-[18px] border border-white/[0.08] bg-zinc-950/70 px-3 py-2"}>
+                {isLumen ? (
+                    <div className="hidden shrink-0 items-center gap-2 laptop:flex laptop:w-[72px] laptop:justify-center desktop:w-auto desktop:justify-start desktop:pl-[18px] desktop:pr-6">
+                        <SkeletonBlock className="h-7 w-7 rounded-md" />
+                        <SkeletonLine className="hidden w-20 desktop:block" />
+                    </div>
+                ) : null}
+                <div className={`flex items-center justify-between gap-3 ${isLumen ? "min-w-0 flex-1 pl-3 desktop:pl-5" : ""}`}>
                     <div className="flex min-w-0 flex-1 items-center gap-2">
                         <SkeletonBlock className="h-10 w-10 rounded-[10px] laptop:hidden" />
                         <div className="flex min-w-0 items-center gap-2 overflow-hidden">

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { formatReportCurrency } from "../planning/planningReportFormatting";
 import { BUDGET_STATUS_STYLES } from "./budgetStatusStyles";
@@ -20,14 +21,18 @@ export function BudgetsOverviewPanel({ overview, nameOf, colorOf, onOpen }: Budg
     const unbudgetedIncome = income - budgeted;
     const available = budgeted - projected;
     const isOver = available < 0;
-    const scale = Math.max(budgeted, projected);
-    const usedPercent = budgeted > 0 ? Math.round((spent / budgeted) * 100) : 0;
+    const scale = Math.max(budgeted, projected, income);
+    const budgetedShare = income > 0 ? Math.round((budgeted / income) * 100) : null;
 
-    const stats = [
-        { label: "Gasto", value: spent, className: "text-white" },
-        { label: "Previsto", value: projected - spent, className: "text-white/60" },
-        { label: isOver ? "Excedido" : "Livre", value: Math.abs(available), className: isOver ? "text-rose-300" : "text-emerald-300" },
+    const isShort = unbudgetedIncome < 0;
+    const [activeKey, setActiveKey] = useState<string | null>(null);
+    const rows = [
+        { key: "spent", label: "Gasto", value: spent, valueClassName: "text-white", bar: spent, barClassName: spent > budgeted ? "bg-rose-400" : "bg-white" },
+        { key: "forecast", label: "Previsto", value: projected - spent, valueClassName: "text-white/70", bar: projected - spent, barClassName: isOver ? "bg-rose-400/40" : "bg-white/30" },
+        { key: "unused", label: isOver ? "Excedido" : "Não usado", value: Math.abs(available), valueClassName: isOver ? "text-rose-300" : "text-white/85", bar: Math.max(0, available), barClassName: "bg-white/[0.12]" },
+        { key: "free", label: isShort ? "Tetos acima da receita" : "Livre", value: Math.abs(unbudgetedIncome), valueClassName: isShort ? "text-rose-300" : "text-emerald-300", bar: Math.max(0, income - Math.max(budgeted, projected)), barClassName: "bg-emerald-400/70" },
     ];
+    const dimClass = (key: string) => (activeKey && activeKey !== key ? "opacity-30" : "opacity-100");
 
     return (
         <motion.aside
@@ -40,36 +45,49 @@ export function BudgetsOverviewPanel({ overview, nameOf, colorOf, onOpen }: Budg
 
             <div className="relative flex items-end justify-between gap-3">
                 <div className="min-w-0">
-                    <p className="text-3xl font-semibold tabular-nums tracking-tight text-white">{formatReportCurrency(budgeted)}</p>
-                    <p className="mt-1 truncate text-xs tabular-nums text-white/45">
-                        <span className="font-medium text-white/80">{formatReportCurrency(spent)}</span> gastos
-                    </p>
+                    <p className="text-[11px] text-white/45">Receitas do mês</p>
+                    <p className="text-3xl font-semibold tabular-nums tracking-tight text-white">{formatReportCurrency(income)}</p>
                 </div>
-                <span className={`text-sm font-medium tabular-nums ${spent > budgeted ? "text-rose-300" : "text-white/55"}`}>{usedPercent}%</span>
+                <p className="shrink-0 pb-1 text-right text-xs tabular-nums text-white/45">
+                    <span className="font-medium text-white/80">{formatReportCurrency(budgeted)}</span> em tetos
+                    <span className={`block ${isShort ? "text-rose-300" : ""}`}>{budgetedShare === null ? "sem receitas" : `${budgetedShare}% da receita`}</span>
+                </p>
             </div>
 
-            <div className="relative mt-4 h-1.5 overflow-hidden rounded-full bg-white/[0.06]" role="progressbar" aria-valuemin={0} aria-valuemax={budgeted} aria-valuenow={spent} aria-label="Uso total dos orçamentos">
-                <div className={`absolute inset-y-0 left-0 rounded-full ${isOver ? "bg-rose-400/30" : "bg-white/20"}`} style={{ width: percentOf(projected, scale) }} />
-                <div className={`absolute inset-y-0 left-0 rounded-full ${spent > budgeted ? "bg-rose-400" : "bg-white"}`} style={{ width: percentOf(spent, scale) }} />
-                {scale > budgeted ? <span className="absolute inset-y-0 w-0.5 bg-white/80" style={{ left: percentOf(budgeted, scale) }} /> : null}
+            <div className="relative mt-4" onMouseLeave={() => setActiveKey(null)}>
+                <div className="flex h-2 gap-px overflow-hidden rounded-full bg-white/[0.06]" role="progressbar" aria-valuemin={0} aria-valuemax={budgeted} aria-valuenow={spent} aria-label="Uso total dos orçamentos">
+                    {rows.map((row) =>
+                        row.bar > 0 ? (
+                            <span
+                                key={row.key}
+                                onMouseEnter={() => setActiveKey(row.key)}
+                                className={`h-full shrink-0 transition-opacity duration-150 ${row.barClassName} ${dimClass(row.key)}`}
+                                style={{ width: percentOf(row.bar, scale) }}
+                            />
+                        ) : null,
+                    )}
+                </div>
+                {scale > budgeted ? <span aria-hidden className="pointer-events-none absolute -inset-y-0.5 w-0.5 rounded-full bg-white/80" style={{ left: percentOf(budgeted, scale) }} title="Soma dos tetos" /> : null}
             </div>
 
-            <dl className="relative mt-5 grid grid-cols-3 gap-2">
-                {stats.map((stat) => (
-                    <div key={stat.label} className="min-w-0 rounded-xl bg-white/[0.03] px-3 py-2.5">
-                        <dt className="text-[11px] text-white/40">{stat.label}</dt>
-                        <dd className={`mt-0.5 truncate text-sm font-medium tabular-nums ${stat.className}`}>{formatReportCurrency(stat.value)}</dd>
+            <dl className="relative mt-4 grid grid-cols-2 gap-x-4 gap-y-2.5" onMouseLeave={() => setActiveKey(null)}>
+                {rows.map((row) => (
+                    <div
+                        key={row.key}
+                        tabIndex={0}
+                        onMouseEnter={() => setActiveKey(row.key)}
+                        onFocus={() => setActiveKey(row.key)}
+                        onBlur={() => setActiveKey(null)}
+                        className={`-mx-1.5 min-w-0 rounded-lg px-1.5 py-0.5 outline-none transition-opacity duration-150 focus-visible:ring-1 focus-visible:ring-white/30 ${dimClass(row.key)}`}
+                    >
+                        <dt className="flex items-center gap-1.5 truncate text-[11px] text-white/45">
+                            <span aria-hidden className={`h-1.5 w-1.5 shrink-0 rounded-full ${row.barClassName}`} />
+                            {row.label}
+                        </dt>
+                        <dd className={`truncate text-sm font-medium tabular-nums ${row.valueClassName}`}>{formatReportCurrency(row.value)}</dd>
                     </div>
                 ))}
             </dl>
-
-            <div className="relative mt-2 flex items-baseline justify-between gap-3 rounded-xl bg-white/[0.03] px-3 py-2.5">
-                <span className="min-w-0 text-[11px] text-white/40">
-                    {unbudgetedIncome >= 0 ? "Receitas fora dos orçamentos" : "Tetos acima das receitas"}
-                    <span className="block truncate tabular-nums text-white/30">de {formatReportCurrency(income)} em receitas</span>
-                </span>
-                <span className={`shrink-0 text-sm font-medium tabular-nums ${unbudgetedIncome >= 0 ? "text-emerald-300" : "text-rose-300"}`}>{formatReportCurrency(Math.abs(unbudgetedIncome))}</span>
-            </div>
 
             <ul className="relative -mx-2 mt-5 border-t border-white/[0.06] pt-3">
                 {overview.progresses.map((progress) => {

@@ -7,6 +7,8 @@ export interface NavSubitem {
     label: string;
     path: string;
     marker?: ReactNode;
+    /** Navegação com intenção (ex.: fatura de um mês); substitui o Link puro. */
+    onSelect?: () => void;
 }
 
 interface NavSubitemsProps {
@@ -30,7 +32,7 @@ export function NavSubitems({ items, activeId, compactAtLaptop = false, indicato
                 onMouseLeave={() => setHoveredId(null)}
                 className={["ml-2 w-[calc(100%-0.5rem)] border-l border-white/10 py-0.5", compactAtLaptop ? "laptop:hidden desktop:block" : ""].join(" ")}
             >
-                {items.map(({ id, label, path, marker }) => {
+                {items.map(({ id, label, path, marker, onSelect }) => {
                     const isActive = id === activeId;
 
                     return (
@@ -45,7 +47,13 @@ export function NavSubitems({ items, activeId, compactAtLaptop = false, indicato
                             ) : null}
                             <Link
                                 to={path}
-                                onClick={onNavigate}
+                                onClick={(event) => {
+                                    if (onSelect) {
+                                        event.preventDefault();
+                                        onSelect();
+                                    }
+                                    onNavigate?.();
+                                }}
                                 onMouseEnter={() => setHoveredId(id)}
                                 onFocus={() => setHoveredId(id)}
                                 onBlur={() => setHoveredId(null)}
