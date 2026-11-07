@@ -1,6 +1,7 @@
 import type { Transaction } from "../../context/FinanceContext";
 import { useFinanceActions, useFinanceCreditCardInvoices } from "../../context/FinanceContext";
 import { getMonthKeyFromDateValue } from "../../context/financeTypes";
+import { getLocalTodayDate } from "../../lib/localDate";
 import { useModal } from "../../context/ModalContext";
 import { usePage } from "../../context/PageContext";
 import { ConfirmActionModal } from "../modal/ConfirmActionModal";
@@ -121,6 +122,11 @@ export function useTransactionContextActionHandler() {
 
         if (action.id === "post_card") {
             openModal(<ConfirmActionModal title="Confirmar cobrança?" description="O valor passará a compor a fatura e o limite utilizado do cartão." confirmLabel="Confirmar cobrança" tone="success" onConfirm={() => updateTransaction({ transaction, draft: { commitment: "posted" }, scope: "single" })} />);
+            return;
+        }
+
+        if (action.id === "post_card_today") {
+            openModal(<ConfirmActionModal title="Confirmar cobrança hoje?" description="A data passa a ser hoje e o valor passará a compor a fatura e o limite utilizado do cartão." confirmLabel="Confirmar cobrança" tone="success" onConfirm={() => updateTransaction({ transaction, draft: { commitment: "posted", date: getLocalTodayDate() }, scope: "single" })} />);
             return;
         }
 

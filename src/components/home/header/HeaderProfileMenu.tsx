@@ -50,7 +50,7 @@ export function HeaderProfileMenu({ onOpenSettings, onSignOut, userName, userPho
     };
 
     return (
-        <div className="relative" ref={profileMenuRef}>
+        <div className="relative -ml-1 sm:-ml-2" ref={profileMenuRef}>
             <button
                 type="button"
                 onClick={() => setIsOpen((current) => !current)}

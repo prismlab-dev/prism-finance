@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
-import { CheckCheck, CircleCheckBig, Clock, Copy, Eye, LayoutList, Link2, ListChecks, SquareArrowOutUpRight, SquareSlash, Trash2, TriangleAlert } from "lucide-react";
+import { CheckCheck, CircleCheckBig, Clock, Copy, Eye, LayoutList, Link, ListChecks, SquareArrowOutUpRight, SquareSlash, Trash2, TriangleAlert } from "lucide-react";
 import type { TransactionContextAction, TransactionContextActionId } from "./transactionContextActions";
 
 export interface TransactionContextMenuState {
@@ -25,12 +25,13 @@ const MENU_DIVIDER_HEIGHT = 13;
 const ACTION_ICONS: Record<TransactionContextActionId, typeof Eye> = {
     open: SquareArrowOutUpRight,
     view_series: LayoutList,
-    view_invoice: Link2,
-    view_expenses: Link2,
+    view_invoice: Link,
+    view_expenses: Link,
     select: ListChecks,
     toggle_status: CircleCheckBig,
     pay_today: CheckCheck,
-    post_card: CheckCheck,
+    post_card: CircleCheckBig,
+    post_card_today: CheckCheck,
     ignore: SquareSlash,
     duplicate: Copy,
     delete_single: Trash2,

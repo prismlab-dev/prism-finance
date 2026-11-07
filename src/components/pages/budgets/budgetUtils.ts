@@ -47,6 +47,8 @@ export interface BudgetsOverview {
     spent: number;
     projected: number;
     unbudgetedSpent: number;
+    /** Receitas do mês (recebidas e previstas). */
+    income: number;
     exceededCount: number;
     attentionCount: number;
 }
@@ -166,6 +168,7 @@ export function buildBudgetsOverview({ budgets, categories, transactions, monthK
         spent: sumValues(monthSpending.filter((transaction) => isBudgeted(transaction) && isPosted(transaction))),
         projected: sumValues(monthSpending.filter(isBudgeted)),
         unbudgetedSpent: sumValues(monthSpending.filter((transaction) => !isBudgeted(transaction) && isPosted(transaction))),
+        income: sumValues(transactions.filter((transaction) => transaction.type === "income" && transaction.status !== "cancelled" && transaction.status !== "skipped" && isInMonth(transaction, monthKey))),
         exceededCount: progresses.filter((progress) => progress.status === "exceeded").length,
         attentionCount: progresses.filter((progress) => progress.status === "warning" || progress.status === "at_risk").length,
     };

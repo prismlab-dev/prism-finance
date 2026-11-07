@@ -171,7 +171,12 @@ function prepareFinanceSnapshot(params: {
         sharedBeneficiaries: params.sharedBeneficiaries ?? [],
     }).snapshot;
     const favoriteWalletId = resolveFavoriteWalletId(rawFavoriteWalletId, snapshot.wallets);
-    return { snapshot, favoriteWalletId, changed: !source };
+    if (!source) return { snapshot, favoriteWalletId, changed: true };
+    // Series only roll their horizon forward on edits; top up ones left behind (older series, idle months) on every load.
+    const materialized = materializeSeriesHorizon(snapshot, getTodayDate());
+    if (materialized === snapshot) return { snapshot, favoriteWalletId, changed: false };
+    const invoices = syncCreditCardInvoices({ creditCards: materialized.creditCards, transactionGroups: materialized.transactionGroups, transactions: materialized.transactions, existingInvoices: materialized.creditCardInvoices });
+    return { snapshot: { ...materialized, transactions: invoices.transactions, creditCardInvoices: invoices.creditCardInvoices }, favoriteWalletId, changed: true };
 }
 
 function applyLocalPlanningPreferences(snapshot: FinanceSnapshot, userId: string | null | undefined): FinanceSnapshot {
@@ -2004,6 +2009,8 @@ export function useFinanceStore(): FinanceStoreValue {
                 createGroupId: () => createId("group"),
                 now: nowIso,
             });
+            // Any edit keeps the series' stored horizon a full window ahead.
+            transformed.snapshot = materializeSeriesHorizon(transformed.snapshot, getTodayDate(), recurringSeriesIdsOf(transformed.snapshot, [transaction.id]));
             const syncedInvoices = syncCreditCardInvoices({
                 creditCards: transformed.snapshot.creditCards,
                 transactionGroups: transformed.snapshot.transactionGroups,

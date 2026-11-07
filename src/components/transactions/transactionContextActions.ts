@@ -1,7 +1,6 @@
-import { getLocalTodayDate } from "../../lib/localDate";
 import type { Transaction, TransactionGroup, TransactionSeriesScope, TransactionStatus } from "../../context/FinanceContext";
 
-export type TransactionContextActionId = "open" | "view_series" | "view_invoice" | "view_expenses" | "select" | "toggle_status" | "pay_today" | "post_card" | "ignore" | "duplicate" | "delete_single" | "delete_this_and_next" | "delete_all";
+export type TransactionContextActionId = "open" | "view_series" | "view_invoice" | "view_expenses" | "select" | "toggle_status" | "pay_today" | "post_card" | "post_card_today" | "ignore" | "duplicate" | "delete_single" | "delete_this_and_next" | "delete_all";
 
 export interface TransactionContextAction {
     id: TransactionContextActionId;
@@ -135,8 +134,8 @@ export function buildTransactionContextActions({ transaction, group, isSelected 
         });
     }
 
-    if (isCreditCardSpending(transaction) && transaction.commitment === "forecast" && transaction.status === "pending" && transaction.date <= getLocalTodayDate()) {
-        actions.push({ id: "post_card", label: "Confirmar cobrança no cartão" });
+    if (isCreditCardSpending(transaction) && transaction.commitment === "forecast" && transaction.status === "pending") {
+        actions.push({ id: "post_card", label: "Confirmar cobrança" }, { id: "post_card_today", label: "Confirmar cobrança hoje" });
     }
 
     if (canShowPayTodayAction(transaction)) {

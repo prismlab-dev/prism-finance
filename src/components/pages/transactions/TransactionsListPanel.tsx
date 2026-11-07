@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useMemo, useState, type MouseEvent, type ReactNode } from "react";
-import { ChevronDown, ChevronsUpDown, ChevronUp, CircleSlash, Link2, Repeat2 } from "lucide-react";
+import { ChevronDown, ChevronsUpDown, ChevronUp, CircleSlash, Link, Repeat2 } from "lucide-react";
 import { type Beneficiary, type Transaction, type Wallet, useFinanceActions, useFinanceBeneficiaries, useFinanceSession, useFinanceTransactionGroups } from "../../../context/FinanceContext";
 import { useModal } from "../../../context/ModalContext";
 import { getCategoryIconComponent } from "../../../lib/categoryIcons";
@@ -559,7 +559,7 @@ function TransactionsTable({ tabs, activeTab, wallets, beneficiariesById, transa
                                                         <TransactionDetailIndicators flags={detailFlags} transactionId={transaction.id} />
                                                         {transaction.systemKind === "invoice_payment" && (
                                                             <span className="inline-flex shrink-0 text-violet-300" role="img" title="Pagamento vinculado à fatura" aria-label="Pagamento vinculado à fatura">
-                                                                <Link2 size={13} />
+                                                                <Link size={13} />
                                                             </span>
                                                         )}
                                                     </div>
