@@ -16,7 +16,8 @@ interface BudgetsOverviewPanelProps {
 
 /** Soma dos tetos contra o gasto (pago/lançado) e o previsto (pendente), mais o gasto de cada orçamento. */
 export function BudgetsOverviewPanel({ overview, nameOf, colorOf, onOpen }: BudgetsOverviewPanelProps) {
-    const { budgeted, spent, projected } = overview;
+    const { budgeted, spent, projected, income } = overview;
+    const unbudgetedIncome = income - budgeted;
     const available = budgeted - projected;
     const isOver = available < 0;
     const scale = Math.max(budgeted, projected);
@@ -61,6 +62,14 @@ export function BudgetsOverviewPanel({ overview, nameOf, colorOf, onOpen }: Budg
                     </div>
                 ))}
             </dl>
+
+            <div className="relative mt-2 flex items-baseline justify-between gap-3 rounded-xl bg-white/[0.03] px-3 py-2.5">
+                <span className="min-w-0 text-[11px] text-white/40">
+                    {unbudgetedIncome >= 0 ? "Receitas fora dos orçamentos" : "Tetos acima das receitas"}
+                    <span className="block truncate tabular-nums text-white/30">de {formatReportCurrency(income)} em receitas</span>
+                </span>
+                <span className={`shrink-0 text-sm font-medium tabular-nums ${unbudgetedIncome >= 0 ? "text-emerald-300" : "text-rose-300"}`}>{formatReportCurrency(Math.abs(unbudgetedIncome))}</span>
+            </div>
 
             <ul className="relative -mx-2 mt-5 border-t border-white/[0.06] pt-3">
                 {overview.progresses.map((progress) => {

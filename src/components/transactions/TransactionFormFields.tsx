@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { ArrowRight, Layers3, LayoutGrid, ReceiptText, Tags } from "lucide-react";
+import { ArrowRight, Layers3, LayoutGrid, Pencil, ReceiptText, Tags } from "lucide-react";
 import { useFinanceTransactions, type Beneficiary, type Category, type Tag, type Transaction, type TransactionSeriesScope, type Wallet } from "../../context/FinanceContext";
 import { DateField } from "./DateField";
 import { DescriptionAutocomplete } from "./DescriptionAutocomplete";
@@ -118,7 +118,7 @@ export function TransactionFormFields({ activeTab, form, transaction, details, d
                     disabled={disabled}
                 />
             )}
-            {form.isEditing && form.isSeriesTransaction && !form.isInvoicePaymentEdit ? <SingleSelectCombobox disableSearch compactTrigger label="Aplicar edição em" value={form.editScope} placeholder="Selecione um escopo" emptyMessage="Nenhum escopo encontrado." options={EDIT_SCOPE_OPTIONS} onChange={(value) => form.setEditScope(value === "all" || value === "this_and_next" ? value : "single")} renderOptionContent={(option) => <EditScopeOptionContent option={option} />} renderSelectedContent={(option) => <span className="truncate">{option.label}</span>} disabled={disabled} /> : null}
+            {form.isEditing && form.isSeriesTransaction && !form.isInvoicePaymentEdit ? <SingleSelectCombobox disableSearch compactTrigger label="Aplicar edição em" hideLabel leadingIcon={<Pencil size={14} className="shrink-0 text-white/55" />} value={form.editScope} placeholder="Selecione um escopo" emptyMessage="Nenhum escopo encontrado." options={EDIT_SCOPE_OPTIONS} onChange={(value) => form.setEditScope(value === "all" || value === "this_and_next" ? value : "single")} renderOptionContent={(option) => <EditScopeOptionContent option={option} />} renderSelectedContent={(option) => <span className="truncate">{option.label}</span>} disabled={disabled} /> : null}
         </section>
     );
 }

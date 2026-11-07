@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type MouseEvent, type ReactNode, Fragment } from "react";
-import { Banknote, CircleCheck, Clock, SkipForward, ChevronDown, ChevronsUpDown, ChevronUp, CreditCard as CreditCardIcon, Link2, Repeat2 } from "lucide-react";
+import { Banknote, CircleCheck, Clock, SkipForward, ChevronDown, ChevronsUpDown, ChevronUp, CreditCard as CreditCardIcon, Link, Repeat2 } from "lucide-react";
 import { type Beneficiary, type CreditCard, type CreditCardInvoice, type Transaction, useFinanceBeneficiaries, useFinanceCategories, useFinanceSession, useFinanceTransactionGroups } from "../../../context/FinanceContext";
 import { useModal } from "../../../context/ModalContext";
 import { normalizeComparisonText } from "../../../context/finance/helpers";
@@ -697,6 +697,7 @@ export function StatementContentPanel({
                                         return (
                                             <tr
                                                 key={transaction.id}
+                                                data-transaction-id={transaction.id}
                                                 onClick={() => handleRowClick(transaction)}
                                                 onContextMenu={(event) => handleRowContextMenu(event, transaction)}
                                                 className={`${selectionMode && canBulkEdit ? "cursor-pointer" : "cursor-context-menu"} transition-colors ${
@@ -765,7 +766,7 @@ export function StatementContentPanel({
                                                                 <TransactionDetailIndicators flags={detailFlags} transactionId={transaction.id} />
                                                                 {isInvoicePayment && (
                                                                     <span className="inline-flex shrink-0 text-violet-300" role="img" title="Pagamento vinculado à fatura" aria-label="Pagamento vinculado à fatura">
-                                                                        <Link2 size={13} />
+                                                                        <Link size={13} />
                                                                     </span>
                                                                 )}
                                                             </div>

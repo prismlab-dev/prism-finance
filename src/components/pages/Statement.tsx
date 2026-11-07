@@ -1,5 +1,7 @@
 import { monthPeriod } from "../../context/finance/recurrence/period";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
+import { useRowHighlight } from "../common/useRowHighlight";
 import { Plus } from "lucide-react";
 import {
     type CreditCard,
@@ -66,18 +68,19 @@ export function StatementPage() {
     const { consumePendingNavigation } = usePage();
     const [filters, setFilters] = useLocalPreferenceSection(user?.uid, STATEMENT_PAGE_PREFERENCES_SECTION, INITIAL_STATEMENT_FILTER_STATE, normalizeStatementFilterState);
     const hasResolvedEntryFiltersRef = useRef(false);
+    const { key: locationKey } = useLocation();
+    const [pendingHighlightTransactionId, setPendingHighlightTransactionId] = useState<string | null>(null);
+    useRowHighlight(pendingHighlightTransactionId, () => setPendingHighlightTransactionId(null));
     const period = monthPeriod(filters.selectedMonth, 2);
     const transactions = useFinanceTransactions(period);
     const creditCardInvoices = useFinanceCreditCardInvoices(period);
 
     useEffect(() => {
-        if (hasResolvedEntryFiltersRef.current) {
-            return;
-        }
-
+        // Navegação explícita vale mesmo já estando na página (ex.: vindo de um modal aberto aqui).
         const pendingNavigation = consumePendingNavigation();
         if (pendingNavigation?.page === "statement") {
             hasResolvedEntryFiltersRef.current = true;
+            setPendingHighlightTransactionId(pendingNavigation.highlightTransactionId ?? null);
 
             setFilters((current) => ({
                 ...current,
@@ -88,7 +91,7 @@ export function StatementPage() {
             return;
         }
 
-        if (sessionLoading) {
+        if (hasResolvedEntryFiltersRef.current || sessionLoading) {
             return;
         }
 
@@ -104,7 +107,7 @@ export function StatementPage() {
             const hasValidStoredCard = current.selectedCardIds[0] && creditCards.some((card) => card.id === current.selectedCardIds[0]);
             return hasValidStoredCard ? current : defaultFilters;
         });
-    }, [consumePendingNavigation, creditCardInvoices, creditCards, favoriteCreditCardId, sessionLoading, setFilters]);
+    }, [consumePendingNavigation, creditCardInvoices, creditCards, favoriteCreditCardId, locationKey, sessionLoading, setFilters]);
 
     useEffect(() => {
         if (!hasResolvedEntryFiltersRef.current || sessionLoading) {

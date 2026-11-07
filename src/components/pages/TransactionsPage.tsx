@@ -1,3 +1,4 @@
+import { useRowHighlight } from "../common/useRowHighlight";
 import { useLocation } from "react-router-dom";
 import { useEffect, useMemo, useState, type SetStateAction } from "react";
 import { Plus } from "lucide-react";
@@ -196,34 +197,8 @@ export function TransactionsPage() {
         openModal(<EditTransaction transaction={transaction} />);
     }, [openModal, pendingOpenTransactionId, transactions]);
 
-    // A linha só existe depois que filtros/aba aplicados re-renderizam a lista; tenta por alguns frames.
-    useEffect(() => {
-        if (!pendingHighlightTransactionId) {
-            return;
-        }
-
-        let attempts = 0;
-        let frame = 0;
-        const tryHighlight = () => {
-            const row = document.querySelector<HTMLElement>(`[data-transaction-id="${CSS.escape(pendingHighlightTransactionId)}"]`);
-            if (!row) {
-                if (++attempts < 60) {
-                    frame = requestAnimationFrame(tryHighlight);
-                }
-                return;
-            }
-
-            setPendingHighlightTransactionId(null);
-            const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-            row.scrollIntoView({ block: "center", behavior: reduceMotion ? "auto" : "smooth" });
-            row.animate(
-                [{ backgroundColor: "transparent" }, { backgroundColor: "rgba(125, 211, 252, 0.16)", offset: 0.3 }, { backgroundColor: "transparent" }],
-                { duration: 1400, easing: "ease-out", delay: reduceMotion ? 0 : 300 },
-            );
-        };
-        frame = requestAnimationFrame(tryHighlight);
-        return () => cancelAnimationFrame(frame);
-    }, [pendingHighlightTransactionId]);
+    // A linha só existe depois que filtros/aba aplicados re-renderizam a lista.
+    useRowHighlight(pendingHighlightTransactionId, () => setPendingHighlightTransactionId(null));
 
     const {
         selectedMonth,

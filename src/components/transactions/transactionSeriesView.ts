@@ -1,5 +1,6 @@
 import { addMonthsToLocalDate, getLocalTodayDate } from "../../lib/localDate";
 import { isOccurrenceInRule, projectOccurrences } from "../../context/finance/recurrence/projectOccurrences";
+import { resolveTransactionCreditCardId, resolveTransactionDestinationWalletId, resolveTransactionSourceWalletId } from "../../context/finance/transactionResolution";
 import type { CreditCard, CreditCardInvoice, StoredTransaction, TransactionGroup, TransactionMode, TransactionStatus } from "../../context/finance/domainTypes";
 
 /** Quantas ocorrências futuras projetar para uma série sem fim definido. */
@@ -52,7 +53,8 @@ interface BuildTransactionSeriesViewParams {
     projectionWindow?: number;
 }
 
-function toRow(transaction: StoredTransaction): TransactionSeriesRow {
+// Ocorrências herdam a conta do grupo; ler só o campo da ocorrência mostra "sem conta".
+function toRow(transaction: StoredTransaction, group: TransactionGroup | undefined): TransactionSeriesRow {
     return {
         id: transaction.id,
         number: transaction.installmentNumber ?? transaction.occurrenceNumber ?? null,
@@ -64,9 +66,9 @@ function toRow(transaction: StoredTransaction): TransactionSeriesRow {
         paidAt: transaction.paidAt,
         title: transaction.title,
         groupId: transaction.groupId,
-        sourceWalletId: transaction.sourceWalletId,
-        destinationWalletId: transaction.destinationWalletId,
-        creditCardId: transaction.creditCardId,
+        sourceWalletId: resolveTransactionSourceWalletId(transaction, group),
+        destinationWalletId: resolveTransactionDestinationWalletId(transaction, group),
+        creditCardId: resolveTransactionCreditCardId(transaction, group),
         invoiceId: transaction.invoiceId,
     };
 }
@@ -114,7 +116,7 @@ export function buildTransactionSeriesView({
         });
     }
 
-    const rows = [...materialized, ...projected].map(toRow).sort((first, second) => first.date.localeCompare(second.date) || (first.number ?? 0) - (second.number ?? 0));
+    const rows = [...materialized, ...projected].map((transaction) => toRow(transaction, segments.find((segment) => segment.id === transaction.groupId))).sort((first, second) => first.date.localeCompare(second.date) || (first.number ?? 0) - (second.number ?? 0));
     const active = rows.filter((row) => row.status !== "skipped" && row.status !== "cancelled");
 
     return {

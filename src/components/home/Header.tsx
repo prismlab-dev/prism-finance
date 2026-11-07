@@ -95,8 +95,8 @@ export function Header({ onOpenSidebar, layout = "classic" }: HeaderProps) {
                         </div>
                     </div>
                     <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-                        <HeaderSearchTrigger />
                         <HeaderNotifications />
+                        <HeaderSearchTrigger />
                         <HeaderProfileMenu onOpenSettings={handleOpenSettings} onSignOut={handleSwitchAccount} userName={userName} userPhotoUrl={userPhotoUrl} />
                     </div>
                 </div>

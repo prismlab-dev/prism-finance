@@ -34,6 +34,7 @@ export type PageNavigationIntent =
           selectedCardId: string;
           // Month key (YYYY-MM) for statement page, always interpreted as invoice due month.
           selectedMonth: string;
+          highlightTransactionId?: string;
       };
 
 interface PageContextType {

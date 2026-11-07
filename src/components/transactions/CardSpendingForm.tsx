@@ -4,7 +4,7 @@ import { occurrenceId } from "../../context/finance/recurrence/projectOccurrence
 import { TransactionModeField } from "./TransactionModeField";
 import { defaultInvoiceOption, filterInvoiceOption } from "./invoiceSelection";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Copy, Eye, SquareSlash, Tags, Trash2, X } from "lucide-react";
+import { Copy, Eye, Pencil, SquareSlash, Tags, Trash2, X } from "lucide-react";
 import type { Category, Transaction, TransactionMode, TransactionSeriesScope, TransactionStatus } from "../../context/FinanceContext";
 import {
     SYSTEM_EXPENSE_CARD_INVOICE_CATEGORY_ID,
@@ -778,6 +778,8 @@ function CardSpendingFormBody({
                                 <SingleSelectCombobox
                                     disableSearch
                                     label="Aplicar edição em"
+                                    hideLabel
+                                    leadingIcon={<Pencil size={14} className="shrink-0 text-white/55" />}
                                     value={editScope}
                                     placeholder="Selecione um escopo"
                                     emptyMessage="Nenhum escopo encontrado."
