@@ -29,4 +29,9 @@ describe("sync error recovery", () => {
         expect(result.retryAutomatically).toBe(false);
         expect(result.message).toContain("pagamentos concorrentes");
     });
+
+    it("reads domain codes from plain Supabase error objects", () => {
+        const result = describeFinanceSyncError({ code: "23514", details: null, hint: null, message: "PAID_INVOICE_CHARGE_IMMUTABLE" });
+        expect(result.retryAutomatically).toBe(false);
+    });
 });

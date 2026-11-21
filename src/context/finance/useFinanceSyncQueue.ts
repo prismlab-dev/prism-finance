@@ -7,6 +7,7 @@ import { persistConflictResolution } from "./persistConflictResolution";
 import { persistPendingSync } from "./persistPendingSync";
 import { recoverPendingSync } from "./recoverPendingSync";
 import {
+    buildFinanceChangesPayload,
     isFinanceRevisionConflictError,
     type SaveSupabaseFinanceDataParams,
     type SupabaseFinanceData,
@@ -135,6 +136,7 @@ export function useFinanceSyncQueue({
     const onConflictMergedRef = useRef(onConflictMerged);
     const backupPendingDataRef = useRef(backupPendingData);
     const pendingSyncRef = useRef<PendingFinanceSync | null>(null);
+    const lastRawErrorRef = useRef<unknown>(null);
     const durablePendingQueuedAtRef = useRef<string | null>(null);
     const inFlightRef = useRef(false);
     const activeFlushIdRef = useRef(0);
@@ -297,6 +299,7 @@ export function useFinanceSyncQueue({
                                 return;
                             }
 
+                            lastRawErrorRef.current = conflictError;
                             logFinanceSyncError({
                                 error: conflictError,
                                 pendingSync,
@@ -310,6 +313,7 @@ export function useFinanceSyncQueue({
                         });
                 }
 
+                lastRawErrorRef.current = error;
                 logFinanceSyncError({
                     error,
                     pendingSync,
@@ -516,6 +520,23 @@ export function useFinanceSyncQueue({
         persistPendingThenFlush(activeUserId, pendingSync);
     }, [persistPendingThenFlush]);
 
+    const copySyncDiagnostic = useCallback(async () => {
+        const activeUserId = userIdRef.current;
+        const pending = pendingSyncRef.current;
+        if (!activeUserId || !pending) return;
+        const diagnostic = {
+            generatedAt: new Date().toISOString(),
+            userAgent: navigator.userAgent,
+            userId: activeUserId,
+            queuedAt: pending.queuedAt,
+            baseRevision: pending.baseRevision,
+            retryAttempt: retryAttemptRef.current,
+            error: lastRawErrorRef.current,
+            changes: buildFinanceChangesPayload(activeUserId, pending.baseData, pending.targetData),
+        };
+        await navigator.clipboard.writeText(JSON.stringify(diagnostic, null, 2));
+    }, []);
+
     const getPendingSyncData = useCallback((): SupabaseFinanceData | null => pendingSyncRef.current?.targetData ?? null, []);
     const getPendingSyncBaseRevision = useCallback((): number | null => pendingSyncRef.current?.baseRevision ?? null, []);
     const hasPendingSync = pendingCount > 0 || pendingSyncRef.current !== null;
@@ -530,11 +551,12 @@ export function useFinanceSyncQueue({
             hasPendingSync,
             retrySync,
             restoreConfirmedData,
+            copySyncDiagnostic,
             enqueueSync,
             getPendingSyncData,
             getPendingSyncBaseRevision,
         }),
-        [enqueueSync, getPendingSyncBaseRevision, getPendingSyncData, hasPendingSync, hydratedUserId, lastError, lastSyncedAt, pendingCount, retrySync, restoreConfirmedData, status],
+        [enqueueSync, getPendingSyncBaseRevision, getPendingSyncData, hasPendingSync, hydratedUserId, lastError, lastSyncedAt, pendingCount, retrySync, restoreConfirmedData, copySyncDiagnostic, status],
     );
 }
 

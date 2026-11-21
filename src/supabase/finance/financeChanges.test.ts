@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createFinanceSnapshot, DEFAULT_PLANNING_STATE } from "../../context/financeTypes";
+import type { StoredTransaction, TransactionGroup, Wallet } from "../../context/financeTypes";
 import type { SupabaseFinanceData } from "./financeService";
 import { buildFinanceChangesPayload } from "./financeChanges";
 
@@ -53,5 +54,27 @@ describe("buildFinanceChangesPayload", () => {
         target.ledgerEntries = [];
         const deletionAttempt = buildFinanceChangesPayload("00000000-0000-0000-0000-000000000001", base, target);
         expect(deletionAttempt.deletes).not.toContainEqual(expect.objectContaining({ entity_type: "ledger_entry" }));
+    });
+
+    it("leaves rows cascaded by a wallet deletion to the database", () => {
+        const base = emptyData();
+        base.wallets = [{ id: "removed" } as Wallet];
+        base.transactionGroups = [
+            { id: "wallet-group", sourceWalletId: "removed", destinationWalletId: null, creditCardId: null } as TransactionGroup,
+            { id: "other-group", sourceWalletId: "kept", destinationWalletId: null, creditCardId: null } as TransactionGroup,
+        ];
+        base.transactions = [
+            { id: "invoice-payment", groupId: "other-group", sourceWalletId: "removed", destinationWalletId: null, creditCardId: null } as StoredTransaction,
+            { id: "wallet-group-item", groupId: "wallet-group", sourceWalletId: null, destinationWalletId: null, creditCardId: null } as StoredTransaction,
+            { id: "unrelated", groupId: "other-group", sourceWalletId: "kept", destinationWalletId: null, creditCardId: null } as StoredTransaction,
+        ];
+
+        const changes = buildFinanceChangesPayload("00000000-0000-0000-0000-000000000001", base, emptyData());
+
+        expect(changes.deletes).toEqual([
+            { entity_type: "wallet", entity_id: "removed" },
+            { entity_type: "transaction_group", entity_id: "other-group" },
+            { entity_type: "transaction", entity_id: "unrelated" },
+        ]);
     });
 });

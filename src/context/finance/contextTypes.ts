@@ -80,6 +80,7 @@ export interface FinanceSyncValue {
     hasPendingSync: boolean;
     retrySync: () => void;
     restoreConfirmedData: () => Promise<void>;
+    copySyncDiagnostic: () => Promise<void>;
 }
 
 export interface FinanceActionsValue {
