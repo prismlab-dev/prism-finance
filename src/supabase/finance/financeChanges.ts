@@ -86,6 +86,32 @@ function collectEntityChanges<T>(config: EntityConfig<T>, upserts: Record<string
     });
 }
 
+// Deleting a wallet or card cascades its groups and transactions in Postgres, where
+// the invoice history guard intentionally allows it. Explicit deletes of those rows
+// would run first, outside the cascade, and be rejected as paid-invoice edits.
+function dropCascadedDeletes(baseData: SupabaseFinanceData, deletes: FinanceDeleteMutation[]): FinanceDeleteMutation[] {
+    const deletedIds = (entityType: FinanceEntityType) => new Set(deletes.filter((item) => item.entity_type === entityType).map((item) => item.entity_id));
+    const wallets = deletedIds("wallet");
+    const cards = deletedIds("credit_card");
+    if (wallets.size === 0 && cards.size === 0) {
+        return deletes;
+    }
+
+    const isCascaded = (row: { sourceWalletId?: string | null; destinationWalletId?: string | null; creditCardId?: string | null }) =>
+        (!!row.sourceWalletId && wallets.has(row.sourceWalletId)) ||
+        (!!row.destinationWalletId && wallets.has(row.destinationWalletId)) ||
+        (!!row.creditCardId && cards.has(row.creditCardId));
+    const cascadedGroups = new Set(baseData.transactionGroups.filter(isCascaded).map((group) => group.id));
+    const cascadedTransactions = new Set(
+        baseData.transactions.filter((transaction) => isCascaded(transaction) || cascadedGroups.has(transaction.groupId)).map((transaction) => transaction.id),
+    );
+
+    return deletes.filter((item) =>
+        !(item.entity_type === "transaction_group" && cascadedGroups.has(item.entity_id)) &&
+        !(item.entity_type === "transaction" && cascadedTransactions.has(item.entity_id)),
+    );
+}
+
 export function buildFinanceChangesPayload(userId: string, baseData: SupabaseFinanceData, targetData: SupabaseFinanceData): FinanceChangesPayload {
     const upserts: Record<string, unknown[]> = {};
     const deletes: FinanceDeleteMutation[] = [];
@@ -122,6 +148,7 @@ export function buildFinanceChangesPayload(userId: string, baseData: SupabaseFin
 
     return {
         protocol_version: 2,
+        deletes: dropCascadedDeletes(baseData, deletes),
         // Preferences are tiny and also mark a brand-new account as initialized.
         preferences: toPreferenceRow({
             userId,
@@ -130,6 +157,5 @@ export function buildFinanceChangesPayload(userId: string, baseData: SupabaseFin
             planning: targetData.planning,
         }) as unknown as Record<string, unknown>,
         upserts,
-        deletes,
     };
 }
