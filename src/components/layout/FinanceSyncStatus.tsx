@@ -1,5 +1,6 @@
 ﻿import { CloudAlert, CloudCheck, RefreshCw } from "lucide-react";
 import { useFinanceSync } from "../../context/FinanceContext";
+import { FinanceSyncDiagnosticButton } from "./FinanceSyncDiagnosticButton";
 import { FinanceSyncRecoveryButton } from "./FinanceSyncRecoveryButton";
 
 interface FinanceSyncStatusProps {
@@ -95,8 +96,9 @@ export function FinanceSyncStatus({ compactAtLaptop = false }: FinanceSyncStatus
                 </button>
             ) : null}
             {isError && sync.hasPendingSync ? (
-                <div className={["mt-1.5", compactAtLaptop ? "laptop:flex laptop:justify-center desktop:block" : ""].join(" ")}>
+                <div className={["mt-1.5 flex flex-col items-start gap-1", compactAtLaptop ? "laptop:items-center desktop:items-start" : ""].join(" ")}>
                     <FinanceSyncRecoveryButton />
+                    <FinanceSyncDiagnosticButton />
                 </div>
             ) : null}
         </div>

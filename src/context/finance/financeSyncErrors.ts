@@ -9,7 +9,9 @@ const domainErrors = [
 ] as const;
 
 export function describeFinanceSyncError(error: unknown): { message: string; retryAutomatically: boolean } {
-    const message = error instanceof Error ? error.message : "Não foi possível sincronizar com o banco de dados.";
+    // Supabase RPC errors are plain PostgrestError objects, not Error instances.
+    const rawMessage = typeof error === "object" && error !== null && "message" in error ? error.message : null;
+    const message = typeof rawMessage === "string" && rawMessage ? rawMessage : "Não foi possível sincronizar com o banco de dados.";
     const domainError = domainErrors.find(([code]) => message.includes(code));
     return domainError
         ? { message: domainError[1], retryAutomatically: false }
