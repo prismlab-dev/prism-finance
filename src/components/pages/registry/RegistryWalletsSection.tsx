@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import {
-    DEFAULT_WALLET_ID,
     useFinanceFavoriteWallet,
     useFinanceLedgerEntries,
     useFinanceStoredTransactions,
@@ -62,7 +61,7 @@ export function RegistryWalletsSection() {
               isActive: selectedWallet.isActive,
               isFavorite: selectedWallet.id === favoriteWalletId,
               hasActivity: activityByWalletId.get(selectedWallet.id) ?? false,
-              canManageLifecycle: selectedWallet.id !== DEFAULT_WALLET_ID,
+              canManageLifecycle: selectedWallet.id !== favoriteWalletId,
           })
         : [];
     const activeCount = wallets.filter((wallet) => wallet.isActive).length;

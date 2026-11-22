@@ -52,7 +52,7 @@ export function useRegistryAssetActionHandler(kind: RegistryAssetKind) {
                     description={`O cadastro "${asset.name}" será removido permanentemente.`}
                     consequences={[
                         "As transações e séries vinculadas serão excluídas, incluindo parcelas e ocorrências alteradas individualmente para outra carteira ou cartão.",
-                        isWallet ? "Os lançamentos dessa carteira serão removidos e os saldos afetados serão recalculados." : "As faturas e seus pagamentos também serão excluídos, alterando os saldos das carteiras usadas nos pagamentos.",
+                        isWallet ? "Os lançamentos dessa carteira serão removidos. Compras no cartão e faturas pagas são mantidas; os pagamentos passam a constar sem carteira." : "As faturas e seus pagamentos também serão excluídos, alterando os saldos das carteiras usadas nos pagamentos.",
                         "Para manter o histórico, use Arquivar. A exclusão permanente não pode ser desfeita.",
                     ]}
                     confirmLabel="Excluir em definitivo"

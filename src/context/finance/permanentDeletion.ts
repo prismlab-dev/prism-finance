@@ -1,4 +1,5 @@
 import { parseInvoicePaymentNote, type Beneficiary, type Category, type CreditCard, type CreditCardInvoice, type LedgerEntry, type StoredTransaction, type Tag, type TransactionGroup, type TransactionTag, type Wallet, type WishItem } from "./financeCore";
+import { resolveTransactionCreditCardId } from "./transactionResolution";
 import { excludeRemovedOccurrences } from "./recurrence/excludeRemovedOccurrences";
 
 interface TransactionPruneParams {
@@ -112,12 +113,43 @@ export function collectCategoryDescendantIds(categories: Category[], rootId: str
     return descendants;
 }
 
+// Card purchases carry a source wallet with no cash effect, and a paid invoice must stay paid (as a settlement
+// without wallet). Both belong to the card and must outlive the wallet.
+function detachCardHistoryFromWallet(params: PermanentlyDeleteWalletParams) {
+    const groupsById = new Map(params.transactionGroups.map((group) => [group.id, group]));
+    const isPaidInvoicePayment = (transaction: StoredTransaction) =>
+        transaction.status === "paid" && Boolean(transaction.paymentForInvoiceId || parseInvoicePaymentNote(transaction.notes));
+    const paymentGroupIds = new Set(params.transactions.filter(isPaidInvoicePayment).map((transaction) => transaction.groupId));
+    return {
+        transactionGroups: params.transactionGroups.map((group) => {
+            const rule = group.recurrenceRule;
+            const isCardGroup = Boolean(group.creditCardId) && rule?.creditCardId !== null;
+            if (!isCardGroup && !paymentGroupIds.has(group.id)) {
+                return group;
+            }
+
+            return {
+                ...group,
+                sourceWalletId: group.sourceWalletId === params.walletId ? null : group.sourceWalletId,
+                recurrenceRule: rule?.sourceWalletId === params.walletId ? { ...rule, sourceWalletId: null } : rule,
+            };
+        }),
+        transactions: params.transactions.map((transaction) =>
+            transaction.sourceWalletId === params.walletId &&
+            (isPaidInvoicePayment(transaction) || resolveTransactionCreditCardId(transaction, groupsById.get(transaction.groupId)))
+                ? { ...transaction, sourceWalletId: null }
+                : transaction,
+        ),
+    };
+}
+
 export function permanentlyDeleteWalletData(params: PermanentlyDeleteWalletParams) {
+    const detached = detachCardHistoryFromWallet(params);
     const nextWallets = params.wallets.filter((wallet) => wallet.id !== params.walletId);
     const nextCreditCards = params.creditCards.map((card) => (card.bankWalletId === params.walletId ? { ...card, bankWalletId: null } : card));
     const pruned = pruneTransactionsAndRelatedData({
-        transactionGroups: params.transactionGroups,
-        transactions: params.transactions,
+        transactionGroups: detached.transactionGroups,
+        transactions: detached.transactions,
         transactionTags: params.transactionTags,
         ledgerEntries: params.ledgerEntries,
         shouldRemoveGroup: (group) => group.sourceWalletId === params.walletId || group.destinationWalletId === params.walletId ||

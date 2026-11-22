@@ -1,6 +1,7 @@
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import type { AppUser } from "../auth/appUser";
 import { subscribeToAuthProfileUpdated } from "../lib/authProfileEvents";
+import { clearUserActions } from "../lib/userActionLog";
 import { mapSupabaseSession } from "../supabase/auth/authService";
 import { getSupabaseClient } from "../supabase/supabaseClient";
 
@@ -50,6 +51,10 @@ export function useAuthListener() {
         const {
             data: { subscription },
         } = supabase.auth.onAuthStateChange((event, session) => {
+            if (event === "SIGNED_OUT") {
+                clearUserActions();
+            }
+
             if (event === "PASSWORD_RECOVERY") {
                 window.localStorage.setItem(PASSWORD_RECOVERY_STORAGE_KEY, "true");
             }

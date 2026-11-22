@@ -16,8 +16,10 @@ export const REMOVED_WALLET: Wallet = {
     createdAt: new Date().toISOString(),
 };
 
+const NO_WALLET: Wallet = { ...REMOVED_WALLET, id: "", name: "Sem carteira" };
+
 export function resolveTransactionWallet(wallets: Wallet[], walletId: string): Wallet {
-    return wallets.find((item) => item.id === walletId) ?? REMOVED_WALLET;
+    return wallets.find((item) => item.id === walletId) ?? (walletId ? REMOVED_WALLET : NO_WALLET);
 }
 
 export function formatTransactionDate(date: string, output = "dd/MM"): string {

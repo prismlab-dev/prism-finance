@@ -359,7 +359,10 @@ function normalizeOptionalWalletId(walletId: string | null, walletIds: Set<strin
         return null;
     }
     const normalized = normalizeWalletId(walletId);
-    return walletIds.has(normalized) ? normalized : DEFAULT_WALLET_ID;
+    if (walletIds.has(normalized)) {
+        return normalized;
+    }
+    return walletIds.has(DEFAULT_WALLET_ID) ? DEFAULT_WALLET_ID : walletIds.values().next().value ?? DEFAULT_WALLET_ID;
 }
 
 function createLedgerEntryId(transactionId: string, suffix?: string): string {
@@ -1255,7 +1258,7 @@ export function toTransactionList(
             type: toTransactionType(groupType),
             value: roundToCents(transaction.amount),
             date: transaction.scheduledDate,
-            inWallet: resolveTransactionSourceWalletId(transaction, group) ?? DEFAULT_WALLET_ID,
+            inWallet: resolveTransactionSourceWalletId(transaction, group) ?? (paymentForInvoiceId ? "" : DEFAULT_WALLET_ID),
             destinationWalletId: resolveTransactionDestinationWalletId(transaction, group) ?? null,
             categoryId: resolvedCategory.id,
             beneficiaryId: resolvedBeneficiaryId,
@@ -1784,7 +1787,7 @@ export function normalizeFinanceSnapshot(rawFinance: unknown, userId: string | n
         walletsById.set(normalizedWallet.id, normalizedWallet);
     });
 
-    if (!walletsById.has(DEFAULT_WALLET_ID)) {
+    if (walletsById.size === 0) {
         walletsById.set(DEFAULT_WALLET_ID, DEFAULT_WALLET);
         changed = true;
     }

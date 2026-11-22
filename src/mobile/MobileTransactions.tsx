@@ -80,7 +80,7 @@ export function MobileTransactions() {
                 <button type="button" aria-label="Mês anterior" onClick={() => setMonth((value) => shiftMonth(value, -1))} className="rounded-full p-2 text-neutral-400 active:bg-white/[0.06]">
                     <ChevronLeft size={20} />
                 </button>
-                <button type="button" onClick={() => setMonth(getCurrentMonthKey())} className="text-base font-medium capitalize text-white">
+                <button type="button" onClick={() => setMonth(getCurrentMonthKey())} className="text-base font-medium first-letter:uppercase text-white">
                     {formatMonthLabel(month)}
                 </button>
                 <button type="button" aria-label="Próximo mês" onClick={() => setMonth((value) => shiftMonth(value, 1))} className="rounded-full p-2 text-neutral-400 active:bg-white/[0.06]">

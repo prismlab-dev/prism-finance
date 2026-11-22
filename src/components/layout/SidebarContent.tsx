@@ -1,5 +1,6 @@
 import { X } from "lucide-react";
 import { AppBrand } from "./AppBrand";
+import { BugReportButton } from "./BugReportButton";
 import { FinanceSyncStatus } from "./FinanceSyncStatus";
 import { NavSection } from "./NavSection";
 
@@ -49,6 +50,7 @@ export function SidebarContent({ variant, onClose, showBrand = true }: SidebarCo
 
             <div className="shrink-0 pt-2">
                 <Divider />
+                <BugReportButton compactAtLaptop={isResponsive} />
                 <FinanceSyncStatus compactAtLaptop={isResponsive} />
             </div>
         </div>
