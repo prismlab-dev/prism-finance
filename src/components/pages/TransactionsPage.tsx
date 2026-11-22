@@ -295,7 +295,7 @@ export function TransactionsPage() {
                 return true;
             }
 
-            const walletName = walletNameById.get(transaction.inWallet) ?? "Carteira removida";
+            const walletName = walletNameById.get(transaction.inWallet) ?? (transaction.isNonCashSettlement ? "Sem carteira" : "Carteira removida");
             const destinationWalletName = transaction.destinationWalletId ? (walletNameById.get(transaction.destinationWalletId) ?? "Carteira removida") : "Nenhuma carteira";
             return normalizeComparisonText(getTransactionSearchSource(transaction, walletName, destinationWalletName)).includes(normalizedSearch);
         });

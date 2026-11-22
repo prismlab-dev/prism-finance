@@ -4,7 +4,7 @@ import { hasWalletActivity } from "../../components/pages/registry/registryAsset
 import { buildRegistryAssetActions } from "../../components/pages/registry/registryAssetTypes";
 import { formatRegistryCurrency } from "../../components/pages/registry/registryFormatters";
 import { useRegistryAssetActionHandler } from "../../components/pages/registry/useRegistryAssetActionHandler";
-import { DEFAULT_WALLET_ID, useFinanceFavoriteWallet, useFinanceLedgerEntries, useFinanceStoredTransactions, useFinanceTransactionGroups, useFinanceWallets } from "../../context/FinanceContext";
+import { useFinanceFavoriteWallet, useFinanceLedgerEntries, useFinanceStoredTransactions, useFinanceTransactionGroups, useFinanceWallets } from "../../context/FinanceContext";
 import { useModal } from "../../context/ModalContext";
 import { MobileActionSheet } from "../MobileActionSheet";
 import { MobileAssetList, MobileAssetTotal } from "./MobileAssetList";
@@ -33,7 +33,7 @@ export function MobileWalletsSection() {
               isActive: selected.isActive,
               isFavorite: selected.id === favoriteWalletId,
               hasActivity: hasWalletActivity(selected.id, transactionGroups, transactions, ledgerEntries),
-              canManageLifecycle: selected.id !== DEFAULT_WALLET_ID,
+              canManageLifecycle: selected.id !== favoriteWalletId,
           })
         : [];
 

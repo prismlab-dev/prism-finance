@@ -41,11 +41,21 @@ export function getTodayDate(): string {
     return getLocalTodayDate();
 }
 
+export function resolveFallbackWalletId(wallets: Wallet[]): string {
+    return (
+        wallets.find((wallet) => wallet.id === DEFAULT_WALLET_ID && wallet.isActive)?.id ??
+        wallets.find((wallet) => wallet.isActive)?.id ??
+        wallets.find((wallet) => wallet.id === DEFAULT_WALLET_ID)?.id ??
+        wallets[0]?.id ??
+        DEFAULT_WALLET_ID
+    );
+}
+
 export function ensureWalletId(candidateWalletId: string, wallets: Wallet[]): string {
     if (wallets.some((wallet) => wallet.id === candidateWalletId)) {
         return candidateWalletId;
     }
-    return DEFAULT_WALLET_ID;
+    return resolveFallbackWalletId(wallets);
 }
 
 export function toCategoryTypeFromGroupType(type: TransactionGroup["type"]): Category["type"] {

@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FinanceSnapshot } from "../financeTypes";
 import type { FinanceSyncStatus, FinanceSyncValue } from "./contextTypes";
+import { version } from "../../../package.json";
+import { getRecentUserActions } from "../../lib/userActionLog";
 import { toSupabasePlanningState } from "../../lib/planningLocalPreferences";
 import { describeFinanceSyncError } from "./financeSyncErrors";
 import { persistConflictResolution } from "./persistConflictResolution";
@@ -523,19 +525,23 @@ export function useFinanceSyncQueue({
     const copySyncDiagnostic = useCallback(async () => {
         const activeUserId = userIdRef.current;
         const pending = pendingSyncRef.current;
-        if (!activeUserId || !pending) return;
         const diagnostic = {
             generatedAt: new Date().toISOString(),
+            appVersion: version,
+            path: window.location.pathname,
             userAgent: navigator.userAgent,
             userId: activeUserId,
-            queuedAt: pending.queuedAt,
-            baseRevision: pending.baseRevision,
+            syncStatus: status,
+            lastSyncedAt,
+            queuedAt: pending?.queuedAt ?? null,
+            baseRevision: pending?.baseRevision ?? null,
             retryAttempt: retryAttemptRef.current,
             error: lastRawErrorRef.current,
-            changes: buildFinanceChangesPayload(activeUserId, pending.baseData, pending.targetData),
+            changes: activeUserId && pending ? buildFinanceChangesPayload(activeUserId, pending.baseData, pending.targetData) : null,
+            recentActions: getRecentUserActions(),
         };
         await navigator.clipboard.writeText(JSON.stringify(diagnostic, null, 2));
-    }, []);
+    }, [lastSyncedAt, status]);
 
     const getPendingSyncData = useCallback((): SupabaseFinanceData | null => pendingSyncRef.current?.targetData ?? null, []);
     const getPendingSyncBaseRevision = useCallback((): number | null => pendingSyncRef.current?.baseRevision ?? null, []);

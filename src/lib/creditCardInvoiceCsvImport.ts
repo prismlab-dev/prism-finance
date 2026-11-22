@@ -10,6 +10,7 @@ import {
     type StoredTransaction,
     type TransactionGroup,
 } from "../context/financeTypes";
+import { ensureWalletId } from "../context/finance/helpers";
 import { normalizeCsvHeader, parseCsvRows } from "./csv";
 
 const REQUIRED_HEADERS = ["Fatura", "Data de Compra", "Categoria", "Descricao", "Parcela", "Valor (R$)", "Tipo"] as const;
@@ -438,7 +439,7 @@ function buildInvoiceTransaction(params: {
 
 export function buildCreditCardInvoiceImportSnapshot(params: BuildCreditCardInvoiceImportSnapshotParams): CreditCardInvoiceImportBuildResult {
     const importedAt = params.importedAt ?? new Date().toISOString();
-    const sourceWalletId = params.creditCard.bankWalletId ?? DEFAULT_WALLET_ID;
+    const sourceWalletId = params.creditCard.bankWalletId ?? ensureWalletId(DEFAULT_WALLET_ID, params.finance.wallets);
     const nextGroups: TransactionGroup[] = [...params.finance.transactionGroups];
     const nextTransactions: StoredTransaction[] = [...params.finance.transactions];
     let sequence = 0;
