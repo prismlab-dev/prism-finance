@@ -1134,7 +1134,7 @@ export function useFinanceStore(): FinanceStoreValue {
     );
 
     const permanentlyDeleteCreditCard = useCallback(
-        async (creditCardId: string) => {
+        async (creditCardId: string, options?: { keepPayments?: boolean }) => {
             const targetCard = creditCardsRef.current.find((card) => card.id === creditCardId);
             if (!targetCard || targetCard.isActive) {
                 return;
@@ -1142,6 +1142,7 @@ export function useFinanceStore(): FinanceStoreValue {
 
             const deleted = permanentlyDeleteCreditCardData({
                 creditCardId,
+                keepPayments: options?.keepPayments,
                 creditCards: creditCardsRef.current,
                 creditCardInvoices: creditCardInvoicesRef.current,
                 transactionGroups: transactionGroupsRef.current,

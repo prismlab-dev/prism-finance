@@ -1,5 +1,7 @@
-import { Suspense, lazy, useEffect } from "react";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { Suspense, lazy, useEffect, useState } from "react";
+import { BrowserRouter, Navigate, Route, Routes, useNavigate } from "react-router-dom";
+import { isExpiredAuthLink } from "./auth/expiredLink";
+import { usePasswordRecoveryPending } from "./auth/passwordRecovery";
 import { AuthShell } from "./components/layout/AuthShell";
 import { LoadingPage, PageSkeletonScreen } from "./components/pages/Loading";
 import { FinanceProvider, useFinanceSession } from "./context/FinanceContext";
@@ -13,7 +15,12 @@ import { useIsMobile } from "./mobile/useIsMobile";
 initAppearance();
 initDemoMode();
 
+// Lido antes do roteador, que descarta o hash ao redirecionar.
+const openedWithExpiredLink = isExpiredAuthLink(window.location.href);
+
 const LoginPage = lazy(() => import("./components/pages/Login").then((module) => ({ default: module.LoginPage })));
+const ExpiredLinkPage = lazy(() => import("./components/pages/ExpiredLink").then((module) => ({ default: module.ExpiredLinkPage })));
+const ResetPasswordPage = lazy(() => import("./components/pages/ResetPassword").then((module) => ({ default: module.ResetPasswordPage })));
 const HomePage = lazy(() => import("./components/pages/Home").then((module) => ({ default: module.HomePage })));
 const PlanningPage = lazy(() => import("./components/pages/Analysis").then((module) => ({ default: module.PlanningPage })));
 const ReportsPage = lazy(() => import("./components/pages/Reports").then((module) => ({ default: module.ReportsPage })));
@@ -105,10 +112,45 @@ function MainApp() {
     const { user, loading } = useFinanceSession();
     const { currentPage } = usePage();
     const isMobile = useIsMobile();
+    const navigate = useNavigate();
+    const [showExpiredLink, setShowExpiredLink] = useState(openedWithExpiredLink);
+    const mustResetPassword = usePasswordRecoveryPending(user?.uid);
 
     useEffect(() => {
+        if (showExpiredLink) {
+            document.title = "Silus ・ Link expirado";
+            return;
+        }
+
+        if (mustResetPassword) {
+            document.title = "Silus ・ Redefinir senha";
+            return;
+        }
+
         document.title = user ? `Silus ・ ${PAGE_TITLES[currentPage]}` : "Silus ・ Entrar";
-    }, [user, currentPage]);
+    }, [user, currentPage, mustResetPassword, showExpiredLink]);
+
+    if (showExpiredLink) {
+        return (
+            <Suspense fallback={<LoadingPage />}>
+                <ExpiredLinkPage
+                    isSignedIn={user !== null}
+                    onLeave={() => {
+                        navigate("/home", { replace: true });
+                        setShowExpiredLink(false);
+                    }}
+                />
+            </Suspense>
+        );
+    }
+
+    if (user && mustResetPassword) {
+        return (
+            <Suspense fallback={<LoadingPage />}>
+                <ResetPasswordPage email={user.email} />
+            </Suspense>
+        );
+    }
 
     if (loading) return <LoadingPage />;
 

@@ -7,6 +7,7 @@ import { buildPatchedMetadataGroup, resolveDraft } from "./draft";
 import { recalculateGroupTotals, replaceTransactionTags } from "./helpers";
 import { updateLedger } from "./updateLedger";
 import { validateTransactionSeriesUpdateInvariants } from "./invariants";
+import { isEditableInScope, isSkippedSibling } from "./installmentScope";
 import { resolveEditedInvoice } from "./resolveEditedInvoice";
 import { seriesChanges } from "../recurrence/seriesChanges";
 import { convertTransactionModeSnapshot } from "./convertTransactionMode";
@@ -66,14 +67,13 @@ export function updateTransactionSeriesSnapshot(params: UpdateTransactionSeriesS
     const nextTransactions = snapshot.transactions.map((transaction): StoredTransaction => {
         if (transaction.groupId !== group.id) return transaction;
         const selectedOnly = transaction.id === transactionId;
-        const inScope = scope === "single" ? selectedOnly : scope === "all" || (transaction.installmentNumber ?? 1) >= (selected.installmentNumber ?? 1);
-        if (!inScope || (scope !== "single" && transaction.status !== "pending")) return transaction;
-        const invoice = snapshot.creditCardInvoices.find((item) => item.id === transaction.invoiceId);
-        if (scope !== "single" && (invoice?.paidAmount ?? 0) > 0) return transaction;
-        affectedTransactionIds.add(transaction.id);
+        if (!isEditableInScope(transaction, selected, scope, snapshot.creditCardInvoices)) return transaction;
+        // Skipped siblings follow the series, or they would share an invoice with a moved installment.
+        const skippedSibling = isSkippedSibling(transaction, selected, scope);
         const rowDraft = scope === "single"
             ? resolved
             : resolveDraft(snapshot, transaction, group, selectedOnly && draft.commitment !== undefined ? { ...changes, commitment: resolved.commitment } : changes);
+        const status = skippedSibling ? transaction.status : rowDraft.status;
         const dateChanged = resolved.scheduledDate !== selected.scheduledDate;
         const cardChanged = resolved.creditCardId !== resolveTransactionCreditCardId(selected, group);
         const offset = scope === "single" ? 0 : (transaction.installmentNumber ?? 1) - (selected.installmentNumber ?? 1);
@@ -87,12 +87,15 @@ export function updateTransactionSeriesSnapshot(params: UpdateTransactionSeriesS
         } else if (!rowDraft.creditCardId) {
             invoiceId = null;
         }
+        // An invoice with payments accepts no charges; a skipped row must not block the whole edit.
+        if (skippedSibling && invoiceId !== transaction.invoiceId && snapshot.creditCardInvoices.some((item) => item.id === invoiceId && item.paidAmount > 0)) return transaction;
+        affectedTransactionIds.add(transaction.id);
         return {
             ...transaction,
             routingOverride: true,
-            amount: resolved.amount === selected.amount ? transaction.amount : resolved.amount,
-            scheduledDate: date, status: rowDraft.status, commitment: rowDraft.status === "paid" ? "posted" : rowDraft.commitment,
-            paidAt: rowDraft.status === "paid" ? transaction.paidAt ?? now : null,
+            amount: skippedSibling || resolved.amount === selected.amount ? transaction.amount : resolved.amount,
+            scheduledDate: date, status, commitment: status === "paid" ? "posted" : rowDraft.commitment,
+            paidAt: status === "paid" ? transaction.paidAt ?? now : null,
             invoiceId, title: rowDraft.title, notes: rowDraft.notes, categoryId: rowDraft.categoryId, beneficiaryId: rowDraft.beneficiaryId,
             sourceWalletId: rowDraft.sourceWalletId, destinationWalletId: rowDraft.destinationWalletId, creditCardId: rowDraft.creditCardId,
         };

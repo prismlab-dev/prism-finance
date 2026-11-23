@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Category, PlanningBudget, Transaction } from "../../../context/FinanceContext";
 import { normalizePlanningBudgets } from "../../../context/finance/planningBudgets";
+import { normalizeCreditCardInvoice, type CreditCardInvoice } from "../../../context/financeTypes";
 import { buildBudgetRuleContext, matchesBudgetRules } from "./budgetRules";
 import { buildBudgetsOverview, previewBudgetRules, suggestBudgetAmount } from "./budgetUtils";
 
@@ -101,6 +102,7 @@ describe("buildBudgetsOverview", () => {
                 spending("old", 90, "2026-09-02"),
                 spending("market", 40, "2026-10-03", { categoryId: "market" }),
             ],
+            creditCardInvoices: [],
             monthKey: "2026-10",
             today: "2026-10-13",
         });
@@ -126,6 +128,7 @@ describe("buildBudgetsOverview", () => {
             budgets: [budget("bills", { include: [{ kind: "category", categoryId: "bills" }], exclude: [] }, 500), subscriptions],
             categories,
             transactions: [spending("netflix", 45, "2026-10-10", { categoryId: "subscriptions" })],
+            creditCardInvoices: [],
             monthKey: "2026-10",
             today: "2026-10-13",
         });
@@ -144,6 +147,7 @@ describe("buildBudgetsOverview", () => {
             ],
             categories,
             transactions: [spending("n", 45.9, "2026-08-05", { groupId: "netflix" }), spending("m", 60, "2026-08-06", { categoryId: "market" })],
+            creditCardInvoices: [],
             monthKey: "2026-08",
             today: "2026-10-13",
         });
@@ -160,6 +164,7 @@ describe("previewBudgetRules", () => {
         const preview = previewBudgetRules({ include: [{ kind: "category", categoryId: "bills" }], exclude: [] }, [subscriptions], {
             categories,
             transactions: [spending("water", 120, "2026-10-05"), spending("netflix", 45, "2026-10-10", { categoryId: "subscriptions" })],
+            creditCardInvoices: [],
             monthKey: "2026-10",
             today: "2026-10-13",
         });
@@ -181,8 +186,8 @@ describe("suggestBudgetAmount", () => {
             spending("sub", 999, "2026-09-11", { categoryId: "subscriptions" }),
             spending("4", 5000, "2026-10-01"),
         ];
-        expect(suggestBudgetAmount(billsWithoutSubscriptions, { categories, transactions, monthKey: "2026-10" })).toBe(201);
-        expect(suggestBudgetAmount({ include: [{ kind: "category", categoryId: "market" }], exclude: [] }, { categories, transactions, monthKey: "2026-10" })).toBeNull();
+        expect(suggestBudgetAmount(billsWithoutSubscriptions, { categories, transactions, creditCardInvoices: [], monthKey: "2026-10" })).toBe(201);
+        expect(suggestBudgetAmount({ include: [{ kind: "category", categoryId: "market" }], exclude: [] }, { categories, transactions, creditCardInvoices: [], monthKey: "2026-10" })).toBeNull();
     });
 });
 
@@ -233,5 +238,25 @@ describe("regras de carteira e cartão", () => {
         const [budget] = normalizePlanningBudgets([{ id: "b", include: [{ kind: "creditCard", creditCardId: "nubank" }], exclude: [], amount: 100 }]);
         expect(matchesBudgetRules(onCard, budget, context)).toBe(true);
         expect(matchesBudgetRules(fromWallet, budget, context)).toBe(false);
+    });
+});
+
+describe("parcelas no cartão", () => {
+    const installment = (number: number, invoiceId: string) =>
+        spending(`parcel-${number}`, 100, "2026-11-15", { paymentMethod: "credit_card", creditCardId: "card", commitment: "posted", status: "pending", installmentNumber: number, invoiceId });
+    const amounts = (transactions: Transaction[], creditCardInvoices: CreditCardInvoice[] = []) =>
+        ["2026-11", "2026-12", "2027-01"].map((monthKey) => buildBudgetsOverview({ budgets: [billsWithoutSubscriptions], categories, transactions, creditCardInvoices, monthKey, today: "2026-11-22" }).progresses[0].projected);
+
+    it("entram no mês da própria fatura, não todas no mês da compra", () => {
+        expect(amounts([installment(1, "invoice-card-2026-12"), installment(2, "invoice-card-2027-01")])).toEqual([0, 100, 100]);
+    });
+
+    it("avançam um mês por parcela quando o id da fatura não traz o ciclo", () => {
+        expect(amounts([installment(1, "legacy-a"), installment(2, "legacy-b")])).toEqual([100, 100, 0]);
+    });
+
+    it("usam o vencimento da fatura vinculada mesmo quando o id não traz o ciclo", () => {
+        const invoice = normalizeCreditCardInvoice({ id: "legacy-b", creditCardId: "card", cycleKey: "2026-12", dueDate: "2026-12-17", totalAmount: 100 }, new Set(["card"]));
+        expect(amounts([installment(3, "legacy-b")], [invoice])).toEqual([0, 100, 0]);
     });
 });

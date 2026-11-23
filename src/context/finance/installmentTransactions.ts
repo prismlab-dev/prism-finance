@@ -1,6 +1,6 @@
 import { addMonthsToLocalDate } from "../../lib/localDate";
 import type { TransactionDraft, TransactionGroup, TransactionMode, TransactionStatus } from "../financeTypes";
-import { splitAmountAcrossInstallments } from "./helpers";
+import { roundToCents, splitAmountAcrossInstallments } from "./helpers";
 
 export interface InstallmentScheduleItem {
     installmentNumber: number;
@@ -16,6 +16,7 @@ interface BuildInstallmentScheduleOptions {
     initialStatus: TransactionStatus;
     ignoredInstallmentsCount?: number;
     advanceDatesMonthly: boolean;
+    amounts?: number[] | null;
 }
 
 export function resolveNewTransactionMode(
@@ -36,12 +37,16 @@ export function buildInstallmentSchedule({
     initialStatus,
     ignoredInstallmentsCount = 0,
     advanceDatesMonthly,
+    amounts,
 }: BuildInstallmentScheduleOptions): InstallmentScheduleItem[] {
     if (!Number.isInteger(installmentCount) || installmentCount < 2) throw new Error("Informe uma quantidade inteira de pelo menos duas parcelas.");
     if (!Number.isFinite(totalAmount) || Math.round(Math.abs(totalAmount) * 100) < installmentCount) {
         throw new Error("Cada parcela deve ter valor de pelo menos R$ 0,01.");
     }
-    return splitAmountAcrossInstallments(totalAmount, installmentCount).map((amount, index) => ({
+    if (amounts && amounts.length !== installmentCount) throw new Error("Informe o valor de todas as parcelas.");
+    const emptyIndex = amounts?.findIndex((amount) => !Number.isFinite(amount) || Math.round(amount * 100) < 1) ?? -1;
+    if (emptyIndex >= 0) throw new Error(`A parcela ${emptyIndex + 1} precisa ter pelo menos R$ 0,01.`);
+    return (amounts?.map(roundToCents) ?? splitAmountAcrossInstallments(totalAmount, installmentCount)).map((amount, index) => ({
         installmentNumber: index + 1,
         amount,
         scheduledDate: advanceDatesMonthly ? addMonthsToLocalDate(startDate, index) : startDate,

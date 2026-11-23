@@ -1,6 +1,6 @@
 import { type ComponentProps, useMemo } from "react";
 import { useLocation } from "react-router-dom";
-import { useFinanceBeneficiaries, useFinanceCategories, useFinanceCreditCards, useFinancePlanning, useFinanceTags, useFinanceTransactionGroups, useFinanceTransactions, useFinanceWallets } from "../../context/FinanceContext";
+import { useFinanceBeneficiaries, useFinanceCategories, useFinanceCreditCardInvoices, useFinanceCreditCards, useFinancePlanning, useFinanceTags, useFinanceTransactionGroups, useFinanceTransactions, useFinanceWallets } from "../../context/FinanceContext";
 import { monthPeriod } from "../../context/finance/recurrence/period";
 import { getLocalTodayDate } from "../../lib/localDate";
 import { buildBudgetsOverview } from "../pages/budgets/budgetUtils";
@@ -22,18 +22,19 @@ export function BudgetNavSubitems(props: BudgetNavSubitemsProps) {
     const monthKey = getCurrentMonthKey();
     const today = getLocalTodayDate();
     const transactions = useFinanceTransactions(monthPeriod(monthKey, 0));
+    const creditCardInvoices = useFinanceCreditCardInvoices();
     const basePath = pathname.startsWith("/orcamentos") ? "/orcamentos" : "/budgets";
 
     const items = useMemo(() => {
         const { labelOf } = createBudgetRuleResolver(buildBudgetRuleOptions({ categories, groups, tags, beneficiaries, wallets, creditCards }));
-        const { progresses } = buildBudgetsOverview({ budgets, categories, transactions, monthKey, today });
+        const { progresses } = buildBudgetsOverview({ budgets, categories, transactions, creditCardInvoices, monthKey, today });
         return progresses.map(({ budget, usedPercent }) => ({
             id: budget.id,
             label: getBudgetDisplayName(budget, labelOf),
             path: `${basePath}/${budget.id}`,
             marker: <BudgetUsageRing percent={usedPercent} />,
         }));
-    }, [basePath, beneficiaries, budgets, categories, creditCards, groups, monthKey, tags, today, transactions, wallets]);
+    }, [basePath, beneficiaries, budgets, categories, creditCardInvoices, creditCards, groups, monthKey, tags, today, transactions, wallets]);
 
     const activeId = items.find((item) => item.path === pathname)?.id ?? null;
 

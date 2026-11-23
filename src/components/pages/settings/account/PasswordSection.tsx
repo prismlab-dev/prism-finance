@@ -1,9 +1,8 @@
 import { KeyRound, LockKeyhole } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import type { AppUser } from "../../../../auth/appUser";
-import { PASSWORD_RECOVERY_STORAGE_KEY } from "../../../../hooks/useAuthListener";
 import { resolveSupabaseAuthErrorMessage } from "../../../../supabase/auth/authErrorMessages";
-import { setSupabasePassword, updateSupabasePassword } from "../../../../supabase/auth/authService";
+import { updateSupabasePassword } from "../../../../supabase/auth/authService";
 import { IconTextField } from "../../../transactions/IconTextField";
 import { SETTINGS_PRIMARY_BUTTON_CLASS, SettingsFeedback, SettingsSection } from "../SettingsSection";
 
@@ -13,7 +12,6 @@ type PasswordSectionProps = {
 };
 
 export function PasswordSection({ user, supportsPassword }: PasswordSectionProps) {
-    const [isRecoverySession, setIsRecoverySession] = useState(() => window.localStorage.getItem(PASSWORD_RECOVERY_STORAGE_KEY) === "true");
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -21,7 +19,7 @@ export function PasswordSection({ user, supportsPassword }: PasswordSectionProps
     const [loading, setLoading] = useState(false);
 
     function validate(): string | null {
-        if (!isRecoverySession && !currentPassword.trim()) return "Digite sua senha atual.";
+        if (!currentPassword.trim()) return "Digite sua senha atual.";
         if (newPassword.length < 6) return "A nova senha precisa ter no mínimo 6 caracteres.";
         if (newPassword !== confirmPassword) return "As novas senhas não conferem.";
         if (currentPassword === newPassword) return "Escolha uma senha diferente da atual.";
@@ -44,13 +42,7 @@ export function PasswordSection({ user, supportsPassword }: PasswordSectionProps
         setFeedback(null);
 
         try {
-            if (isRecoverySession) {
-                await setSupabasePassword(newPassword);
-                window.localStorage.removeItem(PASSWORD_RECOVERY_STORAGE_KEY);
-                setIsRecoverySession(false);
-            } else {
-                await updateSupabasePassword({ email: user.email, currentPassword, newPassword });
-            }
+            await updateSupabasePassword({ email: user.email, currentPassword, newPassword });
             setCurrentPassword("");
             setNewPassword("");
             setConfirmPassword("");
@@ -76,20 +68,16 @@ export function PasswordSection({ user, supportsPassword }: PasswordSectionProps
                 <SettingsFeedback feedback={{ type: "info", message: "Esta conta entra pelo Google, então não tem senha do Silus." }} />
             ) : (
                 <form onSubmit={handleSubmit} className="max-w-md space-y-3">
-                    {isRecoverySession ? (
-                        <SettingsFeedback feedback={{ type: "info", message: "Você entrou por um link de redefinição. Defina a nova senha para concluir." }} />
-                    ) : (
-                        <IconTextField
-                            ariaLabel="Senha atual"
-                            type="password"
-                            autoComplete="current-password"
-                            icon={LockKeyhole}
-                            value={currentPassword}
-                            onChange={bind(setCurrentPassword)}
-                            placeholder="Senha atual"
-                            disabled={loading}
-                        />
-                    )}
+                    <IconTextField
+                        ariaLabel="Senha atual"
+                        type="password"
+                        autoComplete="current-password"
+                        icon={LockKeyhole}
+                        value={currentPassword}
+                        onChange={bind(setCurrentPassword)}
+                        placeholder="Senha atual"
+                        disabled={loading}
+                    />
                     <IconTextField
                         ariaLabel="Nova senha"
                         type="password"

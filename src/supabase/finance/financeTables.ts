@@ -124,6 +124,7 @@ export interface TransactionGroupRow {
     transaction_mode: string;
     total_amount: number | string;
     installment_count: number | null;
+    removed_installments?: unknown;
     recurrence_rule: unknown;
     recurrence_end_date: string | null;
     source_wallet_id: string | null;

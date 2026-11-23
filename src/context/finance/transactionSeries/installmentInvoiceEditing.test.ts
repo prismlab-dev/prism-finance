@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { fixtureCard, fixtureGroup, fixtureSnapshot, fixtureTransaction, fixtureWallet } from "../financeTestFixtures";
 import { normalizeCreditCardInvoice, normalizeFinanceSnapshot, resolveTransactionCreditCardId } from "../financeCore";
 import { toTransactionRow, fromTransactionRow } from "../../../supabase/finance/financeRowMappers";
+import { editedInstallmentTotal } from "./installmentScope";
 import { updateTransactionSeriesSnapshot } from "./updateTransactionSeriesSnapshot";
 
 const secondCard = { ...fixtureCard, id: "second-card", closingDay: 20 };
@@ -52,6 +53,36 @@ describe("installment invoice editing", () => {
             draft: { paymentMethod: "credit_card", creditCardId: secondCard.id, invoiceId: "custom-3" } });
         expect(result.snapshot.transactions.map((row) => row.invoiceId)).toEqual([transactions[0].invoiceId, "custom-3", "custom-4"]);
         expect(result.snapshot.transactions[0]).toEqual(transactions[0]);
+    });
+    it("routes to a selected invoice that is not stored yet", () => {
+        const result = updateTransactionSeriesSnapshot({ snapshot, transactionId: transactions[1].id, scope: "single",
+            draft: { invoiceId: `invoice-${fixtureCard.id}-2026-09` } });
+        expect(result.snapshot.transactions[1].invoiceId).toBe(`invoice-${fixtureCard.id}-2026-09`);
+    });
+    it("moves skipped installments along with the series without changing their status or amount", () => {
+        const withSkipped = { ...snapshot, transactions: transactions.map((row, index) => index === 0 ? { ...row, status: "skipped" as const } : row) };
+        const result = updateTransactionSeriesSnapshot({ snapshot: withSkipped, transactionId: transactions[1].id, scope: "all",
+            draft: { invoiceId: transactions[0].invoiceId, amount: 80 } });
+        expect(result.snapshot.transactions.map((row) => [row.invoiceId, row.status, row.amount])).toEqual([
+            [`invoice-${fixtureCard.id}-2026-01`, "skipped", 100],
+            [`invoice-${fixtureCard.id}-2026-02`, "pending", 80],
+            [`invoice-${fixtureCard.id}-2026-03`, "pending", 80],
+        ]);
+    });
+    it("leaves a skipped installment in place when its target invoice has payments", () => {
+        const paid = normalizeCreditCardInvoice({ id: `invoice-${fixtureCard.id}-2026-01`, creditCardId: fixtureCard.id, cycleKey: "2026-01", totalAmount: 50, paidAmount: 50 }, new Set([fixtureCard.id]));
+        const withSkipped = { ...snapshot, creditCardInvoices: [...invoices, paid], transactions: transactions.map((row, index) => index === 0 ? { ...row, status: "skipped" as const } : row) };
+        const result = updateTransactionSeriesSnapshot({ snapshot: withSkipped, transactionId: transactions[1].id, scope: "all", draft: { invoiceId: transactions[0].invoiceId } });
+        expect(result.snapshot.transactions[0]).toEqual(withSkipped.transactions[0]);
+        expect(result.affectedTransactionIds).toEqual(new Set([transactions[1].id, transactions[2].id]));
+    });
+    it("previews the same series total that saving a per-installment amount produces", () => {
+        const withSkipped = { ...snapshot, transactions: transactions.map((row, index) => index === 0 ? { ...row, status: "skipped" as const } : row) };
+        for (const [scope, total] of [["single", 500], ["this_and_next", 700], ["all", 700]] as const) {
+            const result = updateTransactionSeriesSnapshot({ snapshot: withSkipped, transactionId: transactions[1].id, scope, draft: { amount: 300 } });
+            expect(result.snapshot.transactionGroups[0].totalAmount).toBe(total);
+            expect(editedInstallmentTotal(withSkipped.transactions, withSkipped.transactions[1], scope, 300, withSkipped.creditCardInvoices)).toBe(total);
+        }
     });
     it("anchors automatic cycles to the purchase even when editing from the second installment", () => {
         const result = updateTransactionSeriesSnapshot({ snapshot, transactionId: transactions[1].id, scope: "all",

@@ -23,7 +23,8 @@ export function deleteTransactionsSnapshot(before: FinanceSnapshot, transactionI
         const number = recurring && sameSeries ? recurringOrdinal(transaction, parent) : transaction.installmentNumber ?? 1;
         const targeted = sameSeries && (scope === "single" ? transaction.id === selected.id : scope === "all" || number >= selectedNumber);
         if (!targeted) return [transaction];
-        if (scope !== "single" && isConsolidatedOccurrence(transaction, parent, today)) return [transaction];
+        // Installments are one purchase: it goes away entirely, or assertInvoiceMutation rejects it.
+        if (recurring && scope !== "single" && isConsolidatedOccurrence(transaction, parent, today)) return [transaction];
         removed.add(transaction.id);
         return [];
     });
@@ -51,6 +52,7 @@ export function deleteTransactionsSnapshot(before: FinanceSnapshot, transactionI
         ledgerEntries: snapshot.ledgerEntries.filter((entry) => !entry.transactionId || !removed.has(entry.transactionId)),
         transactionTags: snapshot.transactionTags.filter((link) => transactions.some((item) => item.id === link.transactionId)),
     };
-    assertInvoiceMutation(before, next);
+    // The synced paidAmount is capped by the charges just removed; payments that remain still protect the invoice.
+    assertInvoiceMutation(before, { ...next, creditCardInvoices: invoices });
     return next;
 }

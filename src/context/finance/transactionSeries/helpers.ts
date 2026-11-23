@@ -59,7 +59,7 @@ export function recalculateGroupTotals(groups: TransactionGroup[], transactions:
     return groups.map((group) => ({
         ...group,
         totalAmount: totals.get(group.id) ?? 0,
-        installmentCount: group.transactionMode === "installment" ? counts.get(group.id) ?? null : group.installmentCount,
+        installmentCount: group.transactionMode === "installment" ? (counts.get(group.id) ?? 0) + (group.removedInstallments?.length ?? 0) || null : group.installmentCount,
     }));
 }
 

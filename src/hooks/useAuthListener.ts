@@ -1,11 +1,10 @@
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import type { AppUser } from "../auth/appUser";
+import { detectPasswordRecovery, finishPasswordRecovery, startPasswordRecovery } from "../auth/passwordRecovery";
 import { subscribeToAuthProfileUpdated } from "../lib/authProfileEvents";
 import { clearUserActions } from "../lib/userActionLog";
 import { mapSupabaseSession } from "../supabase/auth/authService";
 import { getSupabaseClient } from "../supabase/supabaseClient";
-
-export const PASSWORD_RECOVERY_STORAGE_KEY = "prism:supabase-password-recovery";
 
 function areUsersEquivalent(currentUser: AppUser | null, nextUser: AppUser | null): boolean {
     if (currentUser === nextUser) {
@@ -44,6 +43,7 @@ export function useAuthListener() {
                 console.error("Falha ao carregar sessao Supabase:", error);
             }
 
+            detectPasswordRecovery(data.session);
             setUserIfChanged(setUser, mapSupabaseSession(data.session));
             setLoading(false);
         });
@@ -53,11 +53,14 @@ export function useAuthListener() {
         } = supabase.auth.onAuthStateChange((event, session) => {
             if (event === "SIGNED_OUT") {
                 clearUserActions();
+                finishPasswordRecovery();
             }
 
-            if (event === "PASSWORD_RECOVERY") {
-                window.localStorage.setItem(PASSWORD_RECOVERY_STORAGE_KEY, "true");
+            if (event === "PASSWORD_RECOVERY" && session) {
+                startPasswordRecovery(session.user.id);
             }
+
+            detectPasswordRecovery(session);
 
             setUserIfChanged(setUser, mapSupabaseSession(session));
             setLoading(false);
