@@ -65,7 +65,7 @@ export function MonthPickerControl({ selectedMonth, onMonthChange, formatMonthLa
                 aria-expanded={isOpen}
                 aria-haspopup="dialog"
                 aria-label="Selecionar mes"
-                className="rounded-lg px-2 py-0.5 text-[13px] font-medium capitalize text-white transition-colors hover:bg-white/[0.06]"
+                className="rounded-lg px-2 py-0.5 text-[13px] font-medium first-letter:uppercase text-white transition-colors hover:bg-white/[0.06]"
             >
                 {formatMonthLabel(selectedMonth)}
             </button>

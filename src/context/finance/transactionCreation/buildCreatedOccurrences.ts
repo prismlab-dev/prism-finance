@@ -25,7 +25,7 @@ export function buildCreatedOccurrences(params: {
     if (group.transactionMode === "recurring" && status === "pending" && (!group.creditCardId || draft.commitment === "forecast" || scheduledDate > today) && !hasInvoiceOverride) return [];
     const schedule = group.transactionMode === "installment" && group.installmentCount
         ? buildInstallmentSchedule({ totalAmount: amount, installmentCount: group.installmentCount, startDate: scheduledDate, initialStatus: status,
-            ignoredInstallmentsCount, advanceDatesMonthly: !group.creditCardId })
+            ignoredInstallmentsCount, advanceDatesMonthly: !group.creditCardId, amounts: draft.installmentAmounts })
         : [{ amount, scheduledDate, status, installmentNumber: null }];
     return schedule.map((item, index) => normalizeStoredTransaction({
         ...item, id: index === 0 ? transactionId : createId("tx"), groupId: group.id,

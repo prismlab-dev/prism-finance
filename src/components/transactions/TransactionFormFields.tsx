@@ -3,6 +3,9 @@ import { ArrowRight, Layers3, LayoutGrid, Pencil, ReceiptText, Tags } from "luci
 import { useFinanceTransactions, type Beneficiary, type Category, type Tag, type Transaction, type TransactionSeriesScope, type Wallet } from "../../context/FinanceContext";
 import { DateField } from "./DateField";
 import { DescriptionAutocomplete } from "./DescriptionAutocomplete";
+import { InstallmentAmountHint } from "./InstallmentAmountHint";
+import type { InstallmentPlan } from "./installmentPreview";
+import { InstallmentPreviewPanel } from "./InstallmentPreviewPanel";
 import { IconTextField } from "./IconTextField";
 import { MultiSelectCombobox } from "./MultiSelectCombobox";
 import { SingleSelectCombobox, type ComboboxOptionBase } from "./SingleSelectCombobox";
@@ -46,11 +49,12 @@ interface TransactionFormFieldsProps {
     form: TransactionFormState;
     transaction?: Transaction | null;
     details: TransactionDetailsController;
+    installmentPlan: InstallmentPlan | null;
     disabled: boolean;
     detailsDisabled?: boolean;
 }
 
-export function TransactionFormFields({ activeTab, form, transaction, details, disabled, detailsDisabled = disabled }: TransactionFormFieldsProps) {
+export function TransactionFormFields({ activeTab, form, transaction, details, installmentPlan, disabled, detailsDisabled = disabled }: TransactionFormFieldsProps) {
     const transactions = useFinanceTransactions();
     const walletOptions = useMemo<WalletOption[]>(() => form.wallets.map((wallet) => ({ id: wallet.id, label: wallet.name, searchText: wallet.name, wallet })), [form.wallets]);
     const categoryOptions = useMemo<CategoryOption[]>(() => {
@@ -87,8 +91,9 @@ export function TransactionFormFields({ activeTab, form, transaction, details, d
             <section className="flex flex-col gap-3">
                 <div className="grid gap-3 md:grid-cols-2">
                     <MultiSelectCombobox hideLabel leadingIcon={<TransactionFieldIcon icon={Tags} />} triggerClassName={FIELD_ICON_TRIGGER_CLASS} label="Tags" values={form.selectedTagIds} placeholder="Nenhuma tag selecionada" emptyMessage="Nenhuma tag cadastrada." options={tagOptions} onChange={form.setSelectedTagIds} renderOptionContent={(option) => <TagOptionContent option={option} />} />
-                    <TransactionModeField recurrenceCountInput={form.recurrenceCountInput} onRecurrenceCountChange={form.setRecurrenceCountInput} mode={form.transactionMode} installmentCountInput={form.installmentCountInput} onModeChange={form.setTransactionMode} onInstallmentCountChange={form.setInstallmentCountInput} disabled={form.isInvoicePaymentEdit || form.isTransfer || disabled} />
+                    <TransactionModeField recurrenceCountInput={form.recurrenceCountInput} onRecurrenceCountChange={form.setRecurrenceCountInput} mode={form.transactionMode} installmentCountInput={form.installmentCountInput} onModeChange={form.setTransactionMode} onInstallmentCountChange={form.setInstallmentCountInput} hideInstallmentCount={form.isInstallmentEdit} disabled={form.isInvoicePaymentEdit || form.isTransfer || disabled} />
                 </div>
+                {installmentPlan ? <InstallmentPreviewPanel plan={installmentPlan} className="max-h-96 min-[1280px]:hidden" /> : null}
                 <div className="h-px bg-white/[0.06]" />
                 <TransactionDetailsField details={details} disabled={detailsDisabled} />
             </section>
@@ -98,9 +103,10 @@ export function TransactionFormFields({ activeTab, form, transaction, details, d
     return (
         <section className="flex flex-col gap-3">
             <input className="rounded-xl border border-white/[0.1] bg-black/35 px-3 py-2 text-2xl text-white outline-none transition-colors placeholder:text-white/35 focus:border-white/[0.24] disabled:cursor-not-allowed disabled:opacity-65" inputMode="numeric" placeholder="R$ 0,00" value={form.amountInput} onChange={(event) => form.setAmountInput(event.target.value)} disabled={form.isInvoicePaymentEdit || disabled} />
+            {transaction && form.isInstallmentEdit && form.transactionMode === "installment" && <InstallmentAmountHint transactionId={transaction.id} amountInput={form.amountInput} scope={form.editScope} />}
             <div className="grid grid-cols-1 gap-2 md:grid-cols-2"><StatusField status={form.status} onChange={form.setStatus} disabled={form.isInvoicePaymentEdit || disabled} /><DateField hideLabel value={form.date} onChange={form.setDate} onOffset={form.setDateOffset} disabled={disabled} /></div>
             <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-                {form.isInvoicePaymentEdit ? <ReadOnlyField label="Carteira">{walletOptions.find((option) => option.id === form.walletId) ? <WalletOptionContent option={walletOptions.find((option) => option.id === form.walletId)!} /> : <span>Carteira removida</span>}</ReadOnlyField> : <SingleSelectCombobox hideLabel label="Carteira" value={form.walletId} placeholder="Selecione uma carteira" emptyMessage="Nenhuma carteira encontrada." options={walletOptions} onChange={form.setWalletId} renderOptionContent={(option) => <WalletOptionContent option={option} />} disabled={disabled} />}
+                {form.isInvoicePaymentEdit ? <ReadOnlyField label="Carteira">{transaction?.isNonCashSettlement ? <span>Sem carteira</span> : walletOptions.find((option) => option.id === form.walletId) ? <WalletOptionContent option={walletOptions.find((option) => option.id === form.walletId)!} /> : <span>Carteira removida</span>}</ReadOnlyField> : <SingleSelectCombobox hideLabel label="Carteira" value={form.walletId} placeholder="Selecione uma carteira" emptyMessage="Nenhuma carteira encontrada." options={walletOptions} onChange={form.setWalletId} renderOptionContent={(option) => <WalletOptionContent option={option} />} disabled={disabled} />}
                 <SingleSelectCombobox hideLabel label="Beneficiário" value={form.beneficiaryId} placeholder="Selecione um beneficiário" emptyMessage="Nenhum beneficiário encontrado." options={beneficiaryOptions} onChange={form.setBeneficiaryId} renderOptionContent={(option) => <BeneficiaryOptionContent option={option} />} disabled={disabled} />
             </div>
             {form.isInvoicePaymentEdit ? <ReadOnlyField label="Categoria" showFallbackIcon>{transaction?.category.label ?? "Sem categoria"}</ReadOnlyField> : <SingleSelectCombobox hideLabel label="Categoria" value={selectedCategoryOptionId} placeholder="Selecione uma categoria" emptyMessage="Nenhuma categoria disponível." options={categoryOptions} onChange={handleCategorySelect} renderOptionContent={(option) => <CategoryOptionContent option={option} />} disabled={disabled} />}

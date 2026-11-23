@@ -1,5 +1,6 @@
 import { validateRecurrenceRuntime } from "./recurrence-runtime.mjs";
 import { validateRecurrenceSyncRuntime } from "./recurrence-sync-runtime.mjs";
+import { validatePermanentDeletionRuntime } from "./permanent-deletion-runtime.mjs";
 import { seedLegacyRecurrences, validateLegacyRecurrences } from "./recurrence-legacy.mjs";
 import { readFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
@@ -83,6 +84,9 @@ const migrationNames = [
     "027_attachment_retry_upsert.sql",
     "028_explicit_invoice_precedence.sql",
     "029_delete_own_account.sql",
+    "030_clear_occurrence_on_series_exit.sql",
+    "031_card_group_wallet_detach.sql",
+    "032_removed_installments.sql",
 ];
 
 let legacyRecurrences;
@@ -542,6 +546,7 @@ if (
 console.log(`RUNTIME OK family RLS/share, CAS, batched ${bulkSize}-row projection (${bulkElapsedMs.toFixed(0)}ms), compact commits, cascades, direct transaction deletion, tombstones, safe legacy adapter, gap fallback and atomic load`);
 await validateRecurrenceRuntime(database, expectDatabaseError);
 await validateRecurrenceSyncRuntime(database, projectRoot, expectDatabaseError);
+await validatePermanentDeletionRuntime(database, projectRoot);
 await validateDeleteOwnAccount();
 await database.close();
 

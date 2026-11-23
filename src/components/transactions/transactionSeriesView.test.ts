@@ -16,6 +16,15 @@ describe("buildTransactionSeriesView", () => {
         expect(view.totals).toMatchObject({ count: 3, projectedCount: 0, paidAmount: 100, pendingAmount: 200, totalAmount: 300 });
     });
 
+    it("shows installments erased with their card without counting them as open", () => {
+        const group = fixtureGroup({ transactionMode: "installment", installmentCount: 2, totalAmount: 100,
+            removedInstallments: [{ number: 1, amount: 50, date: "2026-01-05", cardName: "Antigo" }] });
+        const view = buildTransactionSeriesView({ groupId: group.id, groups: [group], storedTransactions: [fixtureTransaction({ installmentNumber: 2 })], ...base })!;
+
+        expect(view.rows.map((row) => [row.number, row.removedCardName])).toEqual([[1, "Antigo"], [2, undefined]]);
+        expect(view.totals).toMatchObject({ pendingAmount: 100, skippedCount: 0, removedCount: 1, totalAmount: 150 });
+    });
+
     it("projects a fixed monthly series up to the window and flags that it continues", () => {
         const group = fixtureGroup({ transactionMode: "recurring", recurrenceRule: requireRecurrenceRule({ anchorDate: "2026-01-05", amount: 100 }) });
         const view = buildTransactionSeriesView({ groupId: group.id, groups: [group], storedTransactions: [fixtureTransaction({ occurrenceNumber: 1, status: "paid" })], ...base })!;

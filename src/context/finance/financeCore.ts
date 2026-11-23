@@ -7,6 +7,7 @@ import { DEFAULT_WALLET_ID, DEFAULT_BENEFICIARY_ID, DEFAULT_BENEFICIARY_NAME, DE
 export * from "./domainConstants";
 import { syncCreditCardInvoices } from "./syncCreditCardInvoices";
 import { normalizePlanningBudgets } from "./planningBudgets";
+import { parseRemovedInstallments } from "./removedInstallments";
 import { parseRecurrenceRule } from "./recurrence/rule";
 import { getDefaultCategoryIconName, normalizeCategoryIconName } from "../../lib/categoryIcons";
 import { formatLocalDateInput, getLocalTodayDate, parseAppDate } from "../../lib/localDate";
@@ -359,7 +360,10 @@ function normalizeOptionalWalletId(walletId: string | null, walletIds: Set<strin
         return null;
     }
     const normalized = normalizeWalletId(walletId);
-    return walletIds.has(normalized) ? normalized : DEFAULT_WALLET_ID;
+    if (walletIds.has(normalized)) {
+        return normalized;
+    }
+    return walletIds.has(DEFAULT_WALLET_ID) ? DEFAULT_WALLET_ID : walletIds.values().next().value ?? DEFAULT_WALLET_ID;
 }
 
 function createLedgerEntryId(transactionId: string, suffix?: string): string {
@@ -636,6 +640,7 @@ export function normalizeTransactionGroup(group: Partial<TransactionGroup> & { i
             Number.isInteger(group.installmentCount) && Number(group.installmentCount) > 0
                 ? Number(group.installmentCount)
                 : null,
+        ...parseRemovedInstallments(group.removedInstallments),
         recurrenceRule: parseRecurrenceRule(group.recurrenceRule),
         recurrenceEndDate: asNullableString(group.recurrenceEndDate, null),
         sourceWalletId,
@@ -1255,7 +1260,7 @@ export function toTransactionList(
             type: toTransactionType(groupType),
             value: roundToCents(transaction.amount),
             date: transaction.scheduledDate,
-            inWallet: resolveTransactionSourceWalletId(transaction, group) ?? DEFAULT_WALLET_ID,
+            inWallet: resolveTransactionSourceWalletId(transaction, group) ?? (paymentForInvoiceId ? "" : DEFAULT_WALLET_ID),
             destinationWalletId: resolveTransactionDestinationWalletId(transaction, group) ?? null,
             categoryId: resolvedCategory.id,
             beneficiaryId: resolvedBeneficiaryId,
@@ -1784,7 +1789,7 @@ export function normalizeFinanceSnapshot(rawFinance: unknown, userId: string | n
         walletsById.set(normalizedWallet.id, normalizedWallet);
     });
 
-    if (!walletsById.has(DEFAULT_WALLET_ID)) {
+    if (walletsById.size === 0) {
         walletsById.set(DEFAULT_WALLET_ID, DEFAULT_WALLET);
         changed = true;
     }
@@ -2108,6 +2113,7 @@ export function normalizeFinanceSnapshot(rawFinance: unknown, userId: string | n
                 transactionMode: asTransactionMode(rawGroup.transactionMode),
                 totalAmount: Math.abs(asNumber(rawGroup.totalAmount, 0)),
                 installmentCount: asNumber(rawGroup.installmentCount, NaN),
+                ...parseRemovedInstallments(rawGroup.removedInstallments),
                 recurrenceRule: parseRecurrenceRule(rawGroup.recurrenceRule),
                 recurrenceEndDate: asNullableString(rawGroup.recurrenceEndDate, null),
                 sourceWalletId: asNullableString(rawGroup.sourceWalletId, null),

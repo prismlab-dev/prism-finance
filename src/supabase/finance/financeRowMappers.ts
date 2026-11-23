@@ -1,3 +1,4 @@
+import { parseRemovedInstallments } from "../../context/finance/removedInstallments";
 import { parseRecurrenceRule } from "../../context/finance/recurrence/rule";
 import {
     parseInvoicePaymentNote,
@@ -258,6 +259,7 @@ export function toTransactionGroupRow(userId: string, group: TransactionGroup): 
         transaction_mode: group.transactionMode,
         total_amount: group.totalAmount,
         installment_count: group.installmentCount,
+        removed_installments: group.removedInstallments ?? [],
         recurrence_rule: group.recurrenceRule,
         recurrence_end_date: group.recurrenceEndDate,
         source_wallet_id: group.sourceWalletId,
@@ -282,6 +284,7 @@ export function fromTransactionGroupRow(row: TransactionGroupRow): TransactionGr
         transactionMode: row.transaction_mode as TransactionMode,
         totalAmount: toNumber(row.total_amount),
         installmentCount: row.installment_count,
+        ...parseRemovedInstallments(row.removed_installments),
         recurrenceRule: parseRecurrenceRule(row.recurrence_rule),
         recurrenceEndDate: row.recurrence_end_date,
         sourceWalletId: row.source_wallet_id,

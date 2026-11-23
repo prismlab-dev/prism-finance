@@ -23,6 +23,7 @@ import {
     FinanceTransactionTagsContext,
     FinanceWalletsContext,
 } from "./contexts";
+import { withActionLog } from "../../lib/userActionLog";
 import type { FinanceActionsValue, FinanceSessionValue, FinanceSummaryValue } from "./contextTypes";
 import { useFinanceStore } from "./useFinanceStore";
 
@@ -50,7 +51,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     );
 
     const actionsValue = useMemo<FinanceActionsValue>(
-        () => ({
+        () => withActionLog<FinanceActionsValue>({
             setStartBalance: store.setStartBalance,
             setFavoriteWallet: store.setFavoriteWallet,
             setWalletActive: store.setWalletActive,

@@ -30,6 +30,10 @@ export function resolveSupabaseAuthErrorMessage(error: unknown, fallback: string
         return "A senha precisa ter no minimo 6 caracteres.";
     }
 
+    if (message.includes("different from the old password")) {
+        return "Escolha uma senha diferente da atual.";
+    }
+
     if (message.includes("signup is disabled")) {
         return "Cadastro desabilitado no Supabase.";
     }

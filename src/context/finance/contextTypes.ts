@@ -119,7 +119,7 @@ export interface FinanceActionsValue {
     setFavoriteCreditCard: (creditCardId: string) => Promise<void>;
     setCreditCardActive: (creditCardId: string, isActive: boolean) => Promise<void>;
     deleteCreditCard: (creditCardId: string) => Promise<void>;
-    permanentlyDeleteCreditCard: (creditCardId: string) => Promise<void>;
+    permanentlyDeleteCreditCard: (creditCardId: string, options?: { keepPayments?: boolean }) => Promise<void>;
     payCreditCardInvoice: (draft: PayCreditCardInvoiceDraft) => Promise<void>;
     setCreditCardInvoicesPaidState: (draft: SetCreditCardInvoicesPaidStateDraft) => Promise<void>;
     removeWishItem: (wishItemId: string) => Promise<void>;

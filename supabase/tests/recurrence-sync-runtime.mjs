@@ -93,6 +93,24 @@ export async function validateRecurrenceSyncRuntime(database, projectRoot, expec
         await database.query("select public.apply_finance_changes($1,$2::jsonb,'legacy-routing-test')", [revision, JSON.stringify({ protocol_version: 2, upserts: { transactions: [oldPayload] } })]);
         assert.equal((await database.query("select routing_override from public.transactions where id=$1", [installments[1].id])).rows[0].routing_override, true, "old payloads must not restore inherited routing");
         assert.equal((await database.query("select count(*)::int as count from public.ledger_entries where transaction_id=$1", [installments[1].id])).rows[0].count, 1);
+        revision = Number((await database.query("select revision from public.finance_sync_state where user_id=$1", [userId])).rows[0].revision);
+        const iphone = fixtureGroup({ id: "recurring-to-installment", transactionMode: "recurring",
+            recurrenceRule: requireRecurrenceRule({ anchorDate: "2026-11-21", amount: 266.62, end: { type: "count", count: 6 } }) });
+        const iphoneId = occurrenceId(iphone.id, 1);
+        const materialized = { ...materializeOccurrence({ ...purchase, transactionGroups: [...purchase.transactionGroups, iphone] }, iphoneId), favoriteWalletId: null };
+        await apply(materialized);
+        assert.equal((await database.query("select occurrence_number from public.transactions where id=$1", [iphoneId])).rows[0].occurrence_number, 1);
+        const toInstallment = { ...updateTransactionSeriesSnapshot({ snapshot: materialized, transactionId: iphoneId, scope: "single",
+            draft: { transactionMode: "installment", installmentCount: 7, amount: 1866.39 }, createGroupId: () => "installment-from-recurring", now: "2026-11-21T20:21:50Z" }).snapshot, favoriteWalletId: null };
+        const { toBeneficiaryRow, toCategoryRow, toCreditCardInvoiceRow } = await runtime.ssrLoadModule("/src/supabase/finance/financeRowMappers.ts");
+        const result = await database.query("select public.apply_finance_changes($1,$2::jsonb,'domain-sync-test') as result", [revision, JSON.stringify({ protocol_version: 2, upserts: {
+            beneficiaries: toInstallment.beneficiaries.map((item) => toBeneficiaryRow(userId, item)), categories: toInstallment.categories.map((item) => toCategoryRow(userId, item)),
+            transaction_groups: toInstallment.transactionGroups.map((item) => toTransactionGroupRow(userId, item)),
+            credit_card_invoices: toInstallment.creditCardInvoices.map((item) => toCreditCardInvoiceRow(userId, item)),
+            transactions: toInstallment.transactions.map((item) => toTransactionRow(userId, item)) } })]);
+        revision = Number(result.rows[0].result.revision);
+        const moved = (await database.query("select group_id,occurrence_number,installment_number from public.transactions where id=$1", [iphoneId])).rows[0];
+        assert.deepEqual(moved, { group_id: "installment-from-recurring", occurrence_number: null, installment_number: 1 }, "an occurrence moved out of its series drops its occurrence number");
         console.log("RECURRENCE SYNC OK production TS rebase/mappers through CAS writer; no overlapping slots; paid history and ledger preserved; ended series rejects stale materialization");
     } finally {
         await runtime.close();

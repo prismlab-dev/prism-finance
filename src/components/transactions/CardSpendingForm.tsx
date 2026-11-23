@@ -1,10 +1,10 @@
-import { buildCardInvoiceOptions, formatMonthLabel, shiftCycleKey } from "./cardInvoiceOptions";
+import { buildCardInvoiceOptions, shiftCycleKey } from "./cardInvoiceOptions";
 import { InvoiceOptionContent } from "./InvoiceOptionContent";
 import { occurrenceId } from "../../context/finance/recurrence/projectOccurrences";
 import { TransactionModeField } from "./TransactionModeField";
 import { defaultInvoiceOption, filterInvoiceOption } from "./invoiceSelection";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Copy, Eye, Pencil, SquareSlash, Tags, Trash2, X } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Copy, Pencil, SquareSlash, Tags, Trash2, X } from "lucide-react";
 import type { Category, Transaction, TransactionMode, TransactionSeriesScope, TransactionStatus } from "../../context/FinanceContext";
 import {
     SYSTEM_EXPENSE_CARD_INVOICE_CATEGORY_ID,
@@ -20,7 +20,7 @@ import {
     useFinanceTransactionGroups,
 } from "../../context/FinanceContext";
 import { buildCreditCardInvoiceId, getCreditCardInvoiceMonthKey, parseCreditCardInvoiceId, resolveCreditCardInvoiceCycle, resolveCreditCardInvoiceCycleFromCycleKey } from "../../context/financeTypes";
-import { createId, findCurrentUserSelfBeneficiary, roundToCents, splitAmountAcrossInstallments } from "../../context/finance/helpers";
+import { createId, findCurrentUserSelfBeneficiary } from "../../context/finance/helpers";
 import { useModal } from "../../context/ModalContext";
 import { extractCurrencyDigits, formatCurrencyFromDigits, parseCurrencyDigitsToNumber } from "../../lib/currencyMask";
 import { getLocalTodayDate } from "../../lib/localDate";
@@ -50,14 +50,20 @@ import {
     type CreditCardOption,
     type TagOption,
 } from "./CardSpendingOptions";
-import { InstallmentPreviewModal, type InstallmentPreviewData, type InstallmentPreviewRow } from "./InstallmentPreviewModal";
+import { DELETE_ALL_INSTALLMENTS_ACTION } from "./transactionContextActions";
+import { useTransactionContextActionHandler } from "./useTransactionContextActionHandler";
+import { InstallmentAmountHint } from "./InstallmentAmountHint";
+import { customInstallmentAmounts, NO_INSTALLMENT_OVERRIDES, type InstallmentOverrides, type InstallmentPlan } from "./installmentPreview";
+import { InstallmentPlanWarning } from "./InstallmentPlanWarning";
+import { useInstallmentPlan } from "./useInstallmentPlan";
+import { InstallmentPreviewPanel } from "./InstallmentPreviewPanel";
 import { CardCommitmentField } from "./CardCommitmentField";
 
 interface CardSpendingFormProps {
     transaction?: Transaction | null;
     prefill?: CardSpendingFormPrefill;
     activeTab: TransactionFormTab;
-    onInstallmentPreviewOpenChange?: (isOpen: boolean) => void;
+    onInstallmentPlanChange?: (plan: InstallmentPlan | null) => void;
 }
 
 export interface CardSpendingFormPrefill {
@@ -97,11 +103,12 @@ function CardSpendingFormBody({
     transaction = null,
     prefill,
     activeTab,
-    onInstallmentPreviewOpenChange,
+    onInstallmentPlanChange,
     justSaved,
     onSavedAndContinue,
 }: CardSpendingFormProps & { justSaved: boolean; onSavedAndContinue: () => void }) {
     const { closeModal } = useModal();
+    const handleContextAction = useTransactionContextActionHandler();
     const { addTransaction, deleteTransactionWithScope, updateTransaction } = useFinanceActions();
     const creditCards = useFinanceCreditCards();
     const favoriteCreditCardId = useFinanceFavoriteCreditCard();
@@ -115,6 +122,7 @@ function CardSpendingFormBody({
     const isEditing = Boolean(transaction);
     const sourceGroup = useMemo(() => (transaction ? (transactionGroups.find((item) => item.id === transaction.groupId) ?? null) : null), [transaction, transactionGroups]);
     const isSeriesTransaction = Boolean(sourceGroup && sourceGroup.transactionMode !== "single");
+    const isInstallmentEdit = sourceGroup?.transactionMode === "installment";
     const initialPrefillInvoiceId = !isEditing ? (prefill?.initialInvoiceId?.trim() ?? "") : "";
     const parsedInitialPrefillInvoice = !isEditing && initialPrefillInvoiceId ? parseCreditCardInvoiceId(initialPrefillInvoiceId) : null;
     const initialPrefillCreditCardId = !isEditing ? prefill?.initialCreditCardId?.trim() || parsedInitialPrefillInvoice?.creditCardId || "" : "";
@@ -151,7 +159,6 @@ function CardSpendingFormBody({
 
     const [submitting, setSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState("");
-    const [installmentPreviewOpen, setInstallmentPreviewOpen] = useState(false);
     const [draftTransactionId] = useState(() => createId("tx"));
     const [transactionSaved, setTransactionSaved] = useState(false);
     const financialFieldsDisabled = submitting || transactionSaved;
@@ -170,6 +177,7 @@ function CardSpendingFormBody({
         sourceGroup?.transactionMode === "installment" && sourceGroup.installmentCount ? String(sourceGroup.installmentCount) : "2",
     );
     const [ignoredInstallmentsCountInput, setIgnoredInstallmentsCountInput] = useState(() => (sourceGroup?.transactionMode === "installment" ? String(leadingSkippedInstallmentsCount) : "0"));
+    const [installmentOverrides, setInstallmentOverrides] = useState<InstallmentOverrides>(NO_INSTALLMENT_OVERRIDES);
     const [editScope, setEditScope] = useState<TransactionSeriesScope>("single");
     const isFutureRecurringOccurrence = spendingMode === "recurring" && date > getLocalTodayDate();
     const details = useTransactionDetails({ transactionId: transaction?.id ?? (spendingMode === "recurring" ? occurrenceId(`group-${draftTransactionId}`, 1) : draftTransactionId), userId: user?.uid, loadExisting: isEditing });
@@ -198,14 +206,6 @@ function CardSpendingFormBody({
         setIgnoredInstallmentsCountInput(sourceGroup?.transactionMode === "installment" ? String(leadingSkippedInstallmentsCount) : "0");
         setEditScope("single");
     }, [favoriteCreditCardId, leadingSkippedInstallmentsCount, sourceGroup?.installmentCount, sourceGroup?.transactionMode, transaction?.id]);
-
-    useEffect(() => {
-        onInstallmentPreviewOpenChange?.(installmentPreviewOpen);
-    }, [installmentPreviewOpen, onInstallmentPreviewOpenChange]);
-
-    useEffect(() => {
-        return () => onInstallmentPreviewOpenChange?.(false);
-    }, [onInstallmentPreviewOpenChange]);
 
     useEffect(() => {
         if (isFutureRecurringOccurrence && (!transaction || transaction.date !== date)) setCommitment("forecast");
@@ -326,8 +326,11 @@ function CardSpendingFormBody({
             return null;
         }
 
-        return resolveCreditCardInvoiceCycle(date || getLocalTodayDate(), selectedCard.closingDay, selectedCard.dueDay);
-    }, [date, selectedCard]);
+        const purchaseCycle = resolveCreditCardInvoiceCycle(date || getLocalTodayDate(), selectedCard.closingDay, selectedCard.dueDay);
+        // The date is the purchase date: each installment falls one cycle after the previous one.
+        const cycleKey = shiftCycleKey(purchaseCycle.cycleKey, isInstallmentEdit ? (transaction?.installmentNumber ?? 1) - 1 : 0);
+        return resolveCreditCardInvoiceCycleFromCycleKey(cycleKey, selectedCard.closingDay, selectedCard.dueDay);
+    }, [date, isInstallmentEdit, selectedCard, transaction?.installmentNumber]);
     const prefillInvoiceId = !isEditing ? (prefill?.initialInvoiceId?.trim() ?? "") : "";
     const prefillParsedInvoice = useMemo(() => (prefillInvoiceId ? parseCreditCardInvoiceId(prefillInvoiceId) : null), [prefillInvoiceId]);
     const prefillCycleKey = useMemo(() => {
@@ -395,48 +398,21 @@ function CardSpendingFormBody({
         }
     }, [automaticInvoiceId, date]);
     const selectedResolvedInvoiceOption = useMemo(() => invoiceOptions.find((option) => option.id === invoiceId) ?? null, [invoiceOptions, invoiceId]);
-    const installmentPreviewData = useMemo<InstallmentPreviewData | null>(() => {
-        if (spendingMode !== "installment" || !selectedCard || !selectedResolvedInvoiceOption) {
-            return null;
-        }
-
-        const parsedInstallmentCount = Number(installmentCountInput);
-        const installmentCount = Number.isInteger(parsedInstallmentCount) && parsedInstallmentCount >= 2 ? parsedInstallmentCount : null;
-        if (!installmentCount || !Number.isFinite(amountValue) || amountValue <= 0) {
-            return null;
-        }
-
-        const ignoredInstallmentsCount = normalizeIgnoredInstallmentsCountInput(ignoredInstallmentsCountInput, installmentCount);
-        const installmentAmounts = splitAmountAcrossInstallments(amountValue, installmentCount);
-        const rows = installmentAmounts.map<InstallmentPreviewRow>((installmentAmount, index) => {
-            const cycleKey = shiftCycleKey(selectedResolvedInvoiceOption.cycleKey, index);
-            const cycle = cycleKey ? resolveCreditCardInvoiceCycleFromCycleKey(cycleKey, selectedCard.closingDay, selectedCard.dueDay) : null;
-            const monthKey = cycle ? getCreditCardInvoiceMonthKey({ dueDate: cycle.dueDate }) : cycleKey;
-
-            return {
-                installmentNumber: index + 1,
-                cycleKey,
-                monthLabel: monthKey ? formatMonthLabel(monthKey) : selectedResolvedInvoiceOption.monthLabel,
-                amount: installmentAmount,
-                ignored: index < ignoredInstallmentsCount,
-            };
-        });
-
-        return {
-            rows,
-            installmentCount,
-            ignoredInstallmentsCount,
-            totalAmount: roundToCents(rows.reduce((sum, row) => sum + row.amount, 0)),
-            effectiveTotalAmount: roundToCents(rows.reduce((sum, row) => sum + (row.ignored ? 0 : row.amount), 0)),
-            startMonthLabel: selectedResolvedInvoiceOption.monthLabel,
-        };
-    }, [amountValue, ignoredInstallmentsCountInput, installmentCountInput, selectedCard, selectedResolvedInvoiceOption, spendingMode]);
-
-    useEffect(() => {
-        if (installmentPreviewOpen && !installmentPreviewData) {
-            setInstallmentPreviewOpen(false);
-        }
-    }, [installmentPreviewData, installmentPreviewOpen]);
+    const parsedPlanCount = Number(installmentCountInput);
+    const setTotalAmount = useCallback((value: number) => setAmountInputState(formatAmountInputFromValue(value)), []);
+    const installmentPlan = useInstallmentPlan({
+        enabled: spendingMode === "installment" && !isInstallmentEdit,
+        amount: amountValue,
+        countInput: installmentCountInput,
+        ignoredCount: normalizeIgnoredInstallmentsCountInput(ignoredInstallmentsCountInput, Number.isInteger(parsedPlanCount) && parsedPlanCount >= 2 ? parsedPlanCount : null),
+        startDate: selectedResolvedInvoiceOption ? `${getCreditCardInvoiceMonthKey(selectedResolvedInvoiceOption.invoice)}-01` : "",
+        showDay: false,
+        disabled: financialFieldsDisabled,
+        overrides: installmentOverrides,
+        setOverrides: setInstallmentOverrides,
+        setTotalAmount,
+        onChange: onInstallmentPlanChange,
+    });
 
     useEffect(() => {
         if (invoiceOptions.length < 1) {
@@ -549,6 +525,7 @@ function CardSpendingFormBody({
             notes: trimmedDescription || undefined,
             transactionMode: resolvedMode,
             installmentCount: resolvedInstallmentCount,
+            installmentAmounts: isInstallmentEdit ? null : customInstallmentAmounts(numericValue, resolvedInstallmentCount, installmentOverrides),
             ignoredInstallmentsCount: resolvedMode === "installment" ? resolvedIgnoredInstallmentsCount : undefined,
             recurrenceRule:
                 resolvedMode === "recurring"
@@ -669,7 +646,6 @@ function CardSpendingFormBody({
 
     return (
         <>
-            {installmentPreviewOpen && installmentPreviewData && <InstallmentPreviewModal data={installmentPreviewData} onClose={() => setInstallmentPreviewOpen(false)} />}
             <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-white/[0.09] bg-surface p-4 text-white shadow-[0_26px_70px_-38px_rgba(0,0,0,0.95)]">
                     <header className="flex shrink-0 items-center justify-between">
                         <h1 className="text-sm ml-1 uppercase opacity-50">{isEditing ? (isSeriesTransaction ? "Editando gasto da série" : "Editando gasto no cartão") : "Novo gasto no cartão"}</h1>
@@ -701,6 +677,7 @@ function CardSpendingFormBody({
                                 onChange={(event) => setAmountInput(event.target.value)}
                                 disabled={financialFieldsDisabled}
                             />
+                            {transaction && isInstallmentEdit && spendingMode === "installment" && <InstallmentAmountHint transactionId={transaction.id} amountInput={amountInput} scope={editScope} />}
                             <div className="grid grid-cols-1 items-end gap-2 md:grid-cols-3">
                                 <CardCommitmentField
                                     value={commitment}
@@ -812,7 +789,7 @@ function CardSpendingFormBody({
                                     />
                                     <div>
                                         <TransactionModeField mode={spendingMode} installmentCountInput={installmentCountInput} onModeChange={setSpendingMode} onInstallmentCountChange={setInstallmentCountInput} recurrenceCountInput={recurrenceCountInput} onRecurrenceCountChange={setRecurrenceCountInput} hideInstallmentCount disabled={financialFieldsDisabled} />
-                                        {spendingMode === "installment" && (
+                                        {spendingMode === "installment" && !isInstallmentEdit && (
                                                 <div className="mx-0.5 flex flex-col gap-2 rounded-b border-x border-b border-dashed border-white/10 bg-black/20 px-3 py-3">
                                                     <label className="flex items-center justify-between gap-3">
                                                         <span className="text-[11px] uppercase tracking-[0.08em] text-white/50">Parcelas ignoradas</span>
@@ -846,19 +823,11 @@ function CardSpendingFormBody({
                                                             disabled={financialFieldsDisabled}
                                                         />
                                                     </label>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setInstallmentPreviewOpen(true)}
-                                                        disabled={financialFieldsDisabled || !installmentPreviewData}
-                                                        className="mt-2 inline-flex items-center justify-center gap-2 rounded-xl border border-white/[0.12] bg-white/[0.04] py-2 text-[11px] font-medium uppercase tracking-[0.08em] text-white/70 transition-colors hover:border-white/[0.24] hover:text-white disabled:cursor-not-allowed disabled:opacity-45"
-                                                    >
-                                                        <Eye size={13} />
-                                                        Pré-visualizar
-                                                    </button>
                                                 </div>
                                         )}
                                     </div>
                                 </div>
+                                {installmentPlan ? <InstallmentPreviewPanel plan={installmentPlan} className="max-h-96 min-[1280px]:hidden" /> : null}
                                 <div className="h-px bg-white/[0.06]" />
                                 <TransactionDetailsField details={details} disabled={submitting} />
                             </section>
@@ -866,14 +835,21 @@ function CardSpendingFormBody({
                         </AnimatedTransactionFormPanel>
                     </div>
 
+                {installmentPlan && activeTab === "simple" ? <InstallmentPlanWarning plan={installmentPlan} className="mt-3 shrink-0 min-[1280px]:hidden" /> : null}
+
                 <footer className="mt-4 flex shrink-0 flex-col gap-3 border-t border-white/[0.06] pt-4">
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                         <div className="flex gap-1">
                             {isEditing && (
                                 <>
-                                    <FooterButton onClick={() => void runAction(remove)} disabled={submitting || transactionSaved}>
-                                        <Trash2 size={15} /> Excluir
-                                    </FooterButton>
+                                    {!(isInstallmentEdit && editScope === "this_and_next") && (
+                                        <FooterButton
+                                            onClick={() => (transaction && isInstallmentEdit && editScope === "all" ? handleContextAction(transaction, DELETE_ALL_INSTALLMENTS_ACTION) : void runAction(remove))}
+                                            disabled={submitting || transactionSaved}
+                                        >
+                                            <Trash2 size={15} /> {isInstallmentEdit && editScope === "all" ? "Excluir todas" : "Excluir"}
+                                        </FooterButton>
+                                    )}
                                     <FooterButton onClick={() => void runAction(duplicate)} disabled={submitting || transactionSaved}>
                                         <Copy size={15} /> Duplicar
                                     </FooterButton>

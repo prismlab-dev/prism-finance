@@ -26,6 +26,7 @@ import {
 import { BulkHeaderCheckbox, BulkRowCheckbox, FloatingTransactionBulkFooter } from "../../transactions/TransactionBulkSelectionControls";
 import { TransactionDetailIndicators, useTransactionDetailFlags } from "../../transactions/TransactionDetailIndicators";
 import { TransactionContextMenu, type TransactionContextMenuState } from "../../transactions/TransactionContextMenu";
+import { InfoTag } from "../../transactions/InfoTag";
 import { buildTransactionContextActions, type TransactionContextAction } from "../../transactions/transactionContextActions";
 import { formatCurrencyBRL, formatTransactionDate } from "../../transactions/transactionView";
 import { isTransactionEligibleForBulkEdit, useTransactionBulkSelection } from "../../transactions/useTransactionBulkSelection";
@@ -41,6 +42,7 @@ interface StatementContentPanelProps {
     invoiceById: Map<string, CreditCardInvoice>;
     onAction: (transaction: Transaction, action: TransactionContextAction) => void;
     summaryAside?: ReactNode;
+    highlightTransactionId?: string | null;
 }
 
 type StatementSortField = "status" | "wallet" | "date" | "description" | "category" | "beneficiary" | "value";
@@ -165,7 +167,7 @@ function resolveTransactionSeriesIndicator(transaction: Transaction, group: Fina
     if (Number.isInteger(installmentNumber) && Number.isInteger(installmentCount) && Number(installmentNumber) > 0 && Number(installmentCount) >= 2) {
         return {
             kind: "installment",
-            label: `(${Number(installmentNumber)}/${Number(installmentCount)})`,
+            label: `${Number(installmentNumber)}/${Number(installmentCount)}`,
         };
     }
 
@@ -295,6 +297,7 @@ export function StatementContentPanel({
     invoiceById,
     onAction,
     summaryAside,
+    highlightTransactionId = null,
 }: StatementContentPanelProps) {
     const beneficiaries = useFinanceBeneficiaries();
     const categories = useFinanceCategories();
@@ -334,6 +337,17 @@ export function StatementContentPanel({
             searchQuery: nextSearchQuery,
         }));
     };
+
+    // Busca e filtros salvos não podem esconder a linha que a navegação pediu para destacar.
+    useEffect(() => {
+        if (!highlightTransactionId) {
+            return;
+        }
+
+        setViewPreferences((current) => (current.searchQuery ? { ...current, searchQuery: "" } : current));
+        setAdvancedFilters(EMPTY_ADVANCED_FILTERS);
+        setSelectedStatementStatus("all");
+    }, [highlightTransactionId, setViewPreferences]);
 
     const resizeHandle = (key: TableColumnKey) => (
         <ColumnResizeHandle
@@ -730,7 +744,7 @@ export function StatementContentPanel({
                                                                 ) : (
                                                                     "--"
                                                                 )}
-                                                                {seriesIndicator?.kind === "installment" && <span className="shrink-0 text-xs text-white/45">{seriesIndicator.label}</span>}
+                                                                {seriesIndicator?.kind === "installment" && <InfoTag small>{seriesIndicator.label}</InfoTag>}
                                                                 {seriesIndicator?.kind === "recurring" && (
                                                                     <span className="inline-flex shrink-0 text-white/45" role="img" title="Transacao recorrente" aria-label="Transacao recorrente">
                                                                         <Repeat2 strokeWidth={2} size={15} />

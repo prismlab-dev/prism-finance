@@ -1,7 +1,7 @@
 import { ChangeEvent, useEffect, useMemo, useState } from "react";
 import { CircleDollarSign, ImageUp, Link2, RotateCcw, Sigma, Trash2, Wallet as WalletIcon } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
-import { DEFAULT_WALLET_ID, type Wallet, useFinanceActions, useFinanceWallets } from "../../context/FinanceContext";
+import { type Wallet, useFinanceActions, useFinanceFavoriteWallet, useFinanceWallets } from "../../context/FinanceContext";
 import { useModal } from "../../context/ModalContext";
 import { extractCurrencyDigits, formatCurrencyFromDigits, parseCurrencyDigitsToNumber } from "../../lib/currencyMask";
 import { DEFAULT_WALLET_COLOR, DEFAULT_WALLET_ICON, isDefaultWalletIcon, normalizeWalletColor, normalizeWalletIcon } from "../../lib/walletVisual";
@@ -104,6 +104,7 @@ const SECONDARY_BUTTON_CLASS =
 
 export function AddWallet({ mode = "create", walletId, initialWallet }: AddWalletProps) {
     const wallets = useFinanceWallets();
+    const favoriteWalletId = useFinanceFavoriteWallet();
     const { addWallet, deleteWallet, permanentlyDeleteWallet, setWalletActive } = useFinanceActions();
     const { closeModal, openModal } = useModal();
 
@@ -162,7 +163,7 @@ export function AddWallet({ mode = "create", walletId, initialWallet }: AddWalle
     }, [editingWallet, mode]);
 
     const isEditMode = mode === "edit" && Boolean(editingWallet);
-    const isDefaultWallet = editingWallet?.id === DEFAULT_WALLET_ID;
+    const isFavoriteWallet = editingWallet?.id === favoriteWalletId;
     const canSubmit = mode !== "edit" || Boolean(editingWallet);
     const normalizedName = name.trim();
     const resolvedColor = normalizeWalletColor(walletColor);
@@ -287,7 +288,7 @@ export function AddWallet({ mode = "create", walletId, initialWallet }: AddWalle
 
     const handleDelete = () =>
         runAction(async () => {
-            if (!editingWallet || isDefaultWallet) {
+            if (!editingWallet || isFavoriteWallet) {
                 return false;
             }
 
@@ -306,7 +307,7 @@ export function AddWallet({ mode = "create", walletId, initialWallet }: AddWalle
         });
 
     const openPermanentDeleteModal = () => {
-        if (!editingWallet || editingWallet.isActive || isDefaultWallet) {
+        if (!editingWallet || editingWallet.isActive || isFavoriteWallet) {
             return;
         }
 
@@ -316,8 +317,8 @@ export function AddWallet({ mode = "create", walletId, initialWallet }: AddWalle
                 description={`A carteira "${editingWallet.name}" sera removida permanentemente.`}
                 consequences={[
                     "Transacoes e transferencias ligadas a esta carteira serao removidas em definitivo.",
-                    "Pagamentos feitos por esta carteira tambem serao removidos.",
-                    "Cartoes vinculados serao mantidos, mas faturas remanescentes podem ser recalculadas.",
+                    "Compras no cartao e faturas pagas serao mantidas; os pagamentos passam a constar sem carteira.",
+                    "Cartoes vinculados serao mantidos, sem carteira associada.",
                 ]}
                 confirmLabel="Excluir em definitivo"
                 onConfirm={() => permanentlyDeleteWallet(editingWallet.id)}
@@ -406,7 +407,7 @@ export function AddWallet({ mode = "create", walletId, initialWallet }: AddWalle
 
                 <ModalFooter
                     start={
-                        isEditMode && editingWallet && !isDefaultWallet ? (
+                        isEditMode && editingWallet && !isFavoriteWallet ? (
                             <>
                                 <ModalFooterAction onClick={() => (editingWallet.isActive ? void handleDelete() : void handleReactivate())} disabled={submitting}>
                                     {editingWallet.isActive ? <Trash2 size={15} /> : <RotateCcw size={15} />}

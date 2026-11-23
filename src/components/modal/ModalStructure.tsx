@@ -43,7 +43,7 @@ export function ModalStructure({ height, width, children, topContent, closeOnEsc
             <div style={{ height: resolvedHeight, maxHeight: topContent ? "calc(94vh - 40px)" : "90vh" }} className="flex w-full min-h-0 flex-col overflow-hidden">
                 {children}
             </div>
-            {aside ? <div className="absolute left-full top-0 ml-4 max-h-[90vh] w-[340px] overflow-y-auto">{aside}</div> : null}
+            {aside ? <div className={`absolute left-full ml-4 ${topContent ? "top-[38px] w-[min(300px,calc(50vw-392px))]" : "top-0 max-h-[90vh] w-[340px] overflow-y-auto"}`}>{aside}</div> : null}
         </div>
     );
 }

@@ -5,6 +5,7 @@ import {
     type PlanningBudget,
     useFinanceActions,
     useFinanceBeneficiaries,
+    useFinanceCreditCardInvoices,
     useFinanceCreditCards,
     useFinanceWallets,
     useFinanceCategories,
@@ -44,10 +45,11 @@ export function BudgetsPage() {
     const { budgetId } = useParams<{ budgetId?: string }>();
     const [monthKey, setMonthKey] = useState(getCurrentMonthKey);
     const transactions = useFinanceTransactions(monthPeriod(monthKey, BUDGET_HISTORY_MONTHS - 1));
+    const creditCardInvoices = useFinanceCreditCardInvoices();
     const budgets = planning.budgets;
     const today = getLocalTodayDate();
 
-    const overview = useMemo(() => buildBudgetsOverview({ budgets, categories, transactions, monthKey, today }), [budgets, categories, monthKey, today, transactions]);
+    const overview = useMemo(() => buildBudgetsOverview({ budgets, categories, transactions, creditCardInvoices, monthKey, today }), [budgets, categories, creditCardInvoices, monthKey, today, transactions]);
     const ruleOptions = useMemo(() => buildBudgetRuleOptions({ categories, groups, tags, beneficiaries, wallets, creditCards }), [beneficiaries, categories, creditCards, groups, tags, wallets]);
     const { labelOf, visualOf } = useMemo(() => createBudgetRuleResolver(ruleOptions), [ruleOptions]);
     const budgetNameById = useMemo(() => new Map(budgets.map((budget) => [budget.id, getBudgetDisplayName(budget, labelOf)])), [budgets, labelOf]);
@@ -74,8 +76,8 @@ export function BudgetsPage() {
                 labelOf={labelOf}
                 monthLabel={formatMonthLabel(monthKey)}
                 budgetNameById={budgetNameById}
-                previewRules={(rules: BudgetRuleSet) => previewBudgetRules(rules, otherBudgets, { categories, transactions, monthKey, today })}
-                suggestAmount={(rules: BudgetRuleSet) => suggestBudgetAmount(rules, { categories, transactions, monthKey })}
+                previewRules={(rules: BudgetRuleSet) => previewBudgetRules(rules, otherBudgets, { categories, transactions, creditCardInvoices, monthKey, today })}
+                suggestAmount={(rules: BudgetRuleSet) => suggestBudgetAmount(rules, { categories, transactions, creditCardInvoices, monthKey })}
                 onSubmit={(draft) => handleSubmitBudget(editingBudget, draft)}
             />,
         );

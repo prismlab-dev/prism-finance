@@ -1,5 +1,6 @@
 import { addMonthsToLocalDate, getLocalTodayDate } from "../../lib/localDate";
 import { isOccurrenceInRule, projectOccurrences } from "../../context/finance/recurrence/projectOccurrences";
+import { removedInstallmentsTotal } from "../../context/finance/removedInstallments";
 import { resolveTransactionCreditCardId, resolveTransactionDestinationWalletId, resolveTransactionSourceWalletId } from "../../context/finance/transactionResolution";
 import type { CreditCard, CreditCardInvoice, StoredTransaction, TransactionGroup, TransactionMode, TransactionStatus } from "../../context/finance/domainTypes";
 
@@ -21,6 +22,8 @@ export interface TransactionSeriesRow {
     destinationWalletId: string | null;
     creditCardId: string | null;
     invoiceId: string | null;
+    /** Cartão excluído que levou a parcela junto; ausente nas que ainda existem. */
+    removedCardName?: string;
 }
 
 export interface TransactionSeriesView {
@@ -39,6 +42,7 @@ export interface TransactionSeriesView {
         paidAmount: number;
         pendingAmount: number;
         skippedCount: number;
+        removedCount: number;
         totalAmount: number;
     };
 }
@@ -71,6 +75,26 @@ function toRow(transaction: StoredTransaction, group: TransactionGroup | undefin
         creditCardId: resolveTransactionCreditCardId(transaction, group),
         invoiceId: transaction.invoiceId,
     };
+}
+
+function toRemovedRows(group: TransactionGroup): TransactionSeriesRow[] {
+    return (group.removedInstallments ?? []).map((item, index) => ({
+        id: `${group.id}-removed-${index}`,
+        number: item.number,
+        date: item.date,
+        amount: item.amount,
+        status: "cancelled",
+        projected: false,
+        commitment: "posted",
+        paidAt: null,
+        title: null,
+        groupId: group.id,
+        sourceWalletId: null,
+        destinationWalletId: null,
+        creditCardId: null,
+        invoiceId: null,
+        removedCardName: item.cardName,
+    }));
 }
 
 export function buildTransactionSeriesView({
@@ -116,7 +140,8 @@ export function buildTransactionSeriesView({
         });
     }
 
-    const rows = [...materialized, ...projected].map((transaction) => toRow(transaction, segments.find((segment) => segment.id === transaction.groupId))).sort((first, second) => first.date.localeCompare(second.date) || (first.number ?? 0) - (second.number ?? 0));
+    const liveRows = [...materialized, ...projected].map((transaction) => toRow(transaction, segments.find((segment) => segment.id === transaction.groupId)));
+    const rows = [...liveRows, ...toRemovedRows(group)].sort((first, second) => first.date.localeCompare(second.date) || (first.number ?? 0) - (second.number ?? 0));
     const active = rows.filter((row) => row.status !== "skipped" && row.status !== "cancelled");
 
     return {
@@ -128,12 +153,13 @@ export function buildTransactionSeriesView({
         windowEndDate,
         totals: {
             count: rows.length,
-            materializedCount: rows.filter((row) => !row.projected).length,
+            materializedCount: liveRows.filter((row) => !row.projected).length,
             projectedCount: rows.filter((row) => row.projected).length,
             paidAmount: active.filter((row) => row.status === "paid").reduce((sum, row) => sum + row.amount, 0),
             pendingAmount: active.filter((row) => row.status === "pending").reduce((sum, row) => sum + row.amount, 0),
-            skippedCount: rows.filter((row) => row.status === "skipped" || row.status === "cancelled").length,
-            totalAmount: active.reduce((sum, row) => sum + row.amount, 0),
+            skippedCount: liveRows.filter((row) => row.status === "skipped" || row.status === "cancelled").length,
+            removedCount: group.removedInstallments?.length ?? 0,
+            totalAmount: active.reduce((sum, row) => sum + row.amount, 0) + removedInstallmentsTotal(group),
         },
     };
 }

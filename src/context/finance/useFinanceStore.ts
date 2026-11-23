@@ -73,6 +73,7 @@ import {
     findCurrentUserSelfBeneficiary,
     findBeneficiaryByName,
     getTodayDate,
+    resolveFallbackWalletId,
     roundToCents,
 } from "./helpers";
 import {
@@ -129,13 +130,7 @@ function resolveFavoriteWalletId(candidate: unknown, wallets: Wallet[]): string 
         return normalizedCandidate;
     }
 
-    return (
-        wallets.find((wallet) => wallet.id === DEFAULT_WALLET_ID && wallet.isActive)?.id ??
-        wallets.find((wallet) => wallet.isActive)?.id ??
-        wallets.find((wallet) => wallet.id === DEFAULT_WALLET_ID)?.id ??
-        wallets[0]?.id ??
-        DEFAULT_WALLET_ID
-    );
+    return resolveFallbackWalletId(wallets);
 }
 
 function resolveFavoriteCreditCardId(candidate: unknown, creditCards: CreditCard[]): string | null {
@@ -911,7 +906,7 @@ export function useFinanceStore(): FinanceStoreValue {
     const setWalletActive = useCallback(
         async (walletId: string, isActive: boolean) => {
             const normalizedWalletId = normalizeWalletId(walletId);
-            if (normalizedWalletId === DEFAULT_WALLET_ID && !isActive) {
+            if (normalizedWalletId === favoriteWalletIdRef.current && !isActive) {
                 return;
             }
 
@@ -949,7 +944,7 @@ export function useFinanceStore(): FinanceStoreValue {
     const deleteWallet = useCallback(
         async (walletId: string) => {
             const normalizedWalletId = normalizeWalletId(walletId);
-            if (normalizedWalletId === DEFAULT_WALLET_ID) {
+            if (normalizedWalletId === favoriteWalletIdRef.current) {
                 return;
             }
 
@@ -966,7 +961,7 @@ export function useFinanceStore(): FinanceStoreValue {
     const permanentlyDeleteWallet = useCallback(
         async (walletId: string) => {
             const normalizedWalletId = normalizeWalletId(walletId);
-            if (normalizedWalletId === DEFAULT_WALLET_ID) {
+            if (normalizedWalletId === favoriteWalletIdRef.current) {
                 return;
             }
 
@@ -1139,7 +1134,7 @@ export function useFinanceStore(): FinanceStoreValue {
     );
 
     const permanentlyDeleteCreditCard = useCallback(
-        async (creditCardId: string) => {
+        async (creditCardId: string, options?: { keepPayments?: boolean }) => {
             const targetCard = creditCardsRef.current.find((card) => card.id === creditCardId);
             if (!targetCard || targetCard.isActive) {
                 return;
@@ -1147,6 +1142,7 @@ export function useFinanceStore(): FinanceStoreValue {
 
             const deleted = permanentlyDeleteCreditCardData({
                 creditCardId,
+                keepPayments: options?.keepPayments,
                 creditCards: creditCardsRef.current,
                 creditCardInvoices: creditCardInvoicesRef.current,
                 transactionGroups: transactionGroupsRef.current,

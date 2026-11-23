@@ -10,6 +10,13 @@ export interface TransactionContextAction {
     scope?: TransactionSeriesScope;
 }
 
+export const DELETE_ALL_INSTALLMENTS_ACTION: TransactionContextAction = {
+    id: "delete_all",
+    label: "Excluir todas as parcelas",
+    scope: "all",
+    tone: "danger",
+};
+
 interface BuildTransactionContextActionsParams {
     transaction: Transaction;
     group: TransactionGroup | undefined;
@@ -183,20 +190,7 @@ export function buildTransactionContextActions({ transaction, group, isSelected 
     });
 
     if (group?.transactionMode === "installment") {
-        actions.push(
-            {
-                id: "delete_this_and_next",
-                label: "Excluir próximas parcelas",
-                scope: "this_and_next",
-                tone: "danger",
-            },
-            {
-                id: "delete_all",
-                label: "Excluir todas as parcelas",
-                scope: "all",
-                tone: "danger",
-            },
-        );
+        actions.push(DELETE_ALL_INSTALLMENTS_ACTION);
     }
 
     if (group?.transactionMode === "recurring") {

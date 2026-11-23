@@ -1,7 +1,7 @@
 import { ArrowLeft, Layers, Pencil, Trash2 } from "lucide-react";
 import { useMemo } from "react";
-import { type Transaction, useFinanceCreditCards, useFinanceWallets } from "../../../context/FinanceContext";
-import { getMonthKeyFromDateValue } from "../../../context/financeTypes";
+import { type Transaction, useFinanceCreditCardInvoices, useFinanceCreditCards, useFinanceWallets } from "../../../context/FinanceContext";
+import { getMonthKeyFromDateValue, parseCreditCardInvoiceId, resolveCreditCardInvoiceCycle } from "../../../context/financeTypes";
 import { usePage } from "../../../context/PageContext";
 import { getCategoryIconComponent } from "../../../lib/categoryIcons";
 import { PlanningReportsPanel } from "../planning/PlanningReportsPanel";
@@ -39,6 +39,7 @@ export function BudgetDetailView({ progress, name, iconName, color, monthKey, on
     const { goToPage } = usePage();
     const wallets = useFinanceWallets();
     const creditCards = useFinanceCreditCards();
+    const creditCardInvoices = useFinanceCreditCardInvoices();
     const { budget, history, entries, sharedCount, dailyAllowance } = progress;
     const Icon = getCategoryIconComponent(iconName, "expense");
     const paceRatio = dailyAllowance !== null ? currentMonthPace() : undefined;
@@ -51,6 +52,16 @@ export function BudgetDetailView({ progress, name, iconName, color, monthKey, on
         sourceNameById.get(transaction.paymentMethod === "credit_card" ? (transaction.creditCardId ?? "") : transaction.inWallet) ?? null;
 
     const openTransaction = (transaction: Transaction) => {
+        // Gasto no cartão não aparece em Transações: ele vive na fatura.
+        const card = transaction.paymentMethod === "credit_card" ? creditCards.find((item) => item.id === transaction.creditCardId) : undefined;
+        if (card) {
+            const dueDate = creditCardInvoices.find((invoice) => invoice.id === transaction.invoiceId)?.dueDate;
+            const selectedMonth = dueDate
+                ? getMonthKeyFromDateValue(dueDate)
+                : (parseCreditCardInvoiceId(transaction.invoiceId ?? "")?.cycleKey ?? resolveCreditCardInvoiceCycle(transaction.date, card.closingDay, card.dueDay).cycleKey);
+            goToPage("statement", { page: "statement", selectedCardId: card.id, selectedMonth, highlightTransactionId: transaction.id });
+            return;
+        }
         goToPage("transactions", {
             page: "transactions",
             tab: "spending",
