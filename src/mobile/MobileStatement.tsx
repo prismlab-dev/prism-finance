@@ -1,5 +1,7 @@
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
+import { useRowHighlight } from "../components/common/useRowHighlight";
 import { PayCreditCardInvoiceModal } from "../components/modal/PayCreditCardInvoiceModal";
 import { MiniTransactionBlock } from "../components/pages/home/SmTransactionBlock";
 import {
@@ -18,6 +20,7 @@ import { normalizeComparisonText } from "../context/finance/helpers";
 import { monthPeriod } from "../context/finance/recurrence/period";
 import { getMonthKeyFromDateValue } from "../context/financeTypes";
 import { useModal } from "../context/ModalContext";
+import { usePage } from "../context/PageContext";
 import { parseAppDate } from "../lib/localDate";
 import { MobileProgressSummary } from "./MobileProgressSummary";
 import { LABEL_CLASS } from "./MobileHeader";
@@ -48,6 +51,19 @@ export function MobileStatement() {
         ),
     );
     const [query, setQuery] = useState("");
+
+    const { consumePendingNavigation } = usePage();
+    const { key: locationKey } = useLocation();
+    const [highlightId, setHighlightId] = useState<string | null>(null);
+    useRowHighlight(highlightId, () => setHighlightId(null));
+    useEffect(() => {
+        const pendingNavigation = consumePendingNavigation();
+        if (pendingNavigation?.page !== "statement") return;
+        setCardIds([pendingNavigation.selectedCardId]);
+        setMonth(pendingNavigation.selectedMonth);
+        setQuery("");
+        setHighlightId(pendingNavigation.highlightTransactionId ?? null);
+    }, [consumePendingNavigation, locationKey]);
 
     const period = monthPeriod(month, 2);
     const transactions = useFinanceTransactions(period);

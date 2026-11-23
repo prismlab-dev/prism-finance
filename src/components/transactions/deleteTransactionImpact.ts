@@ -1,5 +1,6 @@
 import { useFinanceStoredTransactions, useFinanceTransactionGroups, useFinanceWallets, type Transaction, type TransactionGroup, type TransactionSeriesScope, type Wallet } from "../../context/FinanceContext";
 import type { StoredTransaction } from "../../context/financeTypes";
+import { resolveTransactionCreditCardId, resolveTransactionDestinationWalletId, resolveTransactionSourceWalletId } from "../../context/finance/transactionResolution";
 import { roundToCents } from "../../context/finance/helpers";
 import { formatCurrencyBRL } from "./transactionView";
 
@@ -57,10 +58,9 @@ function resolveWalletImpactDelta(transaction: StoredTransaction, group: Transac
     }
 
     const amount = roundToCents(Math.abs(transaction.amount));
-    const sourceWallet = (transaction.sourceWalletId ? walletsById.get(transaction.sourceWalletId) : null) ?? (group.sourceWalletId ? walletsById.get(group.sourceWalletId) : null) ?? null;
-    const destinationWallet =
-        (transaction.destinationWalletId ? walletsById.get(transaction.destinationWalletId) : null) ?? (group.destinationWalletId ? walletsById.get(group.destinationWalletId) : null) ?? null;
-    const hasCreditCard = Boolean(transaction.creditCardId ?? group.creditCardId);
+    const sourceWallet = walletsById.get(resolveTransactionSourceWalletId(transaction, group) ?? "") ?? null;
+    const destinationWallet = walletsById.get(resolveTransactionDestinationWalletId(transaction, group) ?? "") ?? null;
+    const hasCreditCard = Boolean(resolveTransactionCreditCardId(transaction, group));
 
     if (group.type === "income") {
         return sourceWallet?.includeInMainTotals ? -amount : 0;
@@ -130,9 +130,10 @@ export function buildDeleteTransactionImpactPreview(params: {
     const targetTransactions = buildTargetTransactions(transaction, normalizeScope(scope), storedTransactions, transactionGroups);
     const walletsById = new Map(wallets.map((wallet) => [wallet.id, wallet]));
     const groupsById = new Map(transactionGroups.map((group) => [group.id, group]));
-    // Series deletion preserves paid history; only an explicit individual
-    // deletion can reverse a settled wallet movement.
-    const paidTransactions = normalizeScope(scope) === "single" ? targetTransactions.filter((item) => item.status === "paid") : [];
+    // Recurring series deletion preserves paid history; an individual deletion or
+    // a whole installment purchase reverses settled wallet movements.
+    const isInstallment = groupsById.get(transaction.groupId)?.transactionMode === "installment";
+    const paidTransactions = normalizeScope(scope) === "single" || isInstallment ? targetTransactions.filter((item) => item.status === "paid") : [];
     const balanceDelta = roundToCents(
         paidTransactions.reduce((sum, item) => sum + resolveWalletImpactDelta(item, groupsById.get(item.groupId) ?? null, walletsById), 0),
     );

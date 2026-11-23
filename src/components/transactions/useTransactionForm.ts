@@ -1,6 +1,7 @@
 import { occurrenceId } from "../../context/finance/recurrence/projectOccurrences";
 import { duplicateTransactionDraft } from "./duplicateTransactionDraft";
-import { useEffect, useMemo, useState } from "react";
+import { customInstallmentAmounts, NO_INSTALLMENT_OVERRIDES, type InstallmentOverrides } from "./installmentPreview";
+import { useCallback, useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import {
     DEFAULT_WALLET_ID,
     SYSTEM_EXPENSE_CARD_INVOICE_CATEGORY_ID,
@@ -50,6 +51,7 @@ export interface TransactionFormState {
     isInvoicePaymentEdit: boolean;
     isTransfer: boolean;
     isSeriesTransaction: boolean;
+    isInstallmentEdit: boolean;
     sourceTransaction: Transaction | null;
     transactionId: string;
     amountInput: string;
@@ -86,6 +88,9 @@ export interface TransactionFormState {
     setDateOffset: (offsetInDays: number) => void;
     setTransactionMode: (value: TransactionMode) => void;
     setInstallmentCountInput: (value: string) => void;
+    installmentOverrides: InstallmentOverrides;
+    setInstallmentOverrides: Dispatch<SetStateAction<InstallmentOverrides>>;
+    setTotalAmount: (value: number) => void;
     setEditScope: (value: TransactionSeriesScope) => void;
     toggleTag: (tagId: string) => void;
     submit: () => Promise<boolean>;
@@ -224,6 +229,8 @@ export function useTransactionForm({ type, transaction, mode = "default", prefil
     const [installmentCountInput, setInstallmentCountInput] = useState(() =>
         sourceGroup?.transactionMode === "installment" && sourceGroup.installmentCount ? String(sourceGroup.installmentCount) : "2",
     );
+    const [installmentOverrides, setInstallmentOverrides] = useState<InstallmentOverrides>(NO_INSTALLMENT_OVERRIDES);
+    const setTotalAmount = useCallback((value: number) => setAmountInputState(formatAmountInputFromValue(value)), []);
     const [recurrenceCountInput, setRecurrenceCountInput] = useState(() => sourceGroup?.recurrenceRule?.end.type === "count" ? String(sourceGroup.recurrenceRule.end.count) : "");
     const [editScope, setEditScopeState] = useState<TransactionSeriesScope>("single");
     const [draftTransactionId] = useState(() => createId("tx"));
@@ -276,8 +283,7 @@ export function useTransactionForm({ type, transaction, mode = "default", prefil
             categories.filter(
                 (item) =>
                     item.type === categoryType &&
-                    item.id !== SYSTEM_EXPENSE_CARD_INVOICE_CATEGORY_ID &&
-                    (item.isActive || selectedCategoryIdsToKeep.has(item.id)),
+                    (selectedCategoryIdsToKeep.has(item.id) || (item.isActive && item.id !== SYSTEM_EXPENSE_CARD_INVOICE_CATEGORY_ID)),
             ),
         [categories, categoryType, selectedCategoryIdsToKeep],
     );
@@ -482,6 +488,7 @@ export function useTransactionForm({ type, transaction, mode = "default", prefil
             notes: trimmedDescription || undefined,
             transactionMode: resolvedTransactionMode,
             installmentCount: resolvedInstallmentCount,
+            installmentAmounts: sourceGroup?.transactionMode === "installment" ? null : customInstallmentAmounts(numericValue, resolvedInstallmentCount, installmentOverrides),
             recurrenceRule:
                 resolvedTransactionMode === "recurring"
                     ? {
@@ -609,6 +616,7 @@ export function useTransactionForm({ type, transaction, mode = "default", prefil
         isInvoicePaymentEdit,
         isTransfer,
         isSeriesTransaction,
+        isInstallmentEdit: sourceGroup?.transactionMode === "installment",
         sourceTransaction: transaction ?? null,
         transactionId: transaction?.id ?? (transactionMode === "recurring" ? occurrenceId(`group-${draftTransactionId}`, 1) : draftTransactionId),
         amountInput,
@@ -645,6 +653,9 @@ export function useTransactionForm({ type, transaction, mode = "default", prefil
         setDateOffset,
         setTransactionMode,
         setInstallmentCountInput,
+        installmentOverrides,
+        setInstallmentOverrides,
+        setTotalAmount,
         setEditScope,
         toggleTag,
         saveAndContinue,

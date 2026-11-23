@@ -304,6 +304,7 @@ export function StatementPage() {
                     <StatementContentPanel
                         selectedMonth={selectedDueMonth}
                         transactions={monthInvoiceItems}
+                        highlightTransactionId={pendingHighlightTransactionId}
                         cardById={cardById}
                         invoiceById={invoiceById}
                         onAction={handleTransactionContextAction}

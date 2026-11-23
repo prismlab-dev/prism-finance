@@ -15,6 +15,7 @@ import { ConfirmActionModal } from "../../modal/ConfirmActionModal";
 import { BulkHeaderCheckbox, BulkRowCheckbox, FloatingTransactionBulkFooter } from "../../transactions/TransactionBulkSelectionControls";
 import { TransactionDetailIndicators, useTransactionDetailFlags } from "../../transactions/TransactionDetailIndicators";
 import { TransactionContextMenu, type TransactionContextMenuState } from "../../transactions/TransactionContextMenu";
+import { InfoTag } from "../../transactions/InfoTag";
 import { buildTransactionContextActions, type TransactionContextAction } from "../../transactions/transactionContextActions";
 import { formatCurrencyBRL, formatTransactionDate, getTransactionTypeMeta, resolveTransactionWallet } from "../../transactions/transactionView";
 import { isTransactionEligibleForBulkEdit, useTransactionBulkSelection } from "../../transactions/useTransactionBulkSelection";
@@ -147,7 +148,7 @@ function resolveTransactionSeriesIndicator(transaction: Transaction, group: Fina
     if (Number.isInteger(installmentNumber) && Number.isInteger(installmentCount) && Number(installmentNumber) > 0 && Number(installmentCount) >= 2) {
         return {
             kind: "installment",
-            label: `(${Number(installmentNumber)}/${Number(installmentCount)})`,
+            label: `${Number(installmentNumber)}/${Number(installmentCount)}`,
         };
     }
 
@@ -532,7 +533,7 @@ function TransactionsTable({ tabs, activeTab, wallets, beneficiariesById, transa
                                                         >
                                                             {statusLabel}
                                                         </span>
-                                                        {seriesIndicator?.kind === "installment" && <span className="text-xs text-white/45">{seriesIndicator.label}</span>}
+                                                        {seriesIndicator?.kind === "installment" && <InfoTag small>{seriesIndicator.label}</InfoTag>}
                                                         {seriesIndicator?.kind === "recurring" && (
                                                             <span className="inline-flex text-white/45" role="img" title="Transacao recorrente" aria-label="Transacao recorrente">
                                                                 <Repeat2 strokeWidth={2} size={15} />

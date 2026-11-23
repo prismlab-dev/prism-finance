@@ -10,6 +10,7 @@ export function duplicateTransactionDraft(draft: TransactionDraft): TransactionD
         transactionMode: "single",
         installmentCount: null,
         ignoredInstallmentsCount: null,
+        installmentAmounts: null,
         recurrenceRule: null,
         recurrenceEndDate: null,
         invoiceId: null,

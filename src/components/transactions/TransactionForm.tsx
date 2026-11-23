@@ -1,8 +1,15 @@
+import { DELETE_ALL_INSTALLMENTS_ACTION } from "./transactionContextActions";
+import { useTransactionContextActionHandler } from "./useTransactionContextActionHandler";
 import { useState } from "react";
 import { CircleX, Copy, SquareSlash, Trash2, X } from "lucide-react";
 import { type Transaction, type TransactionType, useFinanceSession } from "../../context/FinanceContext";
 import { useModal } from "../../context/ModalContext";
 import { AnimatedTransactionFormPanel } from "./AnimatedTransactionFormPanel";
+import { extractCurrencyDigits, parseCurrencyDigitsToNumber } from "../../lib/currencyMask";
+import { getLocalTodayDate } from "../../lib/localDate";
+import { InstallmentPlanWarning } from "./InstallmentPlanWarning";
+import type { InstallmentPlan } from "./installmentPreview";
+import { useInstallmentPlan } from "./useInstallmentPlan";
 import { TransactionFormFields } from "./TransactionFormFields";
 import { TransactionHeader } from "./TransactionFormParts";
 import type { TransactionFormTab } from "./TransactionFormTabs";
@@ -18,6 +25,7 @@ interface TransactionFormProps {
     mode?: "default" | "invoice_payment_edit";
     prefill?: TransactionFormPrefill;
     activeTab?: TransactionFormTab;
+    onInstallmentPlanChange?: (plan: InstallmentPlan | null) => void;
 }
 
 type SuccessfulCompletion = "close" | "continue";
@@ -33,16 +41,31 @@ function TransactionFormBody({
     mode = "default",
     prefill,
     activeTab = "simple",
+    onInstallmentPlanChange,
     justSaved,
     onSavedAndContinue,
 }: TransactionFormProps & { justSaved: boolean; onSavedAndContinue: () => void }) {
     const { closeModal } = useModal();
+    const handleContextAction = useTransactionContextActionHandler();
     const { user } = useFinanceSession();
     const [submitting, setSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState("");
     const [pendingDetailsCompletion, setPendingDetailsCompletion] = useState<SuccessfulCompletion | null>(null);
     const form = useTransactionForm({ type, transaction, mode, prefill });
     const details = useTransactionDetails({ transactionId: form.transactionId, userId: user?.uid, loadExisting: form.isEditing });
+
+    const installmentPlan = useInstallmentPlan({
+        enabled: form.transactionMode === "installment" && !form.isInstallmentEdit,
+        amount: parseCurrencyDigitsToNumber(extractCurrencyDigits(form.amountInput)),
+        countInput: form.installmentCountInput,
+        startDate: form.date || getLocalTodayDate(),
+        showDay: true,
+        disabled: submitting || Boolean(pendingDetailsCompletion),
+        overrides: form.installmentOverrides,
+        setOverrides: form.setInstallmentOverrides,
+        setTotalAmount: form.setTotalAmount,
+        onChange: onInstallmentPlanChange,
+    });
 
     const finishSuccessfulAction = (completion: SuccessfulCompletion) => {
         setPendingDetailsCompletion(null);
@@ -107,17 +130,27 @@ function TransactionFormBody({
                         form={form}
                         transaction={transaction}
                         details={details}
+                        installmentPlan={installmentPlan}
                         disabled={submitting || Boolean(pendingDetailsCompletion)}
                         detailsDisabled={submitting}
                     />
                 </AnimatedTransactionFormPanel>
             </div>
 
+            {installmentPlan && activeTab === "simple" ? <InstallmentPlanWarning plan={installmentPlan} className="mt-3 shrink-0 min-[1280px]:hidden" /> : null}
+
             <footer className="mt-4 flex shrink-0 flex-col gap-2 border-t border-white/[0.06] pt-4 sm:flex-row sm:items-end sm:justify-between">
                 <div className="flex flex-wrap gap-1">
                     {form.isEditing && !form.isInvoicePaymentEdit ? (
                         <>
-                            <FooterButton onClick={() => void runAction(form.remove, "close")} disabled={submitting || Boolean(pendingDetailsCompletion)}><Trash2 size={15} /> Excluir</FooterButton>
+                            {!(form.isInstallmentEdit && form.editScope === "this_and_next") && (
+                                <FooterButton
+                                    onClick={() => (transaction && form.isInstallmentEdit && form.editScope === "all" ? handleContextAction(transaction, DELETE_ALL_INSTALLMENTS_ACTION) : void runAction(form.remove, "close"))}
+                                    disabled={submitting || Boolean(pendingDetailsCompletion)}
+                                >
+                                    <Trash2 size={15} /> {form.isInstallmentEdit && form.editScope === "all" ? "Excluir todas" : "Excluir"}
+                                </FooterButton>
+                            )}
                             <FooterButton onClick={() => void runAction(form.duplicate, "close")} disabled={submitting || Boolean(pendingDetailsCompletion)}><Copy size={15} /> Duplicar</FooterButton>
                             <FooterButton onClick={() => void runAction(form.ignore, "close", true)} disabled={submitting || Boolean(pendingDetailsCompletion)}><SquareSlash size={15} /> Ignorar</FooterButton>
                             <FooterButton onClick={() => void runAction(form.cancelTransaction, "close", true)} disabled={submitting || Boolean(pendingDetailsCompletion)}><CircleX size={15} /> Cancelar</FooterButton>

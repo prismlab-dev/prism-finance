@@ -30,11 +30,15 @@ function getDeleteTitle(action: TransactionContextAction): string {
     return "Excluir transação?";
 }
 
-function getDeleteDescription(transaction: Transaction, action: TransactionContextAction): string {
+function getDeleteDescription(transaction: Transaction, action: TransactionContextAction, isInstallment: boolean): string {
     const label = getTransactionDisplayLabel(transaction);
 
     if (transaction.systemKind === "invoice_payment") {
         return `Essa ação remove "${label}" e reverte o pagamento vinculado na fatura.`;
+    }
+
+    if (action.scope === "all" && isInstallment) {
+        return `Essa ação remove todas as parcelas de "${label}" em definitivo, inclusive as pagas e as ignoradas.`;
     }
 
     if (action.scope === "all") {
@@ -167,7 +171,7 @@ export function useTransactionContextActionHandler() {
             openModal(
                 <ConfirmActionModal
                     title={getDeleteTitle(action)}
-                    description={getDeleteDescription(transaction, action)}
+                    description={getDeleteDescription(transaction, action, deleteImpactData.transactionGroups.some((group) => group.id === transaction.groupId && group.transactionMode === "installment"))}
                     consequences={deleteImpactPreview.consequences}
                     confirmLabel={action.label}
                     tone="danger"

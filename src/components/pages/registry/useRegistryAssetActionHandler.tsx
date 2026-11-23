@@ -4,6 +4,7 @@ import { useModal } from "../../../context/ModalContext";
 import { BalanceModal } from "../../modal/BalanceModal";
 import { ConfirmActionModal } from "../../modal/ConfirmActionModal";
 import { CreditCardModal } from "../../modal/CreditCardModal";
+import { DeleteCreditCardModal } from "../../modal/DeleteCreditCardModal";
 import type { RegistryAssetAction, RegistryAssetKind } from "./registryAssetTypes";
 
 export function useRegistryAssetActionHandler(kind: "wallet"):
@@ -12,7 +13,6 @@ export function useRegistryAssetActionHandler(kind: "creditCard"):
     (asset: CreditCard, action: RegistryAssetAction) => void;
 export function useRegistryAssetActionHandler(kind: RegistryAssetKind) {
     const {
-        permanentlyDeleteCreditCard,
         permanentlyDeleteWallet,
         setCreditCardActive,
         setFavoriteCreditCard,
@@ -23,7 +23,6 @@ export function useRegistryAssetActionHandler(kind: RegistryAssetKind) {
 
     return (asset: Wallet | CreditCard, action: RegistryAssetAction) => {
         const isWallet = kind === "wallet";
-        const assetLabel = isWallet ? "carteira" : "cartão";
 
         if (action.id === "edit") {
             openModal(isWallet ? <BalanceModal mode="edit" walletId={asset.id} /> : <CreditCardModal mode="edit" creditCardId={asset.id} />);
@@ -45,22 +44,27 @@ export function useRegistryAssetActionHandler(kind: RegistryAssetKind) {
             return;
         }
 
+        if (action.id === "remove" && "closingDay" in asset) {
+            openModal(<DeleteCreditCardModal creditCard={asset} />);
+            return;
+        }
+
         if (action.id === "remove") {
             openModal(
                 <ConfirmActionModal
-                    title={`Excluir ${assetLabel} em definitivo?`}
+                    title="Excluir carteira em definitivo?"
                     description={`O cadastro "${asset.name}" será removido permanentemente.`}
                     consequences={[
                         "As transações e séries vinculadas serão excluídas, incluindo parcelas e ocorrências alteradas individualmente para outra carteira ou cartão.",
-                        isWallet ? "Os lançamentos dessa carteira serão removidos. Compras no cartão e faturas pagas são mantidas; os pagamentos passam a constar sem carteira." : "As faturas e seus pagamentos também serão excluídos, alterando os saldos das carteiras usadas nos pagamentos.",
+                        "Os lançamentos dessa carteira serão removidos. Compras no cartão e faturas pagas são mantidas; os pagamentos passam a constar sem carteira.",
                         "Para manter o histórico, use Arquivar. A exclusão permanente não pode ser desfeita.",
                     ]}
                     confirmLabel="Excluir em definitivo"
                     onConfirm={async () => {
                         if (asset.isActive) {
-                            await (isWallet ? setWalletActive(asset.id, false) : setCreditCardActive(asset.id, false));
+                            await setWalletActive(asset.id, false);
                         }
-                        await (isWallet ? permanentlyDeleteWallet(asset.id) : permanentlyDeleteCreditCard(asset.id));
+                        await permanentlyDeleteWallet(asset.id);
                     }}
                 />,
             );

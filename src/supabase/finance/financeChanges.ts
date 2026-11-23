@@ -88,7 +88,8 @@ function collectEntityChanges<T>(config: EntityConfig<T>, upserts: Record<string
 
 // Deleting a wallet or card cascades its groups and transactions in Postgres, where
 // the invoice history guard intentionally allows it. Explicit deletes of those rows
-// would run first, outside the cascade, and be rejected as paid-invoice edits.
+// would run first, outside the cascade, and be rejected as paid-invoice edits; deleting
+// an invoice first would touch recurring occurrences whose group is gone at commit.
 function dropCascadedDeletes(baseData: SupabaseFinanceData, deletes: FinanceDeleteMutation[]): FinanceDeleteMutation[] {
     const deletedIds = (entityType: FinanceEntityType) => new Set(deletes.filter((item) => item.entity_type === entityType).map((item) => item.entity_id));
     const wallets = deletedIds("wallet");
@@ -106,7 +107,10 @@ function dropCascadedDeletes(baseData: SupabaseFinanceData, deletes: FinanceDele
         baseData.transactions.filter((transaction) => isCascaded(transaction) || cascadedGroups.has(transaction.groupId)).map((transaction) => transaction.id),
     );
 
+    const cascadedInvoices = new Set(baseData.creditCardInvoices.filter((invoice) => cards.has(invoice.creditCardId)).map((invoice) => invoice.id));
+
     return deletes.filter((item) =>
+        !(item.entity_type === "credit_card_invoice" && cascadedInvoices.has(item.entity_id)) &&
         !(item.entity_type === "transaction_group" && cascadedGroups.has(item.entity_id)) &&
         !(item.entity_type === "transaction" && cascadedTransactions.has(item.entity_id)),
     );

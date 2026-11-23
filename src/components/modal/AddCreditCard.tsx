@@ -13,7 +13,7 @@ import {
     normalizeWalletIcon,
 } from "../../lib/walletVisual";
 import { WalletAvatar } from "../common/WalletAvatar";
-import { ConfirmActionModal } from "./ConfirmActionModal";
+import { DeleteCreditCardModal } from "./DeleteCreditCardModal";
 import { IconTextField } from "../transactions/IconTextField";
 import { DayOfMonthField } from "../transactions/DayOfMonthField";
 import { SingleSelectCombobox, type ComboboxOptionBase } from "../transactions/SingleSelectCombobox";
@@ -127,7 +127,7 @@ const SECONDARY_BUTTON_CLASS = "shrink-0 rounded-lg border border-white/[0.12] b
 export function AddCreditCard({ mode = "create", creditCardId, initialCreditCard }: AddCreditCardProps) {
     const creditCards = useFinanceCreditCards();
     const wallets = useFinanceWallets();
-    const { addCreditCard, deleteCreditCard, permanentlyDeleteCreditCard, setCreditCardActive } = useFinanceActions();
+    const { addCreditCard, deleteCreditCard, setCreditCardActive } = useFinanceActions();
     const { closeModal, openModal } = useModal();
 
     const editingCreditCard = useMemo(() => {
@@ -353,19 +353,7 @@ export function AddCreditCard({ mode = "create", creditCardId, initialCreditCard
             return;
         }
 
-        openModal(
-            <ConfirmActionModal
-                title="Excluir cartao em definitivo?"
-                description={`O cartao "${editingCreditCard.name}" sera removido permanentemente.`}
-                consequences={[
-                    "Compras, parcelas e recorrencias ligadas a este cartao serao removidas em definitivo.",
-                    "Pagamentos de fatura vinculados a este cartao tambem serao removidos.",
-                    "As faturas deste cartao serao apagadas permanentemente.",
-                ]}
-                confirmLabel="Excluir em definitivo"
-                onConfirm={() => permanentlyDeleteCreditCard(editingCreditCard.id)}
-            />,
-        );
+        openModal(<DeleteCreditCardModal creditCard={editingCreditCard} />);
     };
 
     return (

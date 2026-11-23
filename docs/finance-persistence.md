@@ -18,7 +18,7 @@ Isso elimina a janela na qual a aplicação podia combinar tabelas de revisões 
 
 ## Conflitos e deleções
 
-As tabelas financeiras possuem `version` e `updated_at`. Deleções são registradas em `finance_tombstones` com a mesma revisão do commit. Em um conflito, o cliente recarrega o snapshot confirmado e faz um merge de três vias por campo: edições independentes na mesma entidade são combinadas. Uma deleção confirmada pelo servidor vence uma alteração feita sobre uma base obsoleta, evitando ressurreição acidental em outro dispositivo.
+As tabelas financeiras possuem `version` e `updated_at`. Deleções são registradas em `finance_tombstones` com a mesma revisão do commit. Em um conflito, o cliente recarrega o snapshot confirmado e faz um merge de três vias por campo: edições independentes na mesma entidade são combinadas. Uma deleção confirmada pelo servidor vence uma alteração feita sobre uma base obsoleta, evitando ressurreição acidental em outro dispositivo. Exclusões locais são reaplicadas sobre os dados confirmados (`rebaseLocalDeletions.ts`): excluir um cartão preserva as parcelas que outro dispositivo já moveu para fora dele, e a exclusão de uma compra é desfeita se a fatura dela recebeu pagamento enquanto isso.
 
 Cada entidade removida por cascata recebe seu próprio tombstone. Ações `SET NULL` também atualizam `version`, portanto consumidores incrementais recebem tanto a remoção do pai quanto os filhos removidos ou desvinculados. O snapshot canônico continua sendo o fallback para lacunas de revisão.
 
@@ -35,6 +35,7 @@ Cada entidade removida por cascata recebe seu próprio tombstone. Ações `SET N
 - valores de fatura, desejos, limites e totais possuem limites não negativos;
 - ciclos de fatura e números de parcela não podem se repetir no mesmo escopo;
 - uma transação ligada a uma fatura deve resolver para o mesmo cartão;
+- ao excluir um cartão, parcelas movidas para outro cartão ou carteira passam para um novo grupo; `removed_installments` guarda as apagadas (número, valor, data, cartão) e `total_amount` continua sendo a soma das que existem; os pagamentos de fatura feitos por carteira são apagados ou, se o usuário preferir, perdem o vínculo com a fatura e ficam como despesas comuns;
 - FKs compostas impedem referências a entidades de outro usuário;
 - ações `SET NULL` de FKs compostas nomeiam apenas a coluna opcional, preservando o `user_id`; carteiras/cartões removidos em definitivo propagam `CASCADE` para operações dependentes;
 - deleções de transações/faturas removem lançamentos dependentes, detalhes, metadados de anexos e tags no banco;

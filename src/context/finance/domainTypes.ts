@@ -1,3 +1,4 @@
+import type { RemovedInstallment } from "./removedInstallments";
 import type { RecurrenceRule } from "./recurrence/types";
 import type { WishItemPriority } from "../../lib/wishlistPriority";
 
@@ -101,6 +102,7 @@ export interface TransactionGroup {
     transactionMode: TransactionMode;
     totalAmount: number;
     installmentCount: number | null;
+    removedInstallments?: RemovedInstallment[];
     recurrenceRule: RecurrenceRule | null;
     recurrenceEndDate: string | null;
     sourceWalletId: string | null;
@@ -353,6 +355,8 @@ export interface TransactionDraft {
     transactionMode?: TransactionMode;
     installmentCount?: number | null;
     ignoredInstallmentsCount?: number | null;
+    /** Valor de cada parcela; ausente divide o total igualmente. A soma prevalece sobre o total. */
+    installmentAmounts?: number[] | null;
     commitment?: "forecast" | "posted";
     recurrenceRule?: Partial<RecurrenceRule> | null;
     recurrenceEndDate?: string | null;

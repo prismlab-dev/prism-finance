@@ -24,6 +24,7 @@ export function MiniTransactionBlock({ transaction, showSign = true }: { transac
     return (
         <button
             type="button"
+            data-transaction-id={transaction.id}
             onClick={() => openModal(<EditTransaction transaction={transaction} />)}
             className="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left outline-none transition-colors hover:bg-white/[0.04] focus-visible:ring-2 focus-visible:ring-sky-400/60"
         >

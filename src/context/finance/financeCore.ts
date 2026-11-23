@@ -7,6 +7,7 @@ import { DEFAULT_WALLET_ID, DEFAULT_BENEFICIARY_ID, DEFAULT_BENEFICIARY_NAME, DE
 export * from "./domainConstants";
 import { syncCreditCardInvoices } from "./syncCreditCardInvoices";
 import { normalizePlanningBudgets } from "./planningBudgets";
+import { parseRemovedInstallments } from "./removedInstallments";
 import { parseRecurrenceRule } from "./recurrence/rule";
 import { getDefaultCategoryIconName, normalizeCategoryIconName } from "../../lib/categoryIcons";
 import { formatLocalDateInput, getLocalTodayDate, parseAppDate } from "../../lib/localDate";
@@ -639,6 +640,7 @@ export function normalizeTransactionGroup(group: Partial<TransactionGroup> & { i
             Number.isInteger(group.installmentCount) && Number(group.installmentCount) > 0
                 ? Number(group.installmentCount)
                 : null,
+        ...parseRemovedInstallments(group.removedInstallments),
         recurrenceRule: parseRecurrenceRule(group.recurrenceRule),
         recurrenceEndDate: asNullableString(group.recurrenceEndDate, null),
         sourceWalletId,
@@ -2111,6 +2113,7 @@ export function normalizeFinanceSnapshot(rawFinance: unknown, userId: string | n
                 transactionMode: asTransactionMode(rawGroup.transactionMode),
                 totalAmount: Math.abs(asNumber(rawGroup.totalAmount, 0)),
                 installmentCount: asNumber(rawGroup.installmentCount, NaN),
+                ...parseRemovedInstallments(rawGroup.removedInstallments),
                 recurrenceRule: parseRecurrenceRule(rawGroup.recurrenceRule),
                 recurrenceEndDate: asNullableString(rawGroup.recurrenceEndDate, null),
                 sourceWalletId: asNullableString(rawGroup.sourceWalletId, null),

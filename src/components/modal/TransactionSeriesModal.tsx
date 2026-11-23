@@ -23,6 +23,7 @@ import { WalletAvatar } from "../common/WalletAvatar";
 import { ModalHeader, ModalPanel } from "./ModalChrome";
 import { ModalStructure } from "./ModalStructure";
 import { formatCurrencyBRL, formatTransactionDate } from "../transactions/transactionView";
+import { removedInstallmentsTotal } from "../../context/finance/removedInstallments";
 import { buildTransactionSeriesView, type TransactionSeriesRow, type TransactionSeriesView } from "../transactions/transactionSeriesView";
 import type { RecurrenceRule } from "../../context/finance/recurrence/types";
 import type { TransactionGroupType } from "../../context/finance/domainTypes";
@@ -44,7 +45,7 @@ function stateLabel(state: RowState, type: TransactionGroupType): string {
     return ROW_STATES[state].label;
 }
 
-type RowState = "paid" | "settled" | "posted" | "forecast" | "pending" | "projected" | "skipped" | "cancelled";
+type RowState = "paid" | "settled" | "posted" | "forecast" | "pending" | "projected" | "skipped" | "cancelled" | "removed";
 
 const ROW_STATES: Record<RowState, { label: string; chip: string; tick: string }> = {
     paid: { label: "Pago", chip: "border-emerald-400/25 bg-emerald-500/10 text-emerald-200", tick: "bg-emerald-400" },
@@ -55,6 +56,7 @@ const ROW_STATES: Record<RowState, { label: string; chip: string; tick: string }
     projected: { label: "Projeção", chip: "border-dashed border-white/20 text-white/50", tick: "border border-dashed border-white/30" },
     skipped: { label: "Ignorada", chip: "border-slate-400/25 bg-slate-500/10 text-slate-300", tick: "bg-slate-500/60" },
     cancelled: { label: "Cancelada", chip: "border-red-400/25 bg-red-500/10 text-red-200", tick: "bg-red-400/60" },
+    removed: { label: "Apagada", chip: "border-red-400/25 bg-red-500/10 text-red-200", tick: "border border-red-400/50" },
 };
 
 const SETTLED_STATES: ReadonlySet<RowState> = new Set(["paid", "settled"]);
@@ -62,6 +64,7 @@ const OPEN_STATES: ReadonlySet<RowState> = new Set(["posted", "forecast", "pendi
 
 // No cartão, o status da ocorrência fica pendente até a fatura ser quitada; o que importa é a fatura.
 function resolveRowState(row: TransactionSeriesRow, paidInvoiceIds: ReadonlySet<string>): RowState {
+    if (row.removedCardName !== undefined) return "removed";
     if (row.status !== "pending") return row.status;
     if (row.projected) return "projected";
     if (row.creditCardId && row.commitment === "posted" && row.invoiceId && paidInvoiceIds.has(row.invoiceId)) return "settled";
@@ -109,6 +112,7 @@ export function TransactionSeriesModal({ transaction }: { transaction: Transacti
     );
 
     const resolveAccount = (row: TransactionSeriesRow): SeriesAccount | null => {
+        if (row.removedCardName !== undefined) return { kind: "card", name: row.removedCardName ? `${row.removedCardName} (excluído)` : "Cartão excluído", visual: null };
         if (row.creditCardId) {
             const card = creditCards.find((item) => item.id === row.creditCardId);
             return { kind: "card", name: card?.name ?? "Cartão removido", visual: card ?? null };
@@ -187,6 +191,8 @@ function SeriesBody({ view, fallbackTitle, resolveAccount, resolveInvoiceMonth, 
     const paidCount = states.filter((state) => SETTLED_STATES.has(state)).length;
     const pendingCount = states.filter((state) => OPEN_STATES.has(state)).length;
 
+    const removedAmount = removedInstallmentsTotal(group);
+
     const category = categories.find((item) => item.id === group.categoryId);
     // Subcategoria sem cor/ícone próprios herda os da categoria-pai.
     const parentCategory = categories.find((item) => item.id === category?.parentId);
@@ -227,7 +233,7 @@ function SeriesBody({ view, fallbackTitle, resolveAccount, resolveInvoiceMonth, 
                         {view.mode === "recurring" ? (
                             <MetaItem icon={<Repeat size={15} />}>{describeRule(group.recurrenceRule)}</MetaItem>
                         ) : (
-                            <MetaItem icon={<Layers size={15} />}>Total {money(group.totalAmount)}</MetaItem>
+                            <MetaItem icon={<Layers size={15} />}>Total {money(group.totalAmount + removedAmount)}</MetaItem>
                         )}
                     </div>
                 </div>
@@ -239,7 +245,12 @@ function SeriesBody({ view, fallbackTitle, resolveAccount, resolveInvoiceMonth, 
                 <TotalItem label={TYPE_COPY[group.type].settledTotal} value={money(paidAmount)} count={paidCount} color="#a7f3d0" />
                 <TotalItem label={TYPE_COPY[group.type].openTotal} value={money(pendingAmount)} count={`${pendingCount}${view.hasMore ? "+" : ""}`} color="#ffffff" />
                 {totals.skippedCount > 0 ? <TotalItem label="Ignoradas" count={totals.skippedCount} color="#cbd5e1" /> : null}
+                {totals.removedCount > 0 ? <TotalItem label="Apagadas" value={money(removedAmount)} count={totals.removedCount} color="#fecaca" /> : null}
             </dl>
+
+            {totals.removedCount > 0 ? (
+                <p className="mt-2 text-xs text-white/45">As parcelas apagadas estavam em um cartão excluído. Elas continuam aqui só como registro da compra.</p>
+            ) : null}
 
             {view.segments.length > 1 ? (
                 <p className="mt-2 text-xs text-white/45">Série dividida em {view.segments.length} trechos por edições do tipo “essa e as próximas”.</p>
@@ -254,6 +265,7 @@ function SeriesBody({ view, fallbackTitle, resolveAccount, resolveInvoiceMonth, 
                     const AccountIcon = account?.kind === "card" ? CreditCard : Wallet;
                     const isCurrent = row.id === currentTransactionId;
                     const isVoid = row.status === "skipped" || row.status === "cancelled";
+                    const isRemoved = row.removedCardName !== undefined;
                     const isMuted = row.projected || isVoid;
 
                     return (
@@ -286,16 +298,18 @@ function SeriesBody({ view, fallbackTitle, resolveAccount, resolveInvoiceMonth, 
                                 )}
                             </span>
                             <span className={`inline-flex justify-self-end rounded-full border px-2 py-0.5 text-[11px] sm:justify-self-start ${state.chip}`}>{stateLabel(states[index], group.type)}</span>
-                            <span className={`justify-self-end text-sm tabular-nums ${isMuted ? "text-white/50" : "font-semibold text-white"} ${isVoid ? "line-through" : ""}`}>{money(row.amount)}</span>
-                            <button
-                                type="button"
-                                onClick={() => openRow(row)}
-                                className="inline-flex h-8 w-8 items-center justify-center justify-self-end rounded-lg text-white/45 outline-none transition-colors hover:bg-white/[0.08] hover:text-white focus-visible:ring-2 focus-visible:ring-sky-400/60"
-                                title="Ir para a transação"
-                                aria-label={`Ir para a transação de ${formatTransactionDate(row.date, "dd/MM/yyyy")}`}
-                            >
-                                <SquareArrowOutUpRight size={15} />
-                            </button>
+                            <span className={`justify-self-end text-sm tabular-nums ${isMuted ? "text-white/50" : "font-semibold text-white"} ${isVoid && !isRemoved ? "line-through" : ""}`}>{money(row.amount)}</span>
+                            {isRemoved ? <span className="h-8 w-8" aria-hidden="true" /> : (
+                                <button
+                                    type="button"
+                                    onClick={() => openRow(row)}
+                                    className="inline-flex h-8 w-8 items-center justify-center justify-self-end rounded-lg text-white/45 outline-none transition-colors hover:bg-white/[0.08] hover:text-white focus-visible:ring-2 focus-visible:ring-sky-400/60"
+                                    title="Ir para a transação"
+                                    aria-label={`Ir para a transação de ${formatTransactionDate(row.date, "dd/MM/yyyy")}`}
+                                >
+                                    <SquareArrowOutUpRight size={15} />
+                                </button>
+                            )}
                         </li>
                     );
                 })}

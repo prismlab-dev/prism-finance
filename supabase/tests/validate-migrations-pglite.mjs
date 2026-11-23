@@ -86,6 +86,7 @@ const migrationNames = [
     "029_delete_own_account.sql",
     "030_clear_occurrence_on_series_exit.sql",
     "031_card_group_wallet_detach.sql",
+    "032_removed_installments.sql",
 ];
 
 let legacyRecurrences;

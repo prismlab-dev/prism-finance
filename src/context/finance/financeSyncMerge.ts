@@ -1,6 +1,7 @@
 import type { SupabaseFinanceData } from "../../supabase/finance";
 import { createLedgerEntriesForPaidTransaction } from "./financeCore";
 import { mergeSeriesRevisions } from "./recurrence/mergeSeriesRevisions";
+import { rebaseLocalDeletions } from "./rebaseLocalDeletions";
 import { reconcileInvoicePaymentMerge } from "./reconcileInvoicePaymentMerge";
 
 function stableStringify(value: unknown): string {
@@ -101,7 +102,7 @@ export function mergeSupabaseFinanceData(params: {
     remoteData: SupabaseFinanceData;
     targetData: SupabaseFinanceData;
 }): SupabaseFinanceData {
-    const { baseData, remoteData, targetData } = params;
+    const { baseData, remoteData, targetData } = rebaseLocalDeletions(params);
 
     const merged: SupabaseFinanceData = {
         despesas: mergeValue(baseData.despesas, remoteData.despesas, targetData.despesas),

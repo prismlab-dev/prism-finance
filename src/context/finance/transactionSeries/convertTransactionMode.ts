@@ -36,7 +36,8 @@ function normalizeRemainingInstallments(groups: TransactionGroup[], transactions
     const groupUpdates = new Map<string, TransactionGroup>();
 
     groups.forEach((group) => {
-        if (group.transactionMode !== "installment") return;
+        // Renumbering would collide with the installments erased with their card.
+        if (group.transactionMode !== "installment" || group.removedInstallments) return;
         const remaining = transactions
             .filter((transaction) => transaction.groupId === group.id)
             .sort((a, b) => (a.installmentNumber ?? 1) - (b.installmentNumber ?? 1));
