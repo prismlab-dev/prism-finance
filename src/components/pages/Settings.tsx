@@ -1,4 +1,5 @@
-import { Database, Palette, UserRound, Users } from "lucide-react";
+import { Building2, Database, Palette, UserRound, Users } from "lucide-react";
+import { version } from "../../../package.json";
 import { useFinanceSession } from "../../context/FinanceContext";
 import { useLocalPreferenceSection } from "../../lib/localPreferences";
 import { signOutSupabase } from "../../supabase/auth/authService";
@@ -7,6 +8,7 @@ import { AppearanceSettingsTab } from "./settings/AppearanceSettingsTab";
 import { DataSettingsTab } from "./settings/DataSettingsTab";
 import { FamilySettingsTab } from "./settings/FamilySettingsTab";
 import { SettingsSidebarButton } from "./settings/SettingsSidebarButton";
+import { TeamSettingsTab } from "./settings/TeamSettingsTab";
 import type { SettingsTab, SettingsTabId } from "./settings/types";
 
 interface SettingsPagePreferences {
@@ -20,6 +22,7 @@ const TABS: SettingsTab[] = [
     { id: "account", label: "Conta", icon: UserRound },
     { id: "appearance", label: "Aparência", icon: Palette },
     { id: "family", label: "Família", icon: Users },
+    { id: "team", label: "Equipe", icon: Building2 },
     { id: "data", label: "Dados", icon: Database },
 ];
 
@@ -56,10 +59,11 @@ export function SettingsPage() {
                         />
                     ))}
                 </nav>
+                <p className="hidden px-3 text-[11px] text-white/35 tabular-nums lg:fixed lg:bottom-6 lg:block">Silus v{version}</p>
             </aside>
 
             <div className="min-w-0 flex-1">
-                {activeTab === "account" ? <AccountSettingsTab onSignOut={handleSignOut} /> : activeTab === "appearance" ? <AppearanceSettingsTab /> : activeTab === "data" ? <DataSettingsTab /> : <FamilySettingsTab />}
+                {activeTab === "account" ? <AccountSettingsTab onSignOut={handleSignOut} /> : activeTab === "appearance" ? <AppearanceSettingsTab /> : activeTab === "data" ? <DataSettingsTab /> : activeTab === "team" ? <TeamSettingsTab /> : <FamilySettingsTab />}
             </div>
         </div>
     );

@@ -6,7 +6,7 @@ import { type Transaction, type TransactionType, useFinanceSession } from "../..
 import { useModal } from "../../context/ModalContext";
 import { AnimatedTransactionFormPanel } from "./AnimatedTransactionFormPanel";
 import { extractCurrencyDigits, parseCurrencyDigitsToNumber } from "../../lib/currencyMask";
-import { getLocalTodayDate } from "../../lib/localDate";
+import { addMonthsToLocalDate, getLocalTodayDate } from "../../lib/localDate";
 import { InstallmentPlanWarning } from "./InstallmentPlanWarning";
 import type { InstallmentPlan } from "./installmentPreview";
 import { useInstallmentPlan } from "./useInstallmentPlan";
@@ -26,6 +26,7 @@ interface TransactionFormProps {
     prefill?: TransactionFormPrefill;
     activeTab?: TransactionFormTab;
     onInstallmentPlanChange?: (plan: InstallmentPlan | null) => void;
+    seriesEdit?: boolean;
 }
 
 type SuccessfulCompletion = "close" | "continue";
@@ -42,6 +43,7 @@ function TransactionFormBody({
     prefill,
     activeTab = "simple",
     onInstallmentPlanChange,
+    seriesEdit,
     justSaved,
     onSavedAndContinue,
 }: TransactionFormProps & { justSaved: boolean; onSavedAndContinue: () => void }) {
@@ -51,14 +53,17 @@ function TransactionFormBody({
     const [submitting, setSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState("");
     const [pendingDetailsCompletion, setPendingDetailsCompletion] = useState<SuccessfulCompletion | null>(null);
-    const form = useTransactionForm({ type, transaction, mode, prefill });
-    const details = useTransactionDetails({ transactionId: form.transactionId, userId: user?.uid, loadExisting: form.isEditing });
+    const form = useTransactionForm({ type, transaction, mode, prefill, seriesEdit });
+    const details = useTransactionDetails({ transactionId: form.transactionId, userId: user?.uid, loadExisting: form.isEditing, initialAnnotation: prefill?.initialAnnotation });
 
     const installmentPlan = useInstallmentPlan({
-        enabled: form.transactionMode === "installment" && !form.isInstallmentEdit,
+        enabled: form.transactionMode === "installment" && (!form.isInstallmentEdit || Boolean(form.series)),
         amount: parseCurrencyDigitsToNumber(extractCurrencyDigits(form.amountInput)),
-        countInput: form.installmentCountInput,
-        startDate: form.date || getLocalTodayDate(),
+        countInput: form.series?.countInput ?? form.installmentCountInput,
+        ignoredCount: form.series?.ignoredCount,
+        lockedIndexes: form.series?.lockedIndexes,
+        // The date field is the opened installment's; the preview starts at the first one.
+        startDate: addMonthsToLocalDate(form.date || getLocalTodayDate(), -(form.series?.selectedIndex ?? 0)),
         showDay: true,
         disabled: submitting || Boolean(pendingDetailsCompletion),
         overrides: form.installmentOverrides,
@@ -115,7 +120,7 @@ function TransactionFormBody({
     return (
         <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-white/[0.09] bg-surface p-4 text-white shadow-[0_26px_70px_-38px_rgba(0,0,0,0.95)]">
             <header className="flex shrink-0 items-center justify-between gap-3">
-                <TransactionHeader type={form.resolvedType} isEditing={form.isEditing} isSeriesTransaction={form.isSeriesTransaction} isInvoicePaymentEdit={form.isInvoicePaymentEdit} />
+                <TransactionHeader type={form.resolvedType} isEditing={form.isEditing} isSeriesTransaction={form.isSeriesTransaction} isInvoicePaymentEdit={form.isInvoicePaymentEdit} label={form.installmentLabel ?? undefined} />
                 <button type="button" onClick={closeModal} disabled={submitting} className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/[0.12] bg-white/[0.03] text-white/70 transition-colors hover:border-white/[0.22] hover:bg-white/[0.06] hover:text-white disabled:cursor-not-allowed disabled:opacity-55" aria-label="Fechar modal" title="Fechar">
                     <X size={15} />
                 </button>
@@ -151,9 +156,13 @@ function TransactionFormBody({
                                     <Trash2 size={15} /> {form.isInstallmentEdit && form.editScope === "all" ? "Excluir todas" : "Excluir"}
                                 </FooterButton>
                             )}
-                            <FooterButton onClick={() => void runAction(form.duplicate, "close")} disabled={submitting || Boolean(pendingDetailsCompletion)}><Copy size={15} /> Duplicar</FooterButton>
-                            <FooterButton onClick={() => void runAction(form.ignore, "close", true)} disabled={submitting || Boolean(pendingDetailsCompletion)}><SquareSlash size={15} /> Ignorar</FooterButton>
-                            <FooterButton onClick={() => void runAction(form.cancelTransaction, "close", true)} disabled={submitting || Boolean(pendingDetailsCompletion)}><CircleX size={15} /> Cancelar</FooterButton>
+                            {!form.isSeriesEdit ? (
+                                <>
+                                    <FooterButton onClick={() => void runAction(form.duplicate, "close")} disabled={submitting || Boolean(pendingDetailsCompletion)}><Copy size={15} /> Duplicar</FooterButton>
+                                    <FooterButton onClick={() => void runAction(form.ignore, "close", true)} disabled={submitting || Boolean(pendingDetailsCompletion)}><SquareSlash size={15} /> Ignorar</FooterButton>
+                                    <FooterButton onClick={() => void runAction(form.cancelTransaction, "close", true)} disabled={submitting || Boolean(pendingDetailsCompletion)}><CircleX size={15} /> Cancelar</FooterButton>
+                                </>
+                            ) : null}
                         </>
                     ) : null}
                 </div>

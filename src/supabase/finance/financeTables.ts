@@ -125,6 +125,7 @@ export interface TransactionGroupRow {
     total_amount: number | string;
     installment_count: number | null;
     removed_installments?: unknown;
+    team_expense?: unknown;
     recurrence_rule: unknown;
     recurrence_end_date: string | null;
     source_wallet_id: string | null;

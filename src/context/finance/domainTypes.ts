@@ -1,4 +1,5 @@
 import type { RemovedInstallment } from "./removedInstallments";
+import type { TeamExpense } from "./teamExpense";
 import type { RecurrenceRule } from "./recurrence/types";
 import type { WishItemPriority } from "../../lib/wishlistPriority";
 
@@ -7,7 +8,7 @@ export type TransactionGroupType = "income" | "expense" | "transfer";
 export type TransactionMode = "single" | "installment" | "recurring";
 export type TransactionStatus = "pending" | "paid" | "cancelled" | "skipped";
 export type PaymentMethod = "wallet" | "credit_card";
-export type TransactionSystemKind = "invoice_payment";
+export type TransactionSystemKind = "invoice_payment" | "team_settlement";
 export type TransactionSeriesScope = "single" | "this_and_next" | "all";
 export type InvoiceStatus = "open" | "paid";
 export type WalletType = "checking" | "savings" | "cash" | "investment";
@@ -103,6 +104,7 @@ export interface TransactionGroup {
     totalAmount: number;
     installmentCount: number | null;
     removedInstallments?: RemovedInstallment[];
+    teamExpense?: TeamExpense;
     recurrenceRule: RecurrenceRule | null;
     recurrenceEndDate: string | null;
     sourceWalletId: string | null;
@@ -297,6 +299,8 @@ export interface PlanningState {
     disabledIncomeIds: string[];
     disabledSimulatedExpenseIds: string[];
     disabledSimulatedIncomeIds: string[];
+    /** Orçamentos cujo teto entra na projeção, como `${monthKey}:${budgetId}`. */
+    simulatedBudgetMonths: string[];
     /** Mês (yyyy-MM) em que o planejamento cobra a fatura, por id da fatura; ausente = mês do vencimento. */
     invoiceMonthOverrides: Record<string, string>;
     timelineSelectedWalletIds: string[];
@@ -360,6 +364,8 @@ export interface TransactionDraft {
     commitment?: "forecast" | "posted";
     recurrenceRule?: Partial<RecurrenceRule> | null;
     recurrenceEndDate?: string | null;
+    /** Despesa ou acerto da equipe, gravado no grupo pessoal. */
+    teamExpense?: TeamExpense;
 }
 
 

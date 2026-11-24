@@ -27,6 +27,8 @@ interface SingleSelectComboboxProps<T extends ComboboxOptionBase> {
     compactTrigger?: boolean;
     triggerClassName?: string;
     leadingIcon?: ReactNode;
+    /** Largura do menu quando ele deve ser maior que o gatilho. */
+    overlayWidth?: number;
 }
 
 const DEFAULT_LABEL_CLASS = "text-[11px] uppercase tracking-[0.12em] text-white/50";
@@ -48,6 +50,7 @@ export function SingleSelectCombobox<T extends ComboboxOptionBase>({
     compactTrigger = false,
     triggerClassName,
     leadingIcon,
+    overlayWidth,
 }: SingleSelectComboboxProps<T>) {
     const [isOpen, setIsOpen] = useState(false);
     const [query, setQuery] = useState("");
@@ -157,7 +160,7 @@ export function SingleSelectCombobox<T extends ComboboxOptionBase>({
                 <ChevronsUpDown size={15} className="ml-2 shrink-0 text-white/55" />
             </button>
 
-            <AnchoredOverlay anchorRef={triggerRef} overlayRef={overlayRef} isOpen={isOpen && !disabled} preferredMaxHeight={330} className="rounded-xl border border-white/[0.1] bg-surface p-2 shadow-[0_24px_60px_-30px_rgba(0,0,0,0.95)]">
+            <AnchoredOverlay anchorRef={triggerRef} overlayRef={overlayRef} isOpen={isOpen && !disabled} preferredMaxHeight={330} overlayWidth={overlayWidth} className="rounded-xl border border-white/[0.1] bg-surface p-2 shadow-[0_24px_60px_-30px_rgba(0,0,0,0.95)]">
                     {!disableSearch && (
                         <div className="relative mb-2">
                             <Search size={14} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-white/40" />

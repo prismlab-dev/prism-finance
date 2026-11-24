@@ -29,13 +29,13 @@ function Stub({ row, showDay, hasAmount, disabled, onAmountChange }: StubProps) 
     const isEmpty = hasAmount && row.amount <= 0;
 
     return (
-        <li className={`relative flex shrink-0 items-stretch overflow-hidden rounded-lg text-sm ${row.ignored ? "bg-white/[0.025] text-white/50" : "bg-white/[0.07] text-white"}`}>
+        <li className={`relative flex shrink-0 items-stretch overflow-hidden rounded-lg text-sm ${row.ignored || row.locked ? "bg-white/[0.025] text-white/50" : "bg-white/[0.07] text-white"}`}>
             <span className="flex w-11 shrink-0 items-center justify-center border-r border-dashed border-white/25 font-semibold tabular-nums">{row.number}</span>
             <span className="absolute -top-1 left-10 h-2 w-2 rounded-full bg-surface" aria-hidden="true" />
             <span className="absolute -bottom-1 left-10 h-2 w-2 rounded-full bg-surface" aria-hidden="true" />
             <span className="shrink-0 self-center py-2.5 pl-2.5 leading-tight">
                 {formatDate(row.date, showDay)}
-                {row.ignored ? <span className="sr-only">, ignorada</span> : null}
+                {row.ignored ? <span className="sr-only">, ignorada</span> : row.locked ? <span className="sr-only">, paga</span> : null}
             </span>
             {hasAmount ? (
                 <input
@@ -45,7 +45,8 @@ function Stub({ row, showDay, hasAmount, disabled, onAmountChange }: StubProps) 
                     value={formatCurrencyFromDigits(String(Math.round(row.amount * 100)))}
                     onFocus={(event) => event.currentTarget.select()}
                     onChange={(event) => onAmountChange(row.number - 1, parseCurrencyDigitsToNumber(extractCurrencyDigits(event.target.value)))}
-                    disabled={disabled}
+                    disabled={disabled || row.locked}
+                    title={row.locked ? "Parcela paga ou ignorada: o valor não muda." : undefined}
                     className={`m-1 min-w-0 flex-1 rounded-md border bg-transparent px-1 text-right tabular-nums outline-none transition-colors hover:bg-black/25 focus-visible:border-white/50 focus-visible:bg-black/35 disabled:cursor-not-allowed ${
                         isEmpty ? "border-red-400/70 text-red-200" : row.manual ? "border-white/25" : "border-transparent"
                     } ${row.ignored ? "line-through" : "font-medium"}`}

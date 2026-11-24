@@ -1,7 +1,7 @@
-import { ArrowDownRight, ArrowRightLeft, ArrowUpRight, CalendarClock, CreditCard as CreditCardIcon, Gift, Search } from "lucide-react";
+import { ArrowDownRight, ArrowRightLeft, ArrowUpRight, CalendarClock, CreditCard as CreditCardIcon, Gift, Gauge, Search } from "lucide-react";
 import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import type { PlanningWishlistSelection, WishItem } from "../../../context/FinanceContext";
-import type { IncomeItem, InheritedExpenseItem, MonthProjection, PlanningPanel, SimulatedExpenseItem, SimulatedIncomeItem } from "./planningTimelineTypes";
+import type { BudgetProjectionItem, IncomeItem, InheritedExpenseItem, MonthProjection, PlanningPanel, SimulatedExpenseItem, SimulatedIncomeItem } from "./planningTimelineTypes";
 import { IconTextField } from "../../transactions/IconTextField";
 import { PlanningDetailsHeader } from "./PlanningDetailsHeader";
 import { PlanningDetailsSection } from "./PlanningDetailsSection";
@@ -31,6 +31,8 @@ interface PlanningDetailsAsideProps {
     onToggleSimulatedIncome: (income: SimulatedIncomeItem) => void;
     onToggleInheritedExpense: (expenseId: string) => void;
     onToggleWishlistSelection: (wishItemId: string) => void;
+    budgetItems: BudgetProjectionItem[];
+    onToggleBudget: (budgetId: string) => void;
 }
 
 type PlanningProjectionContextTarget =
@@ -103,6 +105,8 @@ export function PlanningDetailsAside({
     onToggleSimulatedIncome,
     onToggleInheritedExpense,
     onToggleWishlistSelection,
+    budgetItems,
+    onToggleBudget,
 }: PlanningDetailsAsideProps) {
     const [contextMenuState, setContextMenuState] = useState<PlanningProjectionContextState | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
@@ -251,6 +255,8 @@ export function PlanningDetailsAside({
         const simulatedIncomeItems = selectedMonth.simulatedIncomeItems.filter((item) => matchesSearch(item.label));
         const simulatedExpenseItems = selectedMonth.simulatedExpenseItems.filter((item) => matchesSearch(item.description));
         const wishItems = activeWishItems.filter((item) => matchesSearch(item.description.trim() || "Desejo"));
+        const visibleBudgetItems = budgetItems.filter((item) => matchesSearch(item.label));
+        const activeBudgetIds = new Set(selectedMonth.budgetExpenseItems.map((item) => item.budgetId));
         const noResults = normalizedQuery ? <p className={EMPTY_STATE_CLASS_NAME}>Nada encontrado para “{searchQuery.trim()}”.</p> : null;
 
         if (selectedPanel === "income") {
@@ -329,14 +335,15 @@ export function PlanningDetailsAside({
             );
         }
 
-        const hasProjectionItems = selectedMonth.simulatedIncomeItems.length + selectedMonth.simulatedExpenseItems.length + activeWishItems.length > 0;
+        const hasProjectionItems = selectedMonth.simulatedIncomeItems.length + selectedMonth.simulatedExpenseItems.length + activeWishItems.length + budgetItems.length > 0;
         const hasSimulatedIncomes = simulatedIncomeItems.length > 0;
         const hasSimulatedExpenses = simulatedExpenseItems.length > 0;
         const hasWishlistItems = wishItems.length > 0;
+        const hasBudgetItems = visibleBudgetItems.length > 0;
 
         return (
             <>
-                {hasProjectionItems && !hasSimulatedIncomes && !hasSimulatedExpenses && !hasWishlistItems ? noResults : null}
+                {hasProjectionItems && !hasSimulatedIncomes && !hasSimulatedExpenses && !hasWishlistItems && !hasBudgetItems ? noResults : null}
                 {!hasProjectionItems ? <p className={EMPTY_STATE_CLASS_NAME}>Nenhuma projeção neste mês. Use “Nova receita” para simular uma entrada.</p> : null}
 
                 {hasSimulatedIncomes ? (
@@ -417,6 +424,24 @@ export function PlanningDetailsAside({
                                 />
                             );
                         })}
+                    </PlanningDetailsSection>
+                ) : null}
+
+                {hasBudgetItems ? (
+                    <PlanningDetailsSection title="Orçamentos" tone="expense">
+                        {visibleBudgetItems.map((item) => (
+                            <PlanningToggleRow
+                                key={item.budgetId}
+                                toggleId={item.budgetId}
+                                label={item.label}
+                                amount={item.amount}
+                                iconName={null}
+                                iconTone="expense"
+                                customIcon={Gauge}
+                                active={activeBudgetIds.has(item.budgetId)}
+                                onToggle={onToggleBudget}
+                            />
+                        ))}
                     </PlanningDetailsSection>
                 ) : null}
             </>

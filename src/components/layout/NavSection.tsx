@@ -7,6 +7,7 @@ import { BudgetNavSubitems } from "./BudgetNavSubitems";
 import { APP_NAVIGATION_ITEMS, REGISTRY_NAVIGATION_SUBITEMS, TRANSACTION_NAVIGATION_SUBITEMS, normalizeNavigationPage } from "./appNavigation";
 import { NavSubitems } from "./NavSubitems";
 import { StatementNavSubitems } from "./StatementNavSubitems";
+import { TeamNavItem } from "./TeamNavItem";
 
 const COLLAPSED_STORAGE_KEY = "prism:nav-collapsed";
 const PAGES_WITH_SUBITEMS = new Set(["transactions", "statement", "budgets", "registry"]);
@@ -90,7 +91,7 @@ export function NavSection({ compactAtLaptop = false, indicatorLayoutId = "nav-i
                                     <span className="flex shrink-0 items-center justify-center">{icon}</span>
                                     <span
                                         className={[
-                                            "max-w-44 overflow-hidden whitespace-nowrap text-xs uppercase opacity-100 transition-[max-width,opacity] duration-300 ease-out",
+                                            "max-w-44 translate-y-px overflow-hidden whitespace-nowrap text-xs uppercase opacity-100 transition-[max-width,opacity] duration-300 ease-out",
                                             compactAtLaptop ? "laptop:max-w-0 laptop:opacity-0 desktop:max-w-44 desktop:opacity-100" : "",
                                         ].join(" ")}
                                     >
@@ -158,6 +159,7 @@ export function NavSection({ compactAtLaptop = false, indicatorLayoutId = "nav-i
                     </Fragment>
                 );
             })}
+            <TeamNavItem compactAtLaptop={compactAtLaptop} indicatorLayoutId={`${indicatorLayoutId}-team`} onNavigate={onNavigate} />
         </nav>
     );
 }

@@ -29,6 +29,8 @@ interface TransactionHeaderProps {
     isEditing: boolean;
     isSeriesTransaction?: boolean;
     isInvoicePaymentEdit?: boolean;
+    /** Substitui o rótulo calculado, como nas parcelas. */
+    label?: string;
 }
 
 interface StatusFieldProps {
@@ -37,7 +39,7 @@ interface StatusFieldProps {
     disabled?: boolean;
 }
 
-export function TransactionHeader({ type, isEditing, isSeriesTransaction = false, isInvoicePaymentEdit = false }: TransactionHeaderProps) {
+export function TransactionHeader({ type, isEditing, isSeriesTransaction = false, isInvoicePaymentEdit = false, label }: TransactionHeaderProps) {
 
     const contextLabel = (() => {
         if (isInvoicePaymentEdit) {
@@ -79,7 +81,7 @@ export function TransactionHeader({ type, isEditing, isSeriesTransaction = false
         return "Nova transferência";
     })();
 
-    return <h1 className="text-sm ml-1 uppercase opacity-50">{contextLabel}</h1>;
+    return <h1 className="text-sm ml-1 uppercase opacity-50">{label ?? contextLabel}</h1>;
 }
 
 export function StatusField({ status, onChange, disabled = false }: StatusFieldProps) {

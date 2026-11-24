@@ -10,7 +10,7 @@ interface SkeletonPanelProps {
 }
 
 export function SkeletonBlock({ className = "" }: SkeletonBlockProps) {
-    return <div className={`animate-pulse rounded-lg bg-white/[0.07] ${className}`} />;
+    return <div className={`animate-pulse rounded-lg motion-reduce:animate-none bg-white/[0.07] ${className}`} />;
 }
 
 export function SkeletonLine({ className = "" }: SkeletonBlockProps) {

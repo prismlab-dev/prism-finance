@@ -27,8 +27,8 @@ import { withActionLog } from "../../lib/userActionLog";
 import type { FinanceActionsValue, FinanceSessionValue, FinanceSummaryValue } from "./contextTypes";
 import { useFinanceStore } from "./useFinanceStore";
 
-export function FinanceProvider({ children }: { children: ReactNode }) {
-    const store = useFinanceStore();
+export function FinanceProvider({ children, teamId }: { children: ReactNode; teamId?: string }) {
+    const store = useFinanceStore(teamId);
 
     const sessionValue = useMemo<FinanceSessionValue>(
         () => ({

@@ -66,6 +66,13 @@ export interface WishlistProjectionItem {
     createdAt: string;
 }
 
+export interface BudgetProjectionItem {
+    budgetId: string;
+    label: string;
+    /** Teto mensal do orçamento. */
+    amount: number;
+}
+
 export interface SimulatedExpenseItem extends PlanningSimulatedExpense {
     isDisabled: boolean;
     /** Parcela exibida neste mês (1-based) quando a projeção é parcelada; `amount` já é o valor da parcela. */
@@ -85,6 +92,7 @@ export interface MonthProjection extends MonthReality {
     simulatedExpenses: number;
     simulatedExpenseItems: SimulatedExpenseItem[];
     wishlistExpenseItems: WishlistProjectionItem[];
+    budgetExpenseItems: BudgetProjectionItem[];
     originalMonthBalance: number;
     currentMonthBalance: number;
     originalAccumulated: number;

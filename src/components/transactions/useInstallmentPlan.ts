@@ -6,6 +6,7 @@ interface UseInstallmentPlanParams {
     amount: number;
     countInput: string;
     ignoredCount?: number;
+    lockedIndexes?: ReadonlySet<number>;
     startDate: string;
     showDay: boolean;
     disabled: boolean;
@@ -17,12 +18,12 @@ interface UseInstallmentPlanParams {
 }
 
 export function useInstallmentPlan({
-    enabled, amount, countInput, ignoredCount, startDate, showDay, disabled, overrides, setOverrides, setTotalAmount, onChange,
+    enabled, amount, countInput, ignoredCount, lockedIndexes, startDate, showDay, disabled, overrides, setOverrides, setTotalAmount, onChange,
 }: UseInstallmentPlanParams): InstallmentPlan | null {
     const plan = useMemo<InstallmentPlan | null>(() => {
         if (!enabled) return null;
 
-        const preview = buildInstallmentPreview({ amount, countInput, ignoredCount, startDate, showDay, overrides });
+        const preview = buildInstallmentPreview({ amount, countInput, ignoredCount, startDate, showDay, overrides, lockedIndexes });
         return {
             preview,
             disabled,
@@ -35,7 +36,7 @@ export function useInstallmentPlan({
             },
             onReset: () => setOverrides(NO_INSTALLMENT_OVERRIDES),
         };
-    }, [amount, countInput, disabled, enabled, ignoredCount, overrides, setOverrides, setTotalAmount, showDay, startDate]);
+    }, [amount, countInput, disabled, enabled, ignoredCount, lockedIndexes, overrides, setOverrides, setTotalAmount, showDay, startDate]);
 
     useEffect(() => {
         onChange?.(plan);

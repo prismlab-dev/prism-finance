@@ -60,6 +60,19 @@ describe("planning cash timeline", () => {
         expect(result.months[0].inheritedItems).toEqual([]);
         expect(result.months[0].currentAccumulated).toBe(1000);
     });
+
+    it("reserves the simulated budget headroom in the month balance", () => {
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date("2026-02-15T12:00:00Z"));
+        const result = buildTimelineProjection({
+            wallets: [fixtureWallet], creditCards: [], creditCardInvoices: [], transactions: [], ledgerEntries: [],
+            wishItems: [], planning: fixtureSnapshot().planning, monthsToShow: 3,
+            budgetItemsByMonth: new Map([["2026-03", [{ budgetId: "b1", label: "Mercado", amount: 250 }]]]),
+        });
+        expect(result.months[0].simulatedExpenses).toBe(0);
+        expect(result.months[1].simulatedExpenses).toBe(250);
+        expect(result.months[1].currentAccumulated).toBe(750);
+    });
 });
 
 describe("planning installment projection", () => {

@@ -10,9 +10,11 @@ import { ModalStructure } from "./ModalStructure";
 
 interface EditTransactionProps {
     transaction: Transaction;
+    /** Edita todas as parcelas do parcelamento; sem isso, só a parcela aberta. */
+    seriesEdit?: boolean;
 }
 
-export function EditTransaction({ transaction }: EditTransactionProps) {
+export function EditTransaction({ transaction, seriesEdit = false }: EditTransactionProps) {
     const [activeTab, setActiveTab] = useState<TransactionFormTab>("simple");
     const [installmentPlan, setInstallmentPlan] = useState<InstallmentPlan | null>(null);
     const isTransfer = transaction.type === "transfer";
@@ -29,9 +31,9 @@ export function EditTransaction({ transaction }: EditTransactionProps) {
             {isTransfer ? (
                 <TransferForm transaction={transaction} activeTab={activeTab} />
             ) : isCreditCardSpending ? (
-                <CardSpendingForm transaction={transaction} activeTab={activeTab} onInstallmentPlanChange={setInstallmentPlan} />
+                <CardSpendingForm transaction={transaction} seriesEdit={seriesEdit} activeTab={activeTab} onInstallmentPlanChange={setInstallmentPlan} />
             ) : (
-                <TransactionForm transaction={transaction} mode={isInvoicePayment ? "invoice_payment_edit" : "default"} activeTab={activeTab} onInstallmentPlanChange={setInstallmentPlan} />
+                <TransactionForm transaction={transaction} seriesEdit={seriesEdit} mode={isInvoicePayment ? "invoice_payment_edit" : "default"} activeTab={activeTab} onInstallmentPlanChange={setInstallmentPlan} />
             )}
         </ModalStructure>
     );

@@ -63,7 +63,13 @@ export function updateTransactionSeriesSnapshot(params: UpdateTransactionSeriesS
     const targetGroup = group.transactionMode === "single" ? {
         ...buildPatchedMetadataGroup(snapshot, group, resolved),
         sourceWalletId: resolved.sourceWalletId, destinationWalletId: resolved.destinationWalletId, creditCardId: resolved.creditCardId,
-    } : group;
+    } : scope === "all" && [changes.description, changes.categoryId, changes.beneficiaryId, changes.notes].some((value) => value !== undefined)
+        // The series view reads the purchase from the group.
+        ? buildPatchedMetadataGroup(snapshot, group, resolved) : group;
+    // The series form sends every installment amount; the paid ones are not editable and keep theirs.
+    const amounts = scope === "all" && group.transactionMode === "installment" ? draft.installmentAmounts ?? null : null;
+    if (amounts?.some((value) => !Number.isFinite(value) || Math.round(value * 100) < 1)) throw new Error("Cada parcela precisa ter pelo menos R$ 0,01.");
+    const installmentAmount = (transaction: StoredTransaction) => amounts?.[(transaction.installmentNumber ?? 1) - 1];
     const nextTransactions = snapshot.transactions.map((transaction): StoredTransaction => {
         if (transaction.groupId !== group.id) return transaction;
         const selectedOnly = transaction.id === transactionId;
@@ -93,14 +99,16 @@ export function updateTransactionSeriesSnapshot(params: UpdateTransactionSeriesS
         return {
             ...transaction,
             routingOverride: true,
-            amount: skippedSibling || resolved.amount === selected.amount ? transaction.amount : resolved.amount,
+            amount: skippedSibling ? transaction.amount : installmentAmount(transaction) ?? (resolved.amount === selected.amount ? transaction.amount : resolved.amount),
             scheduledDate: date, status, commitment: status === "paid" ? "posted" : rowDraft.commitment,
             paidAt: status === "paid" ? transaction.paidAt ?? now : null,
             invoiceId, title: rowDraft.title, notes: rowDraft.notes, categoryId: rowDraft.categoryId, beneficiaryId: rowDraft.beneficiaryId,
             sourceWalletId: rowDraft.sourceWalletId, destinationWalletId: rowDraft.destinationWalletId, creditCardId: rowDraft.creditCardId,
         };
     });
-    const nextGroups = recalculateGroupTotals(snapshot.transactionGroups.map((item) => item.id === group.id ? targetGroup : item), nextTransactions);
+    // A edição pela página da equipe reenvia a divisão e a categoria da equipe.
+    const editedGroup = draft.teamExpense ? { ...targetGroup, teamExpense: draft.teamExpense } : targetGroup;
+    const nextGroups = recalculateGroupTotals(snapshot.transactionGroups.map((item) => item.id === group.id ? editedGroup : item), nextTransactions);
     const ledger = updateLedger({ before: snapshot, groups: nextGroups, transactions: nextTransactions, affectedTransactionIds });
     const nextSnapshot = {
         ...snapshot, transactionGroups: nextGroups, transactions: nextTransactions, ledgerEntries: ledger.ledgerEntries,

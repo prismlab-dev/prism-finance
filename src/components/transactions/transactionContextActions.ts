@@ -1,6 +1,7 @@
+import { isTeamSplitEntry } from "../../context/finance/teamExpense";
 import type { Transaction, TransactionGroup, TransactionSeriesScope, TransactionStatus } from "../../context/FinanceContext";
 
-export type TransactionContextActionId = "open" | "view_series" | "view_invoice" | "view_expenses" | "select" | "toggle_status" | "pay_today" | "post_card" | "post_card_today" | "ignore" | "duplicate" | "delete_single" | "delete_this_and_next" | "delete_all";
+export type TransactionContextActionId = "open" | "edit_series" | "view_series" | "view_invoice" | "view_expenses" | "select" | "toggle_status" | "pay_today" | "post_card" | "post_card_today" | "ignore" | "duplicate" | "delete_single" | "delete_this_and_next" | "delete_all" | "view_in_personal" | "view_in_team" | "remove_from_team";
 
 export interface TransactionContextAction {
     id: TransactionContextActionId;
@@ -32,7 +33,11 @@ function isInvoicePayment(transaction: Transaction): boolean {
     return transaction.systemKind === "invoice_payment";
 }
 
-function getOpenLabel(transaction: Transaction): string {
+function getOpenLabel(transaction: Transaction, group: TransactionGroup | undefined): string {
+    if (group?.transactionMode === "installment") {
+        return "Abrir parcela";
+    }
+
     if (isCreditCardSpending(transaction)) {
         return "Abrir compra";
     }
@@ -116,15 +121,23 @@ export function buildTransactionContextActions({ transaction, group, isSelected 
     const actions: TransactionContextAction[] = [
         {
             id: "open",
-            label: getOpenLabel(transaction),
+            label: getOpenLabel(transaction, group),
         },
     ];
+
+    if (group?.transactionMode === "installment") {
+        actions.push({ id: "edit_series", label: "Editar parcelamento" });
+    }
 
     if (!isInvoicePayment(transaction)) {
         actions.push({
             id: "view_series",
             label: group?.transactionMode === "installment" ? "Visualizar parcelamento" : "Visualizar série",
         });
+    }
+
+    if (isTeamSplitEntry(group?.teamExpense)) {
+        actions.push({ id: "view_in_team", label: "Ver na equipe" });
     }
 
     if (isInvoicePayment(transaction)) {

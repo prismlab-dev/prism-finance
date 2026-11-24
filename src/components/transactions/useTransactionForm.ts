@@ -1,5 +1,6 @@
 import { occurrenceId } from "../../context/finance/recurrence/projectOccurrences";
 import { duplicateTransactionDraft } from "./duplicateTransactionDraft";
+import { useInstallmentSeriesEdit, type InstallmentSeriesEdit } from "./useInstallmentSeriesEdit";
 import { customInstallmentAmounts, NO_INSTALLMENT_OVERRIDES, type InstallmentOverrides } from "./installmentPreview";
 import { useCallback, useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import {
@@ -32,6 +33,8 @@ export interface TransactionFormPrefill {
     initialBeneficiaryId?: string | null;
     initialTagIds?: string[];
     initialStatus?: TransactionStatus;
+    /** Vai para a anotação (observação) da transação nova. */
+    initialAnnotation?: string;
 }
 
 interface UseTransactionFormOptions {
@@ -39,6 +42,7 @@ interface UseTransactionFormOptions {
     transaction?: Transaction | null;
     mode?: "default" | "invoice_payment_edit";
     prefill?: TransactionFormPrefill;
+    seriesEdit?: boolean;
 }
 
 interface CategorySelection {
@@ -52,6 +56,10 @@ export interface TransactionFormState {
     isTransfer: boolean;
     isSeriesTransaction: boolean;
     isInstallmentEdit: boolean;
+    /** Edição de todas as parcelas, aberta pelo botão direito. */
+    isSeriesEdit: boolean;
+    series: InstallmentSeriesEdit | null;
+    installmentLabel: string | null;
     sourceTransaction: Transaction | null;
     transactionId: string;
     amountInput: string;
@@ -197,7 +205,7 @@ function resolveInitialDate(prefillDate?: string): string {
     return parseDateOnlyToLocalDate(normalizedPrefillDate) ? normalizedPrefillDate : getLocalTodayDate();
 }
 
-export function useTransactionForm({ type, transaction, mode = "default", prefill }: UseTransactionFormOptions = {}): TransactionFormState {
+export function useTransactionForm({ type, transaction, mode = "default", prefill, seriesEdit = false }: UseTransactionFormOptions = {}): TransactionFormState {
     const wallets = useFinanceWallets();
     const favoriteWalletId = useFinanceFavoriteWallet();
     const categories = useFinanceCategories();
@@ -213,9 +221,10 @@ export function useTransactionForm({ type, transaction, mode = "default", prefil
         [transaction, transactionGroups],
     );
     const isSeriesTransaction = Boolean(sourceGroup && sourceGroup.transactionMode !== "single");
+    const series = useInstallmentSeriesEdit(transaction ?? null, seriesEdit && sourceGroup?.transactionMode === "installment");
 
     const [amountInput, setAmountInputState] = useState(() =>
-        transaction ? formatAmountInputFromValue(transaction.value) : typeof prefill?.initialAmount === "number" ? formatAmountInputFromValue(prefill.initialAmount) : "R$ 0,00",
+        transaction ? formatAmountInputFromValue(series?.total ?? transaction.value) : typeof prefill?.initialAmount === "number" ? formatAmountInputFromValue(prefill.initialAmount) : "R$ 0,00",
     );
     const [status, setStatus] = useState<TransactionStatus>(transaction?.status ?? prefill?.initialStatus ?? "paid");
     const [description, setDescription] = useState(transaction?.description ?? prefill?.initialDescription ?? "");
@@ -229,10 +238,10 @@ export function useTransactionForm({ type, transaction, mode = "default", prefil
     const [installmentCountInput, setInstallmentCountInput] = useState(() =>
         sourceGroup?.transactionMode === "installment" && sourceGroup.installmentCount ? String(sourceGroup.installmentCount) : "2",
     );
-    const [installmentOverrides, setInstallmentOverrides] = useState<InstallmentOverrides>(NO_INSTALLMENT_OVERRIDES);
+    const [installmentOverrides, setInstallmentOverrides] = useState<InstallmentOverrides>(series?.initialOverrides ?? NO_INSTALLMENT_OVERRIDES);
     const setTotalAmount = useCallback((value: number) => setAmountInputState(formatAmountInputFromValue(value)), []);
     const [recurrenceCountInput, setRecurrenceCountInput] = useState(() => sourceGroup?.recurrenceRule?.end.type === "count" ? String(sourceGroup.recurrenceRule.end.count) : "");
-    const [editScope, setEditScopeState] = useState<TransactionSeriesScope>("single");
+    const [editScope, setEditScopeState] = useState<TransactionSeriesScope>(seriesEdit ? "all" : "single");
     const [draftTransactionId] = useState(() => createId("tx"));
     const [hydratedTransactionId, setHydratedTransactionId] = useState<string | null>(null);
     const [hydratedPrefillCategoryId, setHydratedPrefillCategoryId] = useState<string | null>(null);
@@ -304,7 +313,7 @@ export function useTransactionForm({ type, transaction, mode = "default", prefil
             return;
         }
 
-        setAmountInputState(formatAmountInputFromValue(transaction.value));
+        setAmountInputState(formatAmountInputFromValue(series?.total ?? transaction.value));
         setStatus(transaction.status);
         setDescription(transaction.description ?? "");
         setWalletId(transaction.inWallet ?? favoriteWalletId);
@@ -313,10 +322,10 @@ export function useTransactionForm({ type, transaction, mode = "default", prefil
         setDate(transaction.date ?? getLocalTodayDate());
         setTransactionModeState(sourceGroup?.transactionMode ?? "single");
         setInstallmentCountInput(sourceGroup?.transactionMode === "installment" && sourceGroup.installmentCount ? String(sourceGroup.installmentCount) : "2");
-        setEditScopeState("single");
+        setEditScopeState(seriesEdit ? "all" : "single");
         setRecurrenceCountInput(sourceGroup?.recurrenceRule?.end.type === "count" ? String(sourceGroup.recurrenceRule.end.count) : "");
         setHydratedTransactionId(null);
-    }, [favoriteWalletId, sourceGroup?.installmentCount, sourceGroup?.transactionMode, transaction?.id]);
+    }, [favoriteWalletId, seriesEdit, sourceGroup?.installmentCount, sourceGroup?.transactionMode, transaction?.id]);
 
     useEffect(() => {
         if (!transaction) {
@@ -425,7 +434,9 @@ export function useTransactionForm({ type, transaction, mode = "default", prefil
     const setAmountInput = (value: string) => {
         const digits = extractCurrencyDigits(value);
         setAmountInputState(formatCurrencyFromDigits(digits));
+        if (series) setInstallmentOverrides((current) => series.spreadTotal(parseCurrencyDigitsToNumber(digits), current));
     };
+    const setPlanOverrides = useMemo(() => (series ? series.wrapSetOverrides(setInstallmentOverrides, amountValue) : setInstallmentOverrides), [amountValue, series]);
 
     const setDateOffset = (offsetInDays: number) => {
         setDate(getLocalDateFromOffset(offsetInDays));
@@ -475,7 +486,7 @@ export function useTransactionForm({ type, transaction, mode = "default", prefil
             id: transaction ? undefined : transactionMode === "recurring" ? occurrenceId(`group-${draftTransactionId}`, 1) : draftTransactionId,
             groupId: !transaction && transactionMode === "recurring" ? `group-${draftTransactionId}` : undefined,
             type: transaction?.type ?? resolvedType,
-            value: numericValue,
+            value: series ? series.amounts(numericValue, installmentOverrides)[series.selectedIndex] ?? numericValue : numericValue,
             date: date || getLocalTodayDate(),
             inWallet: walletId,
             paymentMethod: "wallet" as const,
@@ -488,7 +499,7 @@ export function useTransactionForm({ type, transaction, mode = "default", prefil
             notes: trimmedDescription || undefined,
             transactionMode: resolvedTransactionMode,
             installmentCount: resolvedInstallmentCount,
-            installmentAmounts: sourceGroup?.transactionMode === "installment" ? null : customInstallmentAmounts(numericValue, resolvedInstallmentCount, installmentOverrides),
+            installmentAmounts: series ? series.amounts(numericValue, installmentOverrides) : sourceGroup?.transactionMode === "installment" ? null : customInstallmentAmounts(numericValue, resolvedInstallmentCount, installmentOverrides),
             recurrenceRule:
                 resolvedTransactionMode === "recurring"
                     ? {
@@ -617,6 +628,11 @@ export function useTransactionForm({ type, transaction, mode = "default", prefil
         isTransfer,
         isSeriesTransaction,
         isInstallmentEdit: sourceGroup?.transactionMode === "installment",
+        isSeriesEdit: seriesEdit,
+        series,
+        installmentLabel: sourceGroup?.transactionMode === "installment"
+            ? seriesEdit ? "Editando parcelamento" : `Editando parcela ${transaction?.installmentNumber ?? 1} de ${sourceGroup.installmentCount ?? 1}`
+            : null,
         sourceTransaction: transaction ?? null,
         transactionId: transaction?.id ?? (transactionMode === "recurring" ? occurrenceId(`group-${draftTransactionId}`, 1) : draftTransactionId),
         amountInput,
@@ -654,7 +670,7 @@ export function useTransactionForm({ type, transaction, mode = "default", prefil
         setTransactionMode,
         setInstallmentCountInput,
         installmentOverrides,
-        setInstallmentOverrides,
+        setInstallmentOverrides: setPlanOverrides,
         setTotalAmount,
         setEditScope,
         toggleTag,

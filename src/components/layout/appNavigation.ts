@@ -1,5 +1,5 @@
 import { createElement, type ReactNode } from "react";
-import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, BarChart3, CreditCard, FileText, Gift, Home, LayoutGrid, PiggyBank, Tag, TrendingUp, UserRound, Wallet, WalletCards } from "lucide-react";
+import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, BarChart3, CreditCard, FileText, Gift, Home, LayoutGrid, PiggyBank, Tag, TrendingUp, UserRound, Users, Wallet, WalletCards } from "lucide-react";
 import type { NavSubitem } from "./NavSubitems";
 import { type AppPage, getPathForPage } from "../../context/PageContext";
 
@@ -77,6 +77,12 @@ export const REGISTRY_NAVIGATION_SUBITEMS: NavSubitem[] = [
     subitem("categories", "Categorias", LayoutGrid),
     subitem("beneficiaries", "Beneficiários", UserRound),
     subitem("tags", "Tags", Tag),
+];
+
+export const TEAM_NAVIGATION_SUBITEMS: NavSubitem[] = [
+    subitem("team", "Visão geral", LayoutGrid),
+    subitem("teamTransactions", "Transações", ArrowLeftRight),
+    subitem("teamMembers", "Membros", Users),
 ];
 
 const REGISTRY_PAGES = new Set<AppPage>(["registry", "wallets", "creditCards", "beneficiaries", "categories", "tags"]);

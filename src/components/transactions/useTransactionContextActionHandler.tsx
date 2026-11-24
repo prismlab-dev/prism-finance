@@ -83,6 +83,11 @@ export function useTransactionContextActionHandler() {
             return;
         }
 
+        if (action.id === "edit_series") {
+            openModal(<EditTransaction transaction={transaction} seriesEdit />);
+            return;
+        }
+
         if (action.id === "view_series") {
             openModal(<TransactionSeriesModal transaction={transaction} />);
             return;
@@ -98,6 +103,22 @@ export function useTransactionContextActionHandler() {
                     selectedMonth: getMonthKeyFromDateValue(invoice.dueDate),
                 });
             }
+            return;
+        }
+
+        // Despesa da equipe: abre o lado pessoal (fatura do cartão ou lista de despesas).
+        if (action.id === "view_in_personal") {
+            const invoice = transaction.paymentMethod === "credit_card" ? creditCardInvoices.find((item) => item.id === transaction.invoiceId) : undefined;
+            if (invoice) {
+                goToPage("statement", { page: "statement", selectedCardId: invoice.creditCardId, selectedMonth: getMonthKeyFromDateValue(invoice.dueDate), highlightTransactionId: transaction.id });
+                return;
+            }
+            goToPage("transactions", { page: "transactions", tab: "spending", selectedMonth: getMonthKeyFromDateValue(transaction.date), targetTransactionId: transaction.id });
+            return;
+        }
+
+        if (action.id === "view_in_team") {
+            goToPage("teamTransactions");
             return;
         }
 

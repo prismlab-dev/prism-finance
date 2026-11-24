@@ -1,10 +1,12 @@
 import { Fragment, useEffect, useMemo, useState, type MouseEvent, type ReactNode } from "react";
-import { ChevronDown, ChevronsUpDown, ChevronUp, CircleSlash, Link, Repeat2 } from "lucide-react";
+import { isTeamSplitEntry } from "../../../context/finance/teamExpense";
+import { ChevronDown, ChevronsUpDown, ChevronUp, CircleSlash, Link, Repeat2, Users } from "lucide-react";
 import { type Beneficiary, type Transaction, type Wallet, useFinanceActions, useFinanceBeneficiaries, useFinanceSession, useFinanceTransactionGroups } from "../../../context/FinanceContext";
 import { useModal } from "../../../context/ModalContext";
 import { getCategoryIconComponent } from "../../../lib/categoryIcons";
 import { useLocalPreferenceSection } from "../../../lib/localPreferences";
 import { getTransactionCategoryDisplay, getTransactionCategoryDisplayLabel } from "../../../lib/transactionCategory";
+import { useTeamBeneficiaryId } from "../../../context/team/TeamContext";
 import { BeneficiaryAvatar } from "../../common/BeneficiaryAvatar";
 import { TableColumnToggleBar } from "../../common/TableColumnToggleButton";
 import { ColumnResizeHandle } from "../../common/ColumnResizeHandle";
@@ -226,6 +228,7 @@ function NoDestinationWalletCell() {
 function TransactionsTable({ tabs, activeTab, wallets, beneficiariesById, transactionGroupsById, sortMode, onSortModeChange, onAction, selectedMonth }: TransactionsTableProps) {
     const activeTabConfig = tabs.find((tab) => tab.key === activeTab) ?? tabs[0];
     const transactions = activeTabConfig?.transactions ?? [];
+    const teamBeneficiaryId = useTeamBeneficiaryId();
     const [contextMenu, setContextMenu] = useState<TransactionContextMenuState | null>(null);
     const { user } = useFinanceSession();
     const detailFlags = useTransactionDetailFlags(user?.uid);
@@ -558,6 +561,11 @@ function TransactionsTable({ tabs, activeTab, wallets, beneficiariesById, transa
                                                     <div className="flex min-w-0 max-w-full items-center gap-1.5">
                                                         <span className="truncate">{transaction.description || "Sem descrição."}</span>
                                                         <TransactionDetailIndicators flags={detailFlags} transactionId={transaction.id} />
+                                                        {isTeamSplitEntry(group?.teamExpense) && (
+                                                            <span className="inline-flex shrink-0 text-sky-300" role="img" title="Despesa da equipe" aria-label="Despesa da equipe">
+                                                                <Users size={13} />
+                                                            </span>
+                                                        )}
                                                         {transaction.systemKind === "invoice_payment" && (
                                                             <span className="inline-flex shrink-0 text-violet-300" role="img" title="Pagamento vinculado à fatura" aria-label="Pagamento vinculado à fatura">
                                                                 <Link size={13} />
@@ -623,6 +631,7 @@ function TransactionsTable({ tabs, activeTab, wallets, beneficiariesById, transa
                                                                     avatarImage: beneficiary?.avatarImage ?? null,
                                                                     avatarColor: beneficiary?.avatarColor ?? "#374151",
                                                                 }}
+                                                                    isTeam={Boolean(beneficiary) && beneficiary?.id === teamBeneficiaryId}
                                                             />
                                                             <span className="truncate">{beneficiary?.name?.split(" ")?.[0] ?? ""}</span>
                                                         </div>

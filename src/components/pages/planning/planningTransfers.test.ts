@@ -70,6 +70,7 @@ function makePlanningState(): PlanningState {
         disabledIncomeIds: [],
         disabledSimulatedExpenseIds: [],
         disabledSimulatedIncomeIds: [],
+        simulatedBudgetMonths: [],
         invoiceMonthOverrides: {},
         timelineSelectedWalletIds: [],
         timelineSelectedCreditCardIds: [],

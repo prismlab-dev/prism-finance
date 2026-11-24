@@ -1,3 +1,4 @@
+import { useTeamBeneficiaryId } from "../../context/team/TeamContext";
 import { useState } from "react";
 import { BeneficiaryAvatar } from "../../components/common/BeneficiaryAvatar";
 import { AddBeneficiary } from "../../components/modal/AddBeneficiary";
@@ -8,6 +9,7 @@ import { MobileListToolbar } from "../MobileListToolbar";
 const TYPE_LABELS: Record<string, string> = { person: "Pessoa", cost_center: "Centro de custo", pet: "Pet", other: "Outro" };
 
 export function MobileBeneficiariesSection() {
+    const teamBeneficiaryId = useTeamBeneficiaryId();
     const beneficiaries = useFinanceBeneficiaries();
     const { openModal } = useModal();
     const [showInactive, setShowInactive] = useState(false);
@@ -32,7 +34,7 @@ export function MobileBeneficiariesSection() {
                     {visible.map((beneficiary) => {
                         // Family members' profiles are managed by them, so they can't be edited here.
                         const isShared = beneficiary.source === "family_shared";
-                        const origin = isShared ? "Membro da família" : beneficiary.isSelfProfile ? "Perfil" : (TYPE_LABELS[beneficiary.type] ?? beneficiary.type);
+                        const origin = isShared ? "Membro da família" : beneficiary.isSelfProfile ? "Perfil" : beneficiary.id === teamBeneficiaryId ? "Equipe" : (TYPE_LABELS[beneficiary.type] ?? beneficiary.type);
                         const isMe = beneficiary.isSelfProfile && beneficiary.source === "personal";
 
                         return (
@@ -43,7 +45,7 @@ export function MobileBeneficiariesSection() {
                                     onClick={() => openModal(<AddBeneficiary mode="edit" beneficiaryId={beneficiary.id} />)}
                                     className={`flex w-full items-center gap-3 px-1 py-3 text-left outline-none enabled:active:bg-white/[0.03] focus-visible:ring-2 focus-visible:ring-sky-400/60 ${beneficiary.isActive ? "" : "opacity-60"}`}
                                 >
-                                    <BeneficiaryAvatar beneficiary={beneficiary} className="h-11 w-11 shrink-0 rounded-full" textClassName="text-base font-semibold text-white" />
+                                    <BeneficiaryAvatar beneficiary={beneficiary} className={`h-11 w-11 shrink-0 ${beneficiary.id === teamBeneficiaryId ? "rounded-xl" : "rounded-full"}`} textClassName="text-base font-semibold text-white" />
                                     <span className="min-w-0 flex-1">
                                         <span className="flex items-center gap-2">
                                             <span className="truncate font-medium text-white">{beneficiary.name}</span>

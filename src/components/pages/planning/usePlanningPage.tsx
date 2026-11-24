@@ -6,9 +6,13 @@ import {
     type PlanningSimulatedIncome,
     type PlanningWishlistSelection,
     useFinanceActions,
+    useFinanceBeneficiaries,
+    useFinanceCategories,
     useFinanceCreditCardInvoices,
     useFinanceCreditCards,
     useFinanceLedgerEntries,
+    useFinanceTags,
+    useFinanceTransactionGroups,
     useFinancePlanning,
     useFinanceTransactions,
     useFinanceWallets,
@@ -20,7 +24,8 @@ import { usePage } from "../../../context/PageContext";
 import { AddWishItem } from "../../modal/AddWishItem";
 import { PlanningInvoiceMonthModal } from "../../modal/PlanningInvoiceMonthModal";
 import { PlanningSimulationModal, type PlanningSimulationModalDraft } from "../../modal/PlanningSimulationModal";
-import { DEFAULT_TIMELINE_MONTHS, type InheritedExpenseItem, type MonthProjection, type PlanningPanel, type SimulatedExpenseItem, type SimulatedIncomeItem } from "./planningTimelineTypes";
+import { buildBudgetRuleOptions, createBudgetRuleResolver, getBudgetDisplayName } from "../budgets/budgetRuleOptions";
+import { DEFAULT_TIMELINE_MONTHS, type BudgetProjectionItem, type InheritedExpenseItem, type MonthProjection, type PlanningPanel, type SimulatedExpenseItem, type SimulatedIncomeItem } from "./planningTimelineTypes";
 import { buildTimelineProjection, getCurrentMonthKey, mergePlanningUpdate, parseCurrencyInput } from "./planningTimelineUtils";
 import {
     getAllCreditCardIds,
@@ -43,6 +48,10 @@ function toInstallmentField(installmentCount: number | null): Pick<PlanningSimul
     return installmentCount ? { installmentCount } : {};
 }
 
+function toBudgetMonthKey(monthKey: string, budgetId: string): string {
+    return `${monthKey}:${budgetId}`;
+}
+
 function isPlanningPanel(value: string | null): value is PlanningPanel {
     return value === "income" || value === "inherited_expenses" || value === "projections";
 }
@@ -54,6 +63,10 @@ export function usePlanningPage() {
     const ledgerEntries = useFinanceLedgerEntries();
     const wishItems = useFinanceWishItems();
     const planning = useFinancePlanning();
+    const categories = useFinanceCategories();
+    const groups = useFinanceTransactionGroups();
+    const tags = useFinanceTags();
+    const beneficiaries = useFinanceBeneficiaries();
     const { updatePlanningState } = useFinanceActions();
     const { openModal } = useModal();
     const { goToPage } = usePage();
@@ -110,6 +123,26 @@ export function usePlanningPage() {
         }
     }, [currentMonthKey, requestedMonthKey, requestedPanel]);
 
+    const simulatedBudgetMonths = useMemo(() => new Set(planning.simulatedBudgetMonths ?? []), [planning.simulatedBudgetMonths]);
+    // O teto inteiro do orçamento entra como despesa simulada do mês.
+    const budgetItems = useMemo((): BudgetProjectionItem[] => {
+        const { labelOf } = createBudgetRuleResolver(buildBudgetRuleOptions({ categories, groups, tags, beneficiaries, wallets, creditCards }));
+        return (planning.budgets ?? [])
+            .map((budget) => ({ budgetId: budget.id, label: getBudgetDisplayName(budget, labelOf), amount: budget.amount }))
+            .sort((a, b) => a.label.localeCompare(b.label));
+    }, [beneficiaries, categories, creditCards, groups, planning.budgets, tags, wallets]);
+    const selectedMonthBudgetItems = budgetItems;
+    const activeBudgetItemsByMonth = useMemo(
+        () =>
+            new Map(
+                Array.from(simulatedBudgetMonths, (key) => key.split(":")[0]).map((monthKey) => [
+                    monthKey,
+                    budgetItems.filter((item) => simulatedBudgetMonths.has(toBudgetMonthKey(monthKey, item.budgetId))),
+                ]),
+            ),
+        [budgetItems, simulatedBudgetMonths],
+    );
+
     const projection = useMemo(
         () =>
             buildTimelineProjection({
@@ -123,8 +156,9 @@ export function usePlanningPage() {
                 monthsToShow: timelineMonthCount,
                 pastMonthsToShow: TIMELINE_PAST_MONTHS,
                 pinnedMonthKey: selectedMonthKey,
+                budgetItemsByMonth: activeBudgetItemsByMonth,
             }),
-        [planning, scopedCreditCardInvoices, scopedCreditCards, scopedLedgerEntries, scopedTransactions, scopedWallets, selectedMonthKey, timelineMonthCount, wishItems],
+        [activeBudgetItemsByMonth, planning, scopedCreditCardInvoices, scopedCreditCards, scopedLedgerEntries, scopedTransactions, scopedWallets, selectedMonthKey, timelineMonthCount, wishItems],
     );
 
     const currentMonth = projection.months.find((month) => month.isCurrentMonth) ?? projection.months[0] ?? null;
@@ -288,6 +322,16 @@ export function usePlanningPage() {
                 chargeMonthKey={item.movedToMonthKey ?? selectedMonth.monthKey}
                 onSubmit={(monthKey) => setInvoiceMonthOverride(invoiceId, monthKey === dueMonthKey ? null : monthKey)}
             />,
+        );
+    };
+
+    const handleToggleBudgetSimulation = (budgetId: string) => {
+        const key = toBudgetMonthKey(selectedMonthKey, budgetId);
+        const current = planning.simulatedBudgetMonths ?? [];
+        void updatePlanningState(
+            mergePlanningUpdate(planning, {
+                simulatedBudgetMonths: current.includes(key) ? current.filter((item) => item !== key) : [...current, key],
+            }),
         );
     };
 
@@ -583,5 +627,7 @@ export function usePlanningPage() {
         handleToggleSimulatedIncome,
         handleToggleInheritedExpense,
         handleToggleWishlistSelection,
+        selectedMonthBudgetItems,
+        handleToggleBudgetSimulation,
     };
 }

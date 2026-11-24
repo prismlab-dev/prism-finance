@@ -89,4 +89,18 @@ describe("installment invoice editing", () => {
             draft: { paymentMethod: "credit_card", creditCardId: secondCard.id } });
         expect(result.snapshot.transactions.map((row) => row.invoiceId)).toEqual(["custom-2", "custom-3", "custom-4"]);
     });
+    it("renames the purchase when the description of the whole series changes", () => {
+        const result = updateTransactionSeriesSnapshot({ snapshot, transactionId: transactions[1].id, scope: "all", draft: { description: "Notebook" } });
+        expect(result.snapshot.transactionGroups[0].title).toBe("Notebook");
+        const recategorized = updateTransactionSeriesSnapshot({ snapshot: { ...snapshot, categories: [{ id: "cat-new", name: "Eletrônicos", type: "expense", parentId: null, isActive: true } as never] },
+            transactionId: transactions[1].id, scope: "all", draft: { categoryId: "cat-new" } });
+        expect(recategorized.snapshot.transactionGroups[0].categoryId).toBe("cat-new");
+        expect(updateTransactionSeriesSnapshot({ snapshot, transactionId: transactions[1].id, scope: "single", draft: { description: "Notebook" } })
+            .snapshot.transactionGroups[0].title).toBe(group.title);
+    });
+    it("applies the amount of each installment from the series form", () => {
+        const result = updateTransactionSeriesSnapshot({ snapshot, transactionId: transactions[1].id, scope: "all", draft: { value: 150, installmentAmounts: [100, 150, 50] } });
+        expect(result.snapshot.transactions.map((row) => row.amount)).toEqual([100, 150, 50]);
+        expect(() => updateTransactionSeriesSnapshot({ snapshot, transactionId: transactions[1].id, scope: "all", draft: { installmentAmounts: [100, 0, 200] } })).toThrow();
+    });
 });

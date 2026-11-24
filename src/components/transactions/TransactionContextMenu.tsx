@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
-import { CheckCheck, CircleCheckBig, Clock, Copy, Eye, LayoutList, Link, ListChecks, SquareArrowOutUpRight, SquareSlash, Trash2, TriangleAlert } from "lucide-react";
+import { CheckCheck, CircleCheckBig, Clock, Copy, Eye, LayoutList, Layers3, Link, ListChecks, SquareArrowOutUpRight, SquareSlash, Trash2, TriangleAlert, Users } from "lucide-react";
 import type { TransactionContextAction, TransactionContextActionId } from "./transactionContextActions";
 
 export interface TransactionContextMenuState {
@@ -24,6 +24,7 @@ const MENU_DIVIDER_HEIGHT = 13;
 
 const ACTION_ICONS: Record<TransactionContextActionId, typeof Eye> = {
     open: SquareArrowOutUpRight,
+    edit_series: Layers3,
     view_series: LayoutList,
     view_invoice: Link,
     view_expenses: Link,
@@ -37,6 +38,9 @@ const ACTION_ICONS: Record<TransactionContextActionId, typeof Eye> = {
     delete_single: Trash2,
     delete_this_and_next: Trash2,
     delete_all: TriangleAlert,
+    view_in_personal: Link,
+    view_in_team: Users,
+    remove_from_team: SquareSlash,
 };
 
 function resolveActionIcon(action: TransactionContextAction): typeof Eye {
@@ -48,7 +52,7 @@ function resolveActionIcon(action: TransactionContextAction): typeof Eye {
 }
 
 function buildActionSections(actions: TransactionContextAction[]): TransactionContextAction[][] {
-    const primary = actions.filter((action) => action.id === "open" || action.id === "view_series" || action.id === "view_invoice" || action.id === "view_expenses");
+    const primary = actions.filter((action) => action.id === "open" || action.id === "edit_series" || action.id === "view_series" || action.id === "view_invoice" || action.id === "view_expenses" || action.id === "view_in_personal" || action.id === "view_in_team");
     const destructive = actions.filter((action) => action.tone === "danger");
     const secondary = actions.filter((action) => !primary.includes(action) && action.tone !== "danger");
 

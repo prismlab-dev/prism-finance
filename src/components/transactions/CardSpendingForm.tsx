@@ -23,7 +23,8 @@ import { buildCreditCardInvoiceId, getCreditCardInvoiceMonthKey, parseCreditCard
 import { createId, findCurrentUserSelfBeneficiary } from "../../context/finance/helpers";
 import { useModal } from "../../context/ModalContext";
 import { extractCurrencyDigits, formatCurrencyFromDigits, parseCurrencyDigitsToNumber } from "../../lib/currencyMask";
-import { getLocalTodayDate } from "../../lib/localDate";
+import { addMonthsToLocalDate, getLocalTodayDate } from "../../lib/localDate";
+import { useInstallmentSeriesEdit } from "./useInstallmentSeriesEdit";
 import { AnimatedTransactionFormPanel } from "./AnimatedTransactionFormPanel";
 import { DateField } from "./DateField";
 import { DescriptionAutocomplete } from "./DescriptionAutocomplete";
@@ -64,6 +65,8 @@ interface CardSpendingFormProps {
     prefill?: CardSpendingFormPrefill;
     activeTab: TransactionFormTab;
     onInstallmentPlanChange?: (plan: InstallmentPlan | null) => void;
+    /** Edita todas as parcelas; sem isso, uma parcela aberta edita só ela. */
+    seriesEdit?: boolean;
 }
 
 export interface CardSpendingFormPrefill {
@@ -104,6 +107,7 @@ function CardSpendingFormBody({
     prefill,
     activeTab,
     onInstallmentPlanChange,
+    seriesEdit = false,
     justSaved,
     onSavedAndContinue,
 }: CardSpendingFormProps & { justSaved: boolean; onSavedAndContinue: () => void }) {
@@ -157,12 +161,13 @@ function CardSpendingFormBody({
         return skippedCount;
     }, [sourceGroup, transactions]);
 
+    const series = useInstallmentSeriesEdit(transaction, seriesEdit && isInstallmentEdit);
     const [submitting, setSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState("");
     const [draftTransactionId] = useState(() => createId("tx"));
     const [transactionSaved, setTransactionSaved] = useState(false);
     const financialFieldsDisabled = submitting || transactionSaved;
-    const [amountInput, setAmountInputState] = useState(() => formatAmountInputFromValue(transaction?.value ?? prefill?.initialValues?.value ?? 0));
+    const [amountInput, setAmountInputState] = useState(() => formatAmountInputFromValue(series?.total ?? transaction?.value ?? prefill?.initialValues?.value ?? 0));
     const [description, setDescription] = useState(transaction?.description ?? prefill?.initialValues?.description ?? "");
     const [date, setDate] = useState(transaction?.date ?? (initialPrefillDate || getLocalTodayDate()));
     const [creditCardId, setCreditCardId] = useState(transaction?.creditCardId ?? (initialPrefillCreditCardId || favoriteCreditCardId || ""));
@@ -177,8 +182,8 @@ function CardSpendingFormBody({
         sourceGroup?.transactionMode === "installment" && sourceGroup.installmentCount ? String(sourceGroup.installmentCount) : "2",
     );
     const [ignoredInstallmentsCountInput, setIgnoredInstallmentsCountInput] = useState(() => (sourceGroup?.transactionMode === "installment" ? String(leadingSkippedInstallmentsCount) : "0"));
-    const [installmentOverrides, setInstallmentOverrides] = useState<InstallmentOverrides>(NO_INSTALLMENT_OVERRIDES);
-    const [editScope, setEditScope] = useState<TransactionSeriesScope>("single");
+    const [installmentOverrides, setInstallmentOverrides] = useState<InstallmentOverrides>(series?.initialOverrides ?? NO_INSTALLMENT_OVERRIDES);
+    const [editScope, setEditScope] = useState<TransactionSeriesScope>(seriesEdit ? "all" : "single");
     const isFutureRecurringOccurrence = spendingMode === "recurring" && date > getLocalTodayDate();
     const details = useTransactionDetails({ transactionId: transaction?.id ?? (spendingMode === "recurring" ? occurrenceId(`group-${draftTransactionId}`, 1) : draftTransactionId), userId: user?.uid, loadExisting: isEditing });
     const activeCreditCards = useMemo(() => creditCards.filter((card) => card.isActive), [creditCards]);
@@ -191,7 +196,7 @@ function CardSpendingFormBody({
             return;
         }
 
-        setAmountInputState(formatAmountInputFromValue(transaction.value));
+        setAmountInputState(formatAmountInputFromValue(series?.total ?? transaction.value));
         setDescription(transaction.description ?? "");
         setDate(transaction.date ?? getLocalTodayDate());
         setCreditCardId(transaction.creditCardId ?? favoriteCreditCardId ?? "");
@@ -204,8 +209,8 @@ function CardSpendingFormBody({
         setSpendingMode(sourceGroup?.transactionMode ?? "single");
         setInstallmentCountInput(sourceGroup?.transactionMode === "installment" && sourceGroup.installmentCount ? String(sourceGroup.installmentCount) : "2");
         setIgnoredInstallmentsCountInput(sourceGroup?.transactionMode === "installment" ? String(leadingSkippedInstallmentsCount) : "0");
-        setEditScope("single");
-    }, [favoriteCreditCardId, leadingSkippedInstallmentsCount, sourceGroup?.installmentCount, sourceGroup?.transactionMode, transaction?.id]);
+        setEditScope(seriesEdit ? "all" : "single");
+    }, [favoriteCreditCardId, leadingSkippedInstallmentsCount, seriesEdit, sourceGroup?.installmentCount, sourceGroup?.transactionMode, transaction?.id]);
 
     useEffect(() => {
         if (isFutureRecurringOccurrence && (!transaction || transaction.date !== date)) setCommitment("forecast");
@@ -400,16 +405,20 @@ function CardSpendingFormBody({
     const selectedResolvedInvoiceOption = useMemo(() => invoiceOptions.find((option) => option.id === invoiceId) ?? null, [invoiceOptions, invoiceId]);
     const parsedPlanCount = Number(installmentCountInput);
     const setTotalAmount = useCallback((value: number) => setAmountInputState(formatAmountInputFromValue(value)), []);
+    const setPlanOverrides = useMemo(() => (series ? series.wrapSetOverrides(setInstallmentOverrides, amountValue) : setInstallmentOverrides), [amountValue, series]);
+    const selectedInvoiceMonth = selectedResolvedInvoiceOption ? `${getCreditCardInvoiceMonthKey(selectedResolvedInvoiceOption.invoice)}-01` : "";
     const installmentPlan = useInstallmentPlan({
-        enabled: spendingMode === "installment" && !isInstallmentEdit,
+        enabled: spendingMode === "installment" && (!isInstallmentEdit || Boolean(series)),
         amount: amountValue,
-        countInput: installmentCountInput,
-        ignoredCount: normalizeIgnoredInstallmentsCountInput(ignoredInstallmentsCountInput, Number.isInteger(parsedPlanCount) && parsedPlanCount >= 2 ? parsedPlanCount : null),
-        startDate: selectedResolvedInvoiceOption ? `${getCreditCardInvoiceMonthKey(selectedResolvedInvoiceOption.invoice)}-01` : "",
+        countInput: series?.countInput ?? installmentCountInput,
+        ignoredCount: series ? series.ignoredCount : normalizeIgnoredInstallmentsCountInput(ignoredInstallmentsCountInput, Number.isInteger(parsedPlanCount) && parsedPlanCount >= 2 ? parsedPlanCount : null),
+        lockedIndexes: series?.lockedIndexes,
+        // In the series the invoice field is the opened installment's; the preview starts at the first one.
+        startDate: series && selectedInvoiceMonth ? addMonthsToLocalDate(selectedInvoiceMonth, -series.selectedIndex) : selectedInvoiceMonth,
         showDay: false,
         disabled: financialFieldsDisabled,
         overrides: installmentOverrides,
-        setOverrides: setInstallmentOverrides,
+        setOverrides: setPlanOverrides,
         setTotalAmount,
         onChange: onInstallmentPlanChange,
     });
@@ -478,6 +487,7 @@ function CardSpendingFormBody({
     const setAmountInput = (value: string) => {
         const digits = extractCurrencyDigits(value);
         setAmountInputState(formatCurrencyFromDigits(digits));
+        if (series) setInstallmentOverrides((current) => series.spreadTotal(parseCurrencyDigitsToNumber(digits), current));
     };
 
     const buildDraft = (statusOverride?: TransactionStatus) => {
@@ -508,7 +518,8 @@ function CardSpendingFormBody({
             id: transaction ? undefined : spendingMode === "recurring" ? occurrenceId(`group-${draftTransactionId}`, 1) : draftTransactionId,
             groupId: !transaction && spendingMode === "recurring" ? `group-${draftTransactionId}` : undefined,
             type: "spending" as const,
-            value: numericValue,
+            // The series sends the opened installment's amount plus every installment amount.
+            value: series ? series.amounts(numericValue, installmentOverrides)[series.selectedIndex] ?? numericValue : numericValue,
             date: date || getLocalTodayDate(),
             inWallet: selectedCard.bankWalletId ?? "default",
             paymentMethod: "credit_card" as const,
@@ -525,7 +536,7 @@ function CardSpendingFormBody({
             notes: trimmedDescription || undefined,
             transactionMode: resolvedMode,
             installmentCount: resolvedInstallmentCount,
-            installmentAmounts: isInstallmentEdit ? null : customInstallmentAmounts(numericValue, resolvedInstallmentCount, installmentOverrides),
+            installmentAmounts: series ? series.amounts(numericValue, installmentOverrides) : isInstallmentEdit ? null : customInstallmentAmounts(numericValue, resolvedInstallmentCount, installmentOverrides),
             ignoredInstallmentsCount: resolvedMode === "installment" ? resolvedIgnoredInstallmentsCount : undefined,
             recurrenceRule:
                 resolvedMode === "recurring"
@@ -648,7 +659,7 @@ function CardSpendingFormBody({
         <>
             <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-white/[0.09] bg-surface p-4 text-white shadow-[0_26px_70px_-38px_rgba(0,0,0,0.95)]">
                     <header className="flex shrink-0 items-center justify-between">
-                        <h1 className="text-sm ml-1 uppercase opacity-50">{isEditing ? (isSeriesTransaction ? "Editando gasto da série" : "Editando gasto no cartão") : "Novo gasto no cartão"}</h1>
+                        <h1 className="text-sm ml-1 uppercase opacity-50">{isEditing ? (seriesEdit ? "Editando parcelamento" : isInstallmentEdit ? `Editando parcela ${transaction?.installmentNumber ?? 1} de ${sourceGroup?.installmentCount ?? 1}` : isSeriesTransaction ? "Editando gasto da série" : "Editando gasto no cartão") : "Novo gasto no cartão"}</h1>
                         <div className="flex items-center gap-2">
                             <button
                                 type="button"
@@ -677,7 +688,7 @@ function CardSpendingFormBody({
                                 onChange={(event) => setAmountInput(event.target.value)}
                                 disabled={financialFieldsDisabled}
                             />
-                            {transaction && isInstallmentEdit && spendingMode === "installment" && <InstallmentAmountHint transactionId={transaction.id} amountInput={amountInput} scope={editScope} />}
+                            {transaction && isInstallmentEdit && !series && spendingMode === "installment" && <InstallmentAmountHint transactionId={transaction.id} amountInput={amountInput} scope={editScope} />}
                             <div className="grid grid-cols-1 items-end gap-2 md:grid-cols-3">
                                 <CardCommitmentField
                                     value={commitment}
@@ -751,7 +762,7 @@ function CardSpendingFormBody({
                                 excludeTransactionId={transaction?.id}
                                 disabled={financialFieldsDisabled}
                             />
-                            {isEditing && isSeriesTransaction ? (
+                            {isEditing && isSeriesTransaction && !isInstallmentEdit ? (
                                 <SingleSelectCombobox
                                     disableSearch
                                     label="Aplicar edição em"
@@ -788,7 +799,7 @@ function CardSpendingFormBody({
                                         disabled={financialFieldsDisabled}
                                     />
                                     <div>
-                                        <TransactionModeField mode={spendingMode} installmentCountInput={installmentCountInput} onModeChange={setSpendingMode} onInstallmentCountChange={setInstallmentCountInput} recurrenceCountInput={recurrenceCountInput} onRecurrenceCountChange={setRecurrenceCountInput} hideInstallmentCount disabled={financialFieldsDisabled} />
+                                        <TransactionModeField mode={spendingMode} installmentCountInput={installmentCountInput} onModeChange={setSpendingMode} onInstallmentCountChange={setInstallmentCountInput} recurrenceCountInput={recurrenceCountInput} onRecurrenceCountChange={setRecurrenceCountInput} hideInstallmentCount disabled={financialFieldsDisabled || isInstallmentEdit} />
                                         {spendingMode === "installment" && !isInstallmentEdit && (
                                                 <div className="mx-0.5 flex flex-col gap-2 rounded-b border-x border-b border-dashed border-white/10 bg-black/20 px-3 py-3">
                                                     <label className="flex items-center justify-between gap-3">
@@ -828,8 +839,12 @@ function CardSpendingFormBody({
                                     </div>
                                 </div>
                                 {installmentPlan ? <InstallmentPreviewPanel plan={installmentPlan} className="max-h-96 min-[1280px]:hidden" /> : null}
-                                <div className="h-px bg-white/[0.06]" />
-                                <TransactionDetailsField details={details} disabled={submitting} />
+                                {!seriesEdit && (
+                                    <>
+                                        <div className="h-px bg-white/[0.06]" />
+                                        <TransactionDetailsField details={details} disabled={submitting} />
+                                    </>
+                                )}
                             </section>
                         )}
                         </AnimatedTransactionFormPanel>
@@ -850,12 +865,16 @@ function CardSpendingFormBody({
                                             <Trash2 size={15} /> {isInstallmentEdit && editScope === "all" ? "Excluir todas" : "Excluir"}
                                         </FooterButton>
                                     )}
-                                    <FooterButton onClick={() => void runAction(duplicate)} disabled={submitting || transactionSaved}>
-                                        <Copy size={15} /> Duplicar
-                                    </FooterButton>
-                                    <FooterButton onClick={() => void runAction(ignore, true)} disabled={submitting || transactionSaved}>
-                                        <SquareSlash size={15} /> Ignorar
-                                    </FooterButton>
+                                    {!seriesEdit && (
+                                        <>
+                                            <FooterButton onClick={() => void runAction(duplicate)} disabled={submitting || transactionSaved}>
+                                                <Copy size={15} /> Duplicar
+                                            </FooterButton>
+                                            <FooterButton onClick={() => void runAction(ignore, true)} disabled={submitting || transactionSaved}>
+                                                <SquareSlash size={15} /> Ignorar
+                                            </FooterButton>
+                                        </>
+                                    )}
                                 </>
                             )}
                         </div>

@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
-import { createPortal } from "react-dom";
+import { useEffect, useState, type ReactNode } from "react";
 import { TextAlignStart, File } from "lucide-react";
+import { HoverTooltip } from "../common/HoverTooltip";
 import { loadTransactionDetailFlags, TRANSACTION_DETAILS_CHANGED_EVENT, type TransactionDetailFlags } from "../../supabase/finance/transactionDetailsService";
 
 export function useTransactionDetailFlags(userId: string | undefined): TransactionDetailFlags | null {
@@ -28,44 +28,14 @@ export function useTransactionDetailFlags(userId: string | undefined): Transacti
 }
 
 function HoverDetail({ label, icon, children }: { label: string; icon: ReactNode; children: ReactNode }) {
-    const anchorRef = useRef<HTMLSpanElement>(null);
-    const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
-
-    const show = () => {
-        const rect = anchorRef.current?.getBoundingClientRect();
-        if (rect) {
-            setPosition({ top: rect.bottom + 6, left: Math.min(rect.left, window.innerWidth - 296) });
-        }
-    };
-    const hide = () => setPosition(null);
-
     return (
-        <>
-            <span
-                ref={anchorRef}
-                tabIndex={0}
-                role="img"
-                aria-label={label}
-                onMouseEnter={show}
-                onMouseLeave={hide}
-                onFocus={show}
-                onBlur={hide}
-                className="inline-flex shrink-0 rounded text-zinc-500 outline-none transition-colors hover:text-zinc-200 focus-visible:text-zinc-200 focus-visible:ring-1 focus-visible:ring-white/40"
-            >
-                {icon}
-            </span>
-            {position &&
-                createPortal(
-                    <div
-                        role="tooltip"
-                        style={{ top: position.top, left: Math.max(8, position.left) }}
-                        className="pointer-events-none fixed z-[1000] w-max max-w-[min(280px,calc(100vw-16px))] rounded-lg border border-white/10 bg-zinc-900/95 px-3 py-2 text-[13px] font-normal leading-5 text-white/85 shadow-xl backdrop-blur-sm"
-                    >
-                        {children}
-                    </div>,
-                    document.body,
-                )}
-        </>
+        <HoverTooltip
+            label={label}
+            content={children}
+            className="inline-flex shrink-0 rounded text-zinc-500 outline-none transition-colors hover:text-zinc-200 focus-visible:text-zinc-200 focus-visible:ring-1 focus-visible:ring-white/40"
+        >
+            {icon}
+        </HoverTooltip>
     );
 }
 

@@ -18,7 +18,11 @@ export type AppPage =
     | "transactions"
     | "transfer"
     | "registry"
-    | "wishlist";
+    | "wishlist"
+    | "team"
+    | "teamTransactions"
+    | "teamBudgets"
+    | "teamMembers";
 export type TransactionsIntentTab = "income" | "spending" | "transfer";
 export type PageNavigationIntent =
     | {
@@ -64,6 +68,10 @@ const PAGE_PATHS: Record<AppPage, string> = {
     transactions: "/transactions",
     registry: "/registry",
     wishlist: "/wishlist",
+    team: "/equipe",
+    teamTransactions: "/equipe/transacoes",
+    teamBudgets: "/equipe/orcamentos",
+    teamMembers: "/equipe/membros",
 };
 
 function normalizePathname(pathname: string) {
@@ -103,6 +111,10 @@ export function getPageFromPathname(pathname: string): AppPage {
     if (path === "/budgets" || path === "/orcamentos" || path.startsWith("/budgets/") || path.startsWith("/orcamentos/")) return "budgets";
     if (path === "/statement" || path === "/fatura") return "statement";
     if (path === "/wishlist") return "wishlist";
+    if (path === "/equipe" || path === "/team") return "team";
+    if (path === "/equipe/transacoes" || path === "/team/transactions") return "teamTransactions";
+    if (path === "/equipe/orcamentos" || path === "/team/budgets") return "teamBudgets";
+    if (path === "/equipe/membros" || path === "/team/members") return "teamMembers";
     if (path === "/settings" || path === "/configuracoes") return "settings";
 
     return "home";

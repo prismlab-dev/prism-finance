@@ -13,6 +13,7 @@ export type PlanningLocalPreferences = Pick<
     | "disabledIncomeIds"
     | "disabledSimulatedExpenseIds"
     | "disabledSimulatedIncomeIds"
+    | "simulatedBudgetMonths"
     | "invoiceMonthOverrides"
     | "timelineSelectedWalletIds"
     | "timelineSelectedCreditCardIds"
@@ -75,6 +76,7 @@ export function normalizePlanningLocalPreferences(value: unknown): PlanningLocal
         disabledIncomeIds: asStringArray(value.disabledIncomeIds, fallback.disabledIncomeIds),
         disabledSimulatedExpenseIds: asStringArray(value.disabledSimulatedExpenseIds, fallback.disabledSimulatedExpenseIds),
         disabledSimulatedIncomeIds: asStringArray(value.disabledSimulatedIncomeIds, fallback.disabledSimulatedIncomeIds),
+        simulatedBudgetMonths: asStringArray(value.simulatedBudgetMonths, fallback.simulatedBudgetMonths),
         invoiceMonthOverrides: normalizeInvoiceMonthOverrides(value.invoiceMonthOverrides),
         timelineSelectedWalletIds: asStringArray(value.timelineSelectedWalletIds, fallback.timelineSelectedWalletIds),
         timelineSelectedCreditCardIds: asStringArray(value.timelineSelectedCreditCardIds, fallback.timelineSelectedCreditCardIds),
@@ -93,6 +95,7 @@ export function extractPlanningLocalPreferences(planning: PlanningState): Planni
         disabledIncomeIds: planning.disabledIncomeIds ?? [],
         disabledSimulatedExpenseIds: planning.disabledSimulatedExpenseIds ?? [],
         disabledSimulatedIncomeIds: planning.disabledSimulatedIncomeIds ?? [],
+        simulatedBudgetMonths: planning.simulatedBudgetMonths ?? [],
         invoiceMonthOverrides: planning.invoiceMonthOverrides ?? {},
         timelineSelectedWalletIds: planning.timelineSelectedWalletIds ?? [],
         timelineSelectedCreditCardIds: planning.timelineSelectedCreditCardIds ?? [],

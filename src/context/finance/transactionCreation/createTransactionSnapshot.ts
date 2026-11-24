@@ -106,6 +106,7 @@ export function createTransactionSnapshot(before: FinanceSnapshot, newTransactio
         recurrenceEndDate: transactionMode === "recurring" ? newTransaction.recurrenceEndDate ?? existingGroup?.recurrenceEndDate ?? null : null,
         sourceWalletId, destinationWalletId, creditCardId: resolvedGroupCreditCardId,
         createdAt: existingGroup?.createdAt ?? nowIso,
+        ...(newTransaction.teamExpense ? { teamExpense: newTransaction.teamExpense } : {}),
     }, new Set(before.wallets.map((wallet) => wallet.id)));
 
     const nextGroups = existingGroup

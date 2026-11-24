@@ -160,7 +160,7 @@ function isWalletSpendingTransaction(transaction: Transaction): boolean {
 }
 
 function isIncomeTransaction(transaction: Transaction): boolean {
-    return isIncludedTransaction(transaction) && transaction.type === "income";
+    return isIncludedTransaction(transaction) && transaction.type === "income" && transaction.systemKind !== "team_settlement";
 }
 
 function isInvoicePaymentTransaction(transaction: Transaction): boolean {

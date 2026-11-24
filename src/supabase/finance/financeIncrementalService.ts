@@ -154,8 +154,9 @@ export function applySupabaseFinanceChangesPage(baseData: SupabaseFinanceData, p
     };
 }
 
-export async function loadSupabaseFinanceChanges(sinceRevision: number, revisionLimit = 50): Promise<SupabaseFinanceChangesPage> {
-    const result = await getSupabaseClient().rpc("load_finance_changes", {
+export async function loadSupabaseFinanceChanges(sinceRevision: number, revisionLimit = 50, teamId?: string): Promise<SupabaseFinanceChangesPage> {
+    const result = await getSupabaseClient().rpc(teamId ? "load_team_finance_changes" : "load_finance_changes", {
+        ...(teamId ? { target_team_id: teamId } : {}),
         since_revision: sinceRevision,
         revision_limit: revisionLimit,
     });
@@ -169,12 +170,13 @@ export async function loadSupabaseFinanceChanges(sinceRevision: number, revision
 export async function loadSupabaseFinanceIncrementally(
     baseData: SupabaseFinanceData,
     sinceRevision: number,
+    teamId?: string,
 ): Promise<SupabaseIncrementalLoadResult> {
     let data = baseData;
     let revision = sinceRevision;
 
     for (let pageNumber = 0; pageNumber < 1000; pageNumber += 1) {
-        const page = await loadSupabaseFinanceChanges(revision);
+        const page = await loadSupabaseFinanceChanges(revision, undefined, teamId);
         if (page.requires_full_reload) {
             return { data: baseData, revision: sinceRevision, requiresFullReload: true };
         }

@@ -59,6 +59,8 @@ export interface SaveSupabaseFinanceDataParams {
     baseData: SupabaseFinanceData;
     baseRevision: number;
     clientId: string;
+    /** Livro da equipe; ausente = livro pessoal. */
+    teamId?: string;
 }
 
 export interface SupabaseFinanceSaveResult {
@@ -198,9 +200,11 @@ function fromAtomicFinanceSnapshot(atomicSnapshot: AtomicFinanceSnapshotRow): Su
     };
 }
 
-export async function loadSupabaseFinanceData(userId: string, client = getSupabaseClient()): Promise<SupabaseFinanceLoadResult> {
+export async function loadSupabaseFinanceData(userId: string, client = getSupabaseClient(), teamId?: string): Promise<SupabaseFinanceLoadResult> {
     void userId;
-    const result = await client.rpc("load_finance_snapshot");
+    const result = teamId
+        ? await client.rpc("load_team_finance_snapshot", { target_team_id: teamId })
+        : await client.rpc("load_finance_snapshot");
     if (result.error) {
         throw result.error;
     }
@@ -208,8 +212,9 @@ export async function loadSupabaseFinanceData(userId: string, client = getSupaba
     return fromAtomicFinanceSnapshot((result.data ?? {}) as AtomicFinanceSnapshotRow);
 }
 
-export async function saveSupabaseFinanceData({ userId, financeData, baseData, baseRevision, clientId }: SaveSupabaseFinanceDataParams, client = getSupabaseClient()): Promise<SupabaseFinanceSaveResult> {
-    const result = await client.rpc("apply_finance_changes", {
+export async function saveSupabaseFinanceData({ userId, financeData, baseData, baseRevision, clientId, teamId }: SaveSupabaseFinanceDataParams, client = getSupabaseClient()): Promise<SupabaseFinanceSaveResult> {
+    const result = await client.rpc(teamId ? "apply_team_finance_changes" : "apply_finance_changes", {
+        ...(teamId ? { target_team_id: teamId } : {}),
         expected_revision: baseRevision,
         changes: buildFinanceChangesPayload(userId, baseData, financeData),
         client_id: clientId,
@@ -226,7 +231,7 @@ export async function saveSupabaseFinanceData({ userId, financeData, baseData, b
     if (commit.changes) {
         const changeRevision = toRevision(commit.changes.until_revision);
         if (commit.changes.requires_full_reload || changeRevision !== committedRevision) {
-            const fallback = await loadSupabaseFinanceData(userId, client);
+            const fallback = await loadSupabaseFinanceData(userId, client, teamId);
             if (!fallback.data || fallback.revision < committedRevision) {
                 throw new Error("FINANCE_COMMIT_RESPONSE_INVALID");
             }

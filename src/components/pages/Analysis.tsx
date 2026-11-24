@@ -40,6 +40,8 @@ export function PlanningPage() {
         handleToggleSimulatedIncome,
         handleToggleInheritedExpense,
         handleToggleWishlistSelection,
+        selectedMonthBudgetItems,
+        handleToggleBudgetSimulation,
     } = usePlanningPage();
 
     return (
@@ -94,6 +96,8 @@ export function PlanningPage() {
                     onToggleSimulatedIncome={handleToggleSimulatedIncome}
                     onToggleInheritedExpense={handleToggleInheritedExpense}
                     onToggleWishlistSelection={handleToggleWishlistSelection}
+                    budgetItems={selectedMonthBudgetItems}
+                    onToggleBudget={handleToggleBudgetSimulation}
                 />
             </div>
         </div>

@@ -8,6 +8,7 @@ export * from "./domainConstants";
 import { syncCreditCardInvoices } from "./syncCreditCardInvoices";
 import { normalizePlanningBudgets } from "./planningBudgets";
 import { parseRemovedInstallments } from "./removedInstallments";
+import { isTeamSettlement, parseTeamExpense } from "./teamExpense";
 import { parseRecurrenceRule } from "./recurrence/rule";
 import { getDefaultCategoryIconName, normalizeCategoryIconName } from "../../lib/categoryIcons";
 import { formatLocalDateInput, getLocalTodayDate, parseAppDate } from "../../lib/localDate";
@@ -57,7 +58,11 @@ interface NormalizeFinanceOptions {
     defaultBeneficiaryName?: string;
     defaultBeneficiaryAvatarImage?: string | null;
     sharedBeneficiaries?: Beneficiary[];
+    /** Conjunto de categorias criado num livro vazio. */
+    categorySeed?: CategorySeedKind;
 }
+
+export type CategorySeedKind = "personal" | "team";
 
 interface WalletInput extends Partial<Wallet> {
     id: string;
@@ -139,6 +144,7 @@ export const DEFAULT_PLANNING_STATE: PlanningState = {
     disabledIncomeIds: [],
     disabledSimulatedExpenseIds: [],
     disabledSimulatedIncomeIds: [],
+    simulatedBudgetMonths: [],
     invoiceMonthOverrides: {},
     timelineSelectedWalletIds: [],
     timelineSelectedCreditCardIds: [],
@@ -172,6 +178,37 @@ const SYSTEM_CATEGORY_SEED: SystemCategorySeed[] = [
     { id: "system-category-expense-food-delivery", parentId: "system-category-expense-food", name: "Delivery", type: "expense", icon: "bike", color: "#22C55E" },
     { id: "system-category-income-salary", parentId: null, name: "Salário", type: "income", icon: "briefcase", color: "#0EA5E9" },
     { id: "system-category-income-investments", parentId: null, name: "Investimentos", type: "income", icon: "chart-line", color: "#14B8A6" },
+    { id: DEFAULT_INCOME_CATEGORY_ID, parentId: null, name: "Outras receitas", type: "income", icon: "coins", color: "#22C55E" },
+];
+
+// Equipes costumam ser empresas: plano de contas enxuto de receitas e despesas operacionais.
+// Fatura do cartão, "Sem categoria" e "Outras receitas" mantêm os ids de sistema.
+const TEAM_CATEGORY_SEED: SystemCategorySeed[] = [
+    { id: "team-category-expense-payroll", parentId: null, name: "Folha de pagamento", type: "expense", icon: "users", color: "#3B82F6" },
+    { id: "team-category-expense-payroll-salaries", parentId: "team-category-expense-payroll", name: "Salários e pró-labore", type: "expense", icon: "banknote", color: "#60A5FA" },
+    { id: "team-category-expense-payroll-benefits", parentId: "team-category-expense-payroll", name: "Benefícios", type: "expense", icon: "heart-handshake", color: "#93C5FD" },
+    { id: "team-category-expense-payroll-charges", parentId: "team-category-expense-payroll", name: "Encargos trabalhistas", type: "expense", icon: "file-text", color: "#2563EB" },
+    { id: "team-category-expense-taxes", parentId: null, name: "Impostos e taxas", type: "expense", icon: "landmark", color: "#EF4444" },
+    { id: "team-category-expense-office", parentId: null, name: "Estrutura e escritório", type: "expense", icon: "building-2", color: "#F59E0B" },
+    { id: "team-category-expense-office-rent", parentId: "team-category-expense-office", name: "Aluguel e condomínio", type: "expense", icon: "house", color: "#FBBF24" },
+    { id: "team-category-expense-office-utilities", parentId: "team-category-expense-office", name: "Energia, água e internet", type: "expense", icon: "zap", color: "#FCD34D" },
+    { id: "team-category-expense-office-supplies", parentId: "team-category-expense-office", name: "Material de escritório", type: "expense", icon: "paperclip", color: "#D97706" },
+    { id: "team-category-expense-software", parentId: null, name: "Software e tecnologia", type: "expense", icon: "laptop", color: "#8B5CF6" },
+    { id: "team-category-expense-marketing", parentId: null, name: "Marketing e vendas", type: "expense", icon: "megaphone", color: "#EC4899" },
+    { id: "team-category-expense-services", parentId: null, name: "Serviços de terceiros", type: "expense", icon: "handshake", color: "#14B8A6" },
+    { id: "team-category-expense-services-accounting", parentId: "team-category-expense-services", name: "Contabilidade e jurídico", type: "expense", icon: "scale", color: "#2DD4BF" },
+    { id: "team-category-expense-suppliers", parentId: null, name: "Fornecedores e estoque", type: "expense", icon: "package", color: "#F97316" },
+    { id: "team-category-expense-logistics", parentId: null, name: "Logística e frete", type: "expense", icon: "truck", color: "#84CC16" },
+    { id: "team-category-expense-travel", parentId: null, name: "Viagens e deslocamento", type: "expense", icon: "plane", color: "#0EA5E9" },
+    { id: "team-category-expense-bank-fees", parentId: null, name: "Tarifas bancárias e juros", type: "expense", icon: "percent", color: "#64748B" },
+    { id: "team-category-expense-training", parentId: null, name: "Treinamento", type: "expense", icon: "graduation-cap", color: "#A855F7" },
+    { id: SYSTEM_EXPENSE_CARD_INVOICE_CATEGORY_ID, parentId: null, name: "Fatura do Cartão", type: "expense", icon: "credit-card", color: "#06B6D4" },
+    { id: DEFAULT_EXPENSE_CATEGORY_ID, parentId: null, name: "Sem categoria", type: "expense", icon: "tag", color: "#6B7280" },
+    { id: "team-category-income-sales", parentId: null, name: "Vendas de produtos", type: "income", icon: "shopping-bag", color: "#22C55E" },
+    { id: "team-category-income-services", parentId: null, name: "Prestação de serviços", type: "income", icon: "briefcase", color: "#0EA5E9" },
+    { id: "team-category-income-recurring", parentId: null, name: "Assinaturas e contratos", type: "income", icon: "repeat", color: "#8B5CF6" },
+    { id: "team-category-income-financial", parentId: null, name: "Rendimentos financeiros", type: "income", icon: "chart-line", color: "#14B8A6" },
+    { id: "team-category-income-capital", parentId: null, name: "Aporte de sócios", type: "income", icon: "piggy-bank", color: "#F59E0B" },
     { id: DEFAULT_INCOME_CATEGORY_ID, parentId: null, name: "Outras receitas", type: "income", icon: "coins", color: "#22C55E" },
 ];
 
@@ -641,6 +678,7 @@ export function normalizeTransactionGroup(group: Partial<TransactionGroup> & { i
                 ? Number(group.installmentCount)
                 : null,
         ...parseRemovedInstallments(group.removedInstallments),
+        ...parseTeamExpense(group.teamExpense),
         recurrenceRule: parseRecurrenceRule(group.recurrenceRule),
         recurrenceEndDate: asNullableString(group.recurrenceEndDate, null),
         sourceWalletId,
@@ -924,6 +962,13 @@ export function normalizePlanningState(rawPlanning: unknown): PlanningState {
                 ),
             ),
         ).sort((a, b) => a.localeCompare(b)),
+        simulatedBudgetMonths: Array.from(
+            new Set(
+                asArray(rawPlanning.simulatedBudgetMonths).filter(
+                    (value): value is string => typeof value === "string" && value.trim().length > 0,
+                ),
+            ),
+        ).sort((a, b) => a.localeCompare(b)),
         invoiceMonthOverrides: normalizeInvoiceMonthOverrides(rawPlanning.invoiceMonthOverrides),
         timelineSelectedWalletIds: Array.from(
             new Set(
@@ -1167,6 +1212,8 @@ export function calculateFinanceSummary(wallets: Wallet[], transactionGroups: Tr
             if ((transaction.paymentForInvoiceId || parseInvoicePaymentNote(transaction.notes)) && !resolveTransactionSourceWalletId(transaction, group)) return acc;
 
             if (group.type === "income") {
+                // Acerto de equipe devolve dinheiro adiantado: entra no saldo, não é renda.
+                if (isTeamSettlement(group)) return acc;
                 acc.receitas += Math.abs(transaction.amount);
             } else if (group.type === "expense") {
                 if (resolveTransactionCreditCardId(transaction, group) || transaction.invoiceId) {
@@ -1253,7 +1300,7 @@ export function toTransactionList(
 
         const invoicePaymentMeta = parseInvoicePaymentNote(transaction.notes);
         const paymentForInvoiceId = transaction.paymentForInvoiceId ?? invoicePaymentMeta?.invoiceId ?? null;
-        const systemKind = paymentForInvoiceId ? "invoice_payment" : null;
+        const systemKind = paymentForInvoiceId ? "invoice_payment" : isTeamSettlement(group) ? "team_settlement" : null;
         const transactionEntity: TransactionEntity = {
             id: transaction.id,
             groupId: transaction.groupId,
@@ -1330,8 +1377,8 @@ export function createFinanceSnapshot(
     };
 }
 
-function buildSeedCategories(now: string): Category[] {
-    return SYSTEM_CATEGORY_SEED.map((item, index) =>
+function buildSeedCategories(now: string, seedKind: CategorySeedKind = "personal"): Category[] {
+    return (seedKind === "team" ? TEAM_CATEGORY_SEED : SYSTEM_CATEGORY_SEED).map((item, index) =>
         normalizeCategory({
             id: item.id,
             userId: null,
@@ -1364,11 +1411,11 @@ function buildInvoicePaymentCategory(now: string): Category {
     });
 }
 
-function normalizeSeedCategoryFlags(categoriesById: Map<string, Category>, now: string): boolean {
+function normalizeSeedCategoryFlags(categoriesById: Map<string, Category>, now: string, seedKind?: CategorySeedKind): boolean {
     let changed = false;
 
     if (categoriesById.size === 0) {
-        buildSeedCategories(now).forEach((category) => {
+        buildSeedCategories(now, seedKind).forEach((category) => {
             categoriesById.set(category.id, category);
         });
         return true;
@@ -1943,7 +1990,7 @@ export function normalizeFinanceSnapshot(rawFinance: unknown, userId: string | n
         categoriesById.set(normalizedCategory.id, normalizedCategory);
     });
 
-    if (normalizeSeedCategoryFlags(categoriesById, now)) {
+    if (normalizeSeedCategoryFlags(categoriesById, now, options.categorySeed)) {
         changed = true;
     }
 
@@ -2114,6 +2161,7 @@ export function normalizeFinanceSnapshot(rawFinance: unknown, userId: string | n
                 totalAmount: Math.abs(asNumber(rawGroup.totalAmount, 0)),
                 installmentCount: asNumber(rawGroup.installmentCount, NaN),
                 ...parseRemovedInstallments(rawGroup.removedInstallments),
+                ...parseTeamExpense(rawGroup.teamExpense),
                 recurrenceRule: parseRecurrenceRule(rawGroup.recurrenceRule),
                 recurrenceEndDate: asNullableString(rawGroup.recurrenceEndDate, null),
                 sourceWalletId: asNullableString(rawGroup.sourceWalletId, null),

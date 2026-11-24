@@ -91,11 +91,15 @@ export function TransactionFormFields({ activeTab, form, transaction, details, i
             <section className="flex flex-col gap-3">
                 <div className="grid gap-3 md:grid-cols-2">
                     <MultiSelectCombobox hideLabel leadingIcon={<TransactionFieldIcon icon={Tags} />} triggerClassName={FIELD_ICON_TRIGGER_CLASS} label="Tags" values={form.selectedTagIds} placeholder="Nenhuma tag selecionada" emptyMessage="Nenhuma tag cadastrada." options={tagOptions} onChange={form.setSelectedTagIds} renderOptionContent={(option) => <TagOptionContent option={option} />} />
-                    <TransactionModeField recurrenceCountInput={form.recurrenceCountInput} onRecurrenceCountChange={form.setRecurrenceCountInput} mode={form.transactionMode} installmentCountInput={form.installmentCountInput} onModeChange={form.setTransactionMode} onInstallmentCountChange={form.setInstallmentCountInput} hideInstallmentCount={form.isInstallmentEdit} disabled={form.isInvoicePaymentEdit || form.isTransfer || disabled} />
+                    <TransactionModeField recurrenceCountInput={form.recurrenceCountInput} onRecurrenceCountChange={form.setRecurrenceCountInput} mode={form.transactionMode} installmentCountInput={form.installmentCountInput} onModeChange={form.setTransactionMode} onInstallmentCountChange={form.setInstallmentCountInput} hideInstallmentCount={form.isInstallmentEdit} disabled={form.isInvoicePaymentEdit || form.isTransfer || form.isInstallmentEdit || disabled} />
                 </div>
                 {installmentPlan ? <InstallmentPreviewPanel plan={installmentPlan} className="max-h-96 min-[1280px]:hidden" /> : null}
-                <div className="h-px bg-white/[0.06]" />
-                <TransactionDetailsField details={details} disabled={detailsDisabled} />
+                {form.isSeriesEdit ? null : (
+                    <>
+                        <div className="h-px bg-white/[0.06]" />
+                        <TransactionDetailsField details={details} disabled={detailsDisabled} />
+                    </>
+                )}
             </section>
         );
     }
@@ -103,8 +107,8 @@ export function TransactionFormFields({ activeTab, form, transaction, details, i
     return (
         <section className="flex flex-col gap-3">
             <input className="rounded-xl border border-white/[0.1] bg-black/35 px-3 py-2 text-2xl text-white outline-none transition-colors placeholder:text-white/35 focus:border-white/[0.24] disabled:cursor-not-allowed disabled:opacity-65" inputMode="numeric" placeholder="R$ 0,00" value={form.amountInput} onChange={(event) => form.setAmountInput(event.target.value)} disabled={form.isInvoicePaymentEdit || disabled} />
-            {transaction && form.isInstallmentEdit && form.transactionMode === "installment" && <InstallmentAmountHint transactionId={transaction.id} amountInput={form.amountInput} scope={form.editScope} />}
-            <div className="grid grid-cols-1 gap-2 md:grid-cols-2"><StatusField status={form.status} onChange={form.setStatus} disabled={form.isInvoicePaymentEdit || disabled} /><DateField hideLabel value={form.date} onChange={form.setDate} onOffset={form.setDateOffset} disabled={disabled} /></div>
+            {transaction && form.isInstallmentEdit && !form.series && form.transactionMode === "installment" && <InstallmentAmountHint transactionId={transaction.id} amountInput={form.amountInput} scope={form.editScope} />}
+            {form.isSeriesEdit ? <DateField hideLabel value={form.date} onChange={form.setDate} onOffset={form.setDateOffset} disabled={disabled} /> : <div className="grid grid-cols-1 gap-2 md:grid-cols-2"><StatusField status={form.status} onChange={form.setStatus} disabled={form.isInvoicePaymentEdit || disabled} /><DateField hideLabel value={form.date} onChange={form.setDate} onOffset={form.setDateOffset} disabled={disabled} /></div>}
             <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
                 {form.isInvoicePaymentEdit ? <ReadOnlyField label="Carteira">{transaction?.isNonCashSettlement ? <span>Sem carteira</span> : walletOptions.find((option) => option.id === form.walletId) ? <WalletOptionContent option={walletOptions.find((option) => option.id === form.walletId)!} /> : <span>Carteira removida</span>}</ReadOnlyField> : <SingleSelectCombobox hideLabel label="Carteira" value={form.walletId} placeholder="Selecione uma carteira" emptyMessage="Nenhuma carteira encontrada." options={walletOptions} onChange={form.setWalletId} renderOptionContent={(option) => <WalletOptionContent option={option} />} disabled={disabled} />}
                 <SingleSelectCombobox hideLabel label="Beneficiário" value={form.beneficiaryId} placeholder="Selecione um beneficiário" emptyMessage="Nenhum beneficiário encontrado." options={beneficiaryOptions} onChange={form.setBeneficiaryId} renderOptionContent={(option) => <BeneficiaryOptionContent option={option} />} disabled={disabled} />
@@ -124,7 +128,7 @@ export function TransactionFormFields({ activeTab, form, transaction, details, i
                     disabled={disabled}
                 />
             )}
-            {form.isEditing && form.isSeriesTransaction && !form.isInvoicePaymentEdit ? <SingleSelectCombobox disableSearch compactTrigger label="Aplicar edição em" hideLabel leadingIcon={<Pencil size={14} className="shrink-0 text-white/55" />} value={form.editScope} placeholder="Selecione um escopo" emptyMessage="Nenhum escopo encontrado." options={EDIT_SCOPE_OPTIONS} onChange={(value) => form.setEditScope(value === "all" || value === "this_and_next" ? value : "single")} renderOptionContent={(option) => <EditScopeOptionContent option={option} />} renderSelectedContent={(option) => <span className="truncate">{option.label}</span>} disabled={disabled} /> : null}
+            {form.isEditing && form.isSeriesTransaction && !form.isInstallmentEdit && !form.isInvoicePaymentEdit ? <SingleSelectCombobox disableSearch compactTrigger label="Aplicar edição em" hideLabel leadingIcon={<Pencil size={14} className="shrink-0 text-white/55" />} value={form.editScope} placeholder="Selecione um escopo" emptyMessage="Nenhum escopo encontrado." options={EDIT_SCOPE_OPTIONS} onChange={(value) => form.setEditScope(value === "all" || value === "this_and_next" ? value : "single")} renderOptionContent={(option) => <EditScopeOptionContent option={option} />} renderSelectedContent={(option) => <span className="truncate">{option.label}</span>} disabled={disabled} /> : null}
         </section>
     );
 }

@@ -149,4 +149,43 @@ describe("transaction mode conversion", () => {
         expect(result.snapshot.creditCardInvoices.find((item) => item.id === selectedOpenInvoiceId)?.status).toBe("open");
         expect(result.snapshot.transactions.some((item) => item.invoiceId === dateBasedPaidInvoiceId)).toBe(false);
     });
+
+    it("turns a whole wallet installment plan into one charge with the remaining total", () => {
+        const group = fixtureGroup({ transactionMode: "installment", installmentCount: 3, totalAmount: 300 });
+        const transactions = [1, 2, 3].map((installmentNumber) => fixtureTransaction({
+            id: `tx-${installmentNumber}`, amount: 100, installmentNumber, scheduledDate: `2026-0${installmentNumber}-05`,
+            status: installmentNumber === 1 ? "paid" : "pending",
+        }));
+        const result = updateTransactionSeriesSnapshot({
+            snapshot: fixtureSnapshot([group], transactions),
+            transactionId: "tx-2",
+            draft: { ...editDraft("single"), value: 100, date: "2026-02-05" },
+            scope: "all",
+            createGroupId: () => "group-single",
+            now: "2026-01-01T12:00:00.000Z",
+        });
+
+        expect(result.snapshot.transactions.find((item) => item.id === "tx-1")).toMatchObject({ groupId: "group-test", status: "paid" });
+        expect(result.snapshot.transactions.find((item) => item.id === "tx-2")).toMatchObject({ groupId: "group-single", amount: 200 });
+        expect(result.snapshot.transactions.some((item) => item.id === "tx-3")).toBe(false);
+    });
+
+    it("converts posted card installments instead of treating them as history", () => {
+        const group = fixtureGroup({ transactionMode: "installment", installmentCount: 3, totalAmount: 300, creditCardId: fixtureCard.id, sourceWalletId: null });
+        const transactions = [1, 2, 3].map((installmentNumber) => fixtureTransaction({
+            id: `parcel-${installmentNumber}`, amount: 100, installmentNumber, scheduledDate: "2026-01-15",
+            invoiceId: `invoice-${fixtureCard.id}-2026-0${installmentNumber + 1}`, commitment: "posted",
+        }));
+        const result = updateTransactionSeriesSnapshot({
+            snapshot: fixtureSnapshot([group], transactions),
+            transactionId: "parcel-1",
+            draft: { value: 100, date: "2026-01-15", paymentMethod: "credit_card", creditCardId: fixtureCard.id,
+                invoiceId: `invoice-${fixtureCard.id}-2026-02`, status: "pending", transactionMode: "single", installmentCount: null },
+            scope: "all",
+            createGroupId: () => "group-single",
+            now: "2026-03-01T12:00:00.000Z",
+        });
+
+        expect(result.snapshot.transactions.map((item) => [item.id, item.groupId, item.amount])).toEqual([["parcel-1", "group-single", 300]]);
+    });
 });

@@ -7,6 +7,7 @@ import { LoadingPage, PageSkeletonScreen } from "./components/pages/Loading";
 import { FinanceProvider, useFinanceSession } from "./context/FinanceContext";
 import { ModalProvider } from "./context/ModalContext";
 import { AppPage, PageProvider, usePage } from "./context/PageContext";
+import { TeamProvider } from "./context/team/TeamContext";
 import "./lib/chart";
 import { initAppearance } from "./lib/appearance";
 import { initDemoMode } from "./lib/demoMode";
@@ -30,6 +31,7 @@ const RegistryPage = lazy(() => import("./components/pages/Registry").then((modu
 const SettingsPage = lazy(() => import("./components/pages/Settings").then((module) => ({ default: module.SettingsPage })));
 const TransactionsPage = lazy(() => import("./components/pages/TransactionsPage").then((module) => ({ default: module.TransactionsPage })));
 const MobileApp = lazy(() => import("./mobile/MobileApp").then((module) => ({ default: module.MobileApp })));
+const TeamPage = lazy(() => import("./components/pages/Team").then((module) => ({ default: module.TeamPage })));
 const WishlistPage = lazy(() => import("./components/pages/Wishlist").then((module) => ({ default: module.WishlistPage })));
 
 // Shared by the desktop shell and the mobile app (which overrides some paths with its own pages).
@@ -68,6 +70,10 @@ const pageRoutes = (
         <Route path="/registry/beneficiarios" element={<RegistryPage />} />
         <Route path="/registry/beneficiaries" element={<RegistryPage />} />
         <Route path="/registry/tags" element={<RegistryPage />} />
+        <Route path="/equipe" element={<TeamPage />} />
+        <Route path="/team" element={<TeamPage />} />
+        <Route path="/equipe/:section" element={<TeamPage />} />
+        <Route path="/team/:section" element={<TeamPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/configuracoes" element={<SettingsPage />} />
         <Route path="*" element={<Navigate to="/home" replace />} />
@@ -78,11 +84,13 @@ function App() {
     return (
         <BrowserRouter>
             <FinanceProvider>
-                <PageProvider>
-                    <ModalProvider>
-                        <MainApp />
-                    </ModalProvider>
-                </PageProvider>
+                <TeamProvider>
+                    <PageProvider>
+                        <ModalProvider>
+                            <MainApp />
+                        </ModalProvider>
+                    </PageProvider>
+                </TeamProvider>
             </FinanceProvider>
         </BrowserRouter>
     );
@@ -106,6 +114,10 @@ const PAGE_TITLES: Record<AppPage, string> = {
     statement: "Fatura",
     registry: "Cadastros",
     wishlist: "Lista de desejos",
+    team: "Equipe",
+    teamTransactions: "Transações da equipe",
+    teamBudgets: "Orçamentos da equipe",
+    teamMembers: "Membros da equipe",
 };
 
 function MainApp() {

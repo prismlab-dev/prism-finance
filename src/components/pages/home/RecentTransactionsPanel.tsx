@@ -1,15 +1,15 @@
 import { useMemo } from "react";
-import type { Transaction } from "../../../context/FinanceContext";
+import { type Transaction, useFinanceTransactionGroups } from "../../../context/FinanceContext";
 import { parseAppDate } from "../../../lib/localDate";
 import { transactionSettlementDate } from "../../../lib/transactionSettlementDate";
-import { MiniTransactionBlock } from "./SmTransactionBlock";
+import { type InstallmentSummary, MiniTransactionBlock } from "./SmTransactionBlock";
 import { usePage } from "../../../context/PageContext";
 
 interface RecentTransactionsPanelProps {
     transactions: Transaction[];
 }
 
-function dayLabel(date: Date | null) {
+export function dayLabel(date: Date | null) {
     if (!date) return "Sem data";
     const today = new Date();
     const startOf = (value: Date) => new Date(value.getFullYear(), value.getMonth(), value.getDate()).getTime();
@@ -21,6 +21,11 @@ function dayLabel(date: Date | null) {
 
 export function RecentTransactionsPanel({ transactions }: RecentTransactionsPanelProps) {
     const { goToPage } = usePage();
+    const transactionGroups = useFinanceTransactionGroups();
+    const installmentGroups = useMemo(
+        () => new Map(transactionGroups.filter((group) => group.transactionMode === "installment" && (group.installmentCount ?? 0) >= 2).map((group) => [group.id, group])),
+        [transactionGroups],
+    );
     const recentPaidTransactions = useMemo(() => {
         const now = Date.now();
         // Wallet: paid movements. Card: purchases already made (not projected/future), whatever the invoice status.
@@ -35,20 +40,30 @@ export function RecentTransactionsPanel({ transactions }: RecentTransactionsPane
                 return !transaction.isProjected && transaction.status !== "cancelled" && transaction.status !== "skipped" && !!date && date.getTime() <= now;
             })
             .sort((a, b) => (movementDate(b)?.getTime() ?? 0) - (movementDate(a)?.getTime() ?? 0))
+            // Compra parcelada vira uma linha só, na parcela mais recente (a lista já está ordenada).
+            .filter((transaction, index, list) => {
+                const group = installmentGroups.get(transaction.groupId);
+                return !group || list.findIndex((item) => item.groupId === transaction.groupId) === index;
+            })
             .slice(0, 6)
             .map((transaction) => ({ transaction, date: movementDate(transaction) }));
-    }, [transactions]);
+    }, [transactions, installmentGroups]);
 
     const groups = useMemo(() => {
-        const result: { label: string; items: Transaction[] }[] = [];
+        const result: { label: string; items: { transaction: Transaction; installment?: InstallmentSummary }[] }[] = [];
         for (const { transaction, date } of recentPaidTransactions) {
             const label = dayLabel(date);
+            const group = installmentGroups.get(transaction.groupId);
+            const item = {
+                transaction,
+                installment: group && transaction.installmentNumber ? { number: transaction.installmentNumber, count: group.installmentCount ?? 0, total: group.totalAmount } : undefined,
+            };
             const last = result[result.length - 1];
-            if (last?.label === label) last.items.push(transaction);
-            else result.push({ label, items: [transaction] });
+            if (last?.label === label) last.items.push(item);
+            else result.push({ label, items: [item] });
         }
         return result;
-    }, [recentPaidTransactions]);
+    }, [recentPaidTransactions, installmentGroups]);
 
     return (
         <section className="rounded-2xl border border-white/[0.08] bg-surface p-4">
@@ -77,8 +92,8 @@ export function RecentTransactionsPanel({ transactions }: RecentTransactionsPane
                                 />
                                 <p className={`pl-2 text-sm first-letter:uppercase ${index === 0 ? "font-medium text-white" : "text-neutral-400"}`}>{group.label}</p>
                                 <div className={`mt-1 ${isLast ? "" : "pb-4"}`}>
-                                    {group.items.map((transaction) => (
-                                        <MiniTransactionBlock key={transaction.id} transaction={transaction} />
+                                    {group.items.map(({ transaction, installment }) => (
+                                        <MiniTransactionBlock key={installment ? transaction.groupId : transaction.id} transaction={transaction} installment={installment} />
                                     ))}
                                 </div>
                             </li>

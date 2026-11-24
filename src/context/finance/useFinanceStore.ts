@@ -58,6 +58,7 @@ import {
     resolveCreditCardInvoiceStatus,
     SYSTEM_EXPENSE_CARD_INVOICE_CATEGORY_ID,
 } from "../financeTypes";
+import type { CategorySeedKind } from "./financeCore";
 import type {
     BulkUpdateTransactionsDraft,
     FinanceStoreValue,
@@ -153,6 +154,7 @@ function prepareFinanceSnapshot(params: {
     userId: string;
     profile: UserProfileData;
     sharedBeneficiaries?: Beneficiary[];
+    categorySeed?: CategorySeedKind;
 }): PreparedFinanceSnapshot {
     const rawFavoriteWalletId = params.financeSource?.favoriteWalletId;
     const source = params.financeSource;
@@ -164,6 +166,7 @@ function prepareFinanceSnapshot(params: {
         defaultBeneficiaryName: params.profile.displayName,
         defaultBeneficiaryAvatarImage: params.profile.photoURL,
         sharedBeneficiaries: params.sharedBeneficiaries ?? [],
+        categorySeed: params.categorySeed,
     }).snapshot;
     const favoriteWalletId = resolveFavoriteWalletId(rawFavoriteWalletId, snapshot.wallets);
     if (!source) return { snapshot, favoriteWalletId, changed: true };
@@ -207,8 +210,21 @@ function normalizeSeriesScope(scope: TransactionSeriesScope | null | undefined):
     return "single";
 }
 
-export function useFinanceStore(): FinanceStoreValue {
-    const { user, loading: authLoading, profileVersion } = useAuthListener();
+export function useFinanceStore(teamId?: string): FinanceStoreValue {
+    const { user: authUser, loading: authLoading, profileVersion } = useAuthListener();
+    // No livro da equipe o dono é a equipe: uid vira o id dela, e com ele as chaves
+    // de cache local, fila pendente, abas e Realtime ficam separadas das pessoais.
+    const user = useMemo(() => (authUser && teamId ? { ...authUser, uid: teamId } : authUser), [authUser, teamId]);
+    const categorySeed: CategorySeedKind = teamId ? "team" : "personal";
+    const loadFinanceData = useCallback((userId: string) => loadSupabaseFinanceData(userId, undefined, teamId), [teamId]);
+    const saveFinanceData = useCallback(
+        (params: Parameters<typeof saveSupabaseFinanceData>[0]) => saveSupabaseFinanceData({ ...params, teamId }),
+        [teamId],
+    );
+    const loadCurrentFamily = useCallback(
+        () => (teamId ? Promise.resolve({ family: null, sharedWishlists: [] }) : loadCurrentFamilyContext()),
+        [teamId],
+    );
 
     const [profile, setProfile] = useState<UserProfileData | null>(null);
     const [family, setFamily] = useState<FamilySummary | null>(null);
@@ -394,7 +410,7 @@ export function useFinanceStore(): FinanceStoreValue {
 
     const applySupabaseFinanceData = useCallback(
         (params: { financeData: SupabaseFinanceData | null; revision: number; profile: UserProfileData; trigger: string }) => {
-            const preparedFinance = prepareFinanceSnapshot({
+            const preparedFinance = prepareFinanceSnapshot({ categorySeed,
                 financeSource: params.financeData,
                 userId: user?.uid ?? "",
                 profile: params.profile,
@@ -450,7 +466,7 @@ export function useFinanceStore(): FinanceStoreValue {
                 return mergedData;
             }
 
-            const preparedFinance = prepareFinanceSnapshot({
+            const preparedFinance = prepareFinanceSnapshot({ categorySeed,
                 financeSource: mergedData,
                 userId: user?.uid ?? "",
                 profile: resolvedProfile,
@@ -468,7 +484,7 @@ export function useFinanceStore(): FinanceStoreValue {
                 return;
             }
 
-            const preparedFinance = prepareFinanceSnapshot({
+            const preparedFinance = prepareFinanceSnapshot({ categorySeed,
                 financeSource: financeData,
                 userId: user?.uid ?? "",
                 profile: resolvedProfile,
@@ -489,7 +505,7 @@ export function useFinanceStore(): FinanceStoreValue {
     const backupPendingData = useCallback(async (financeData: SupabaseFinanceData) => {
         if (!user) throw new Error("Entre na sua conta para salvar a cópia local.");
         const resolvedProfile = profileRef.current ?? buildUserProfileData(user);
-        const prepared = prepareFinanceSnapshot({ financeSource: financeData, userId: user.uid, profile: resolvedProfile });
+        const prepared = prepareFinanceSnapshot({ categorySeed, financeSource: financeData, userId: user.uid, profile: resolvedProfile });
         const backup = { uid: user.uid, finance: prepared.snapshot, favoriteWalletId: prepared.favoriteWalletId };
         await saveLocalFinanceBackup({ ...backup, trigger: "before-sync-recovery" });
         downloadFinanceBackupFile(buildFinanceBackupFile(backup), "prism-alteracoes-nao-sincronizadas");
@@ -498,8 +514,8 @@ export function useFinanceStore(): FinanceStoreValue {
     const financeSync = useFinanceSyncQueue({
         userId: user?.uid ?? null,
         clientId: financeClientId,
-        saveFinanceData: saveSupabaseFinanceData,
-        loadFinanceData: loadSupabaseFinanceData,
+        saveFinanceData,
+        loadFinanceData,
         mergeFinanceData: mergeAndPrepareFinanceData,
         onSyncAccepted: applyConfirmedRevision,
         onConflictMerged: applyConflictMergedData,
@@ -520,10 +536,10 @@ export function useFinanceStore(): FinanceStoreValue {
                 return;
             }
 
-            const familyContext = await loadCurrentFamilyContext();
+            const familyContext = await loadCurrentFamily();
             setFamilyState(familyContext.family, familyContext.sharedWishlists);
         },
-        [setFamilyState, user],
+        [loadCurrentFamily, setFamilyState, user],
     );
 
     useEffect(() => {
@@ -573,16 +589,16 @@ export function useFinanceStore(): FinanceStoreValue {
                 if (isActive) {
                     setProfile(profile);
                 }
-                const supabaseFinance = await loadSupabaseFinanceData(user.uid);
+                const supabaseFinance = await loadFinanceData(user.uid);
                 const remoteAcknowledgedData = supabaseFinance.data ?? createEmptySupabaseFinanceData();
                 const financeSource = pendingSyncFinance ?? supabaseFinance.data;
-                const preparedFinance = prepareFinanceSnapshot({
+                const preparedFinance = prepareFinanceSnapshot({ categorySeed,
                     financeSource,
                     userId: user.uid,
                     profile,
                 });
                 const localSnapshot = applyLocalPlanningPreferences(preparedFinance.snapshot, user.uid);
-                const familyContext = await loadCurrentFamilyContext().catch((error) => {
+                const familyContext = await loadCurrentFamily().catch((error) => {
                     console.error("Failed to load family data:", error);
                     return { family: null, sharedWishlists: [] };
                 });
@@ -611,7 +627,7 @@ export function useFinanceStore(): FinanceStoreValue {
                 console.error("Failed to load finance data:", error);
                 if (isActive) {
                     setProfile(profile);
-                    const fallback = prepareFinanceSnapshot({
+                    const fallback = prepareFinanceSnapshot({ categorySeed,
                         financeSource: pendingSyncFinance,
                         userId: user.uid,
                         profile,
@@ -632,7 +648,7 @@ export function useFinanceStore(): FinanceStoreValue {
         return () => {
             isActive = false;
         };
-    }, [enqueueFinanceSync, getPendingSyncData, pendingSyncHydratedUserId, profileVersion, refreshFamilyState, retryFinanceSync, saveLocalSnapshotBackup, setFamilyState, setSnapshotState, user]);
+    }, [enqueueFinanceSync, getPendingSyncData, loadCurrentFamily, loadFinanceData, pendingSyncHydratedUserId, profileVersion, refreshFamilyState, retryFinanceSync, saveLocalSnapshotBackup, setFamilyState, setSnapshotState, user]);
 
     const refreshFromConfirmedRevision = useCallback(
         async (revision: number, trigger: string, updatedBy: string | null) => {
@@ -653,10 +669,10 @@ export function useFinanceStore(): FinanceStoreValue {
             try {
                 const acknowledgedData = lastAcknowledgedDataRef.current;
                 const incremental = acknowledgedData
-                    ? await loadSupabaseFinanceIncrementally(acknowledgedData, currentRevisionRef.current)
+                    ? await loadSupabaseFinanceIncrementally(acknowledgedData, currentRevisionRef.current, teamId)
                     : null;
                 const loadedFinance = !incremental || incremental.requiresFullReload
-                    ? await loadSupabaseFinanceData(user.uid)
+                    ? await loadFinanceData(user.uid)
                     : { data: incremental.data, revision: incremental.revision, tombstones: [] };
                 if (loadedFinance.revision <= currentRevisionRef.current) {
                     return;
@@ -678,7 +694,7 @@ export function useFinanceStore(): FinanceStoreValue {
                 console.error("Failed to refresh finance data after revision update:", error);
             }
         },
-        [applySupabaseFinanceData, financeClientId, getPendingSyncData, hasPendingFinanceSync, retryFinanceSync, user],
+        [applySupabaseFinanceData, financeClientId, getPendingSyncData, hasPendingFinanceSync, loadFinanceData, retryFinanceSync, teamId, user],
     );
 
     useEffect(() => {

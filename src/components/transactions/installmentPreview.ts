@@ -16,6 +16,8 @@ export interface InstallmentPreviewRow {
     amount: number;
     ignored: boolean;
     manual: boolean;
+    /** Parcela paga, em fatura com pagamento ou ignorada: o valor não muda. */
+    locked: boolean;
 }
 
 export interface InstallmentPreview {
@@ -58,6 +60,7 @@ interface BuildInstallmentPreviewParams {
     startDate: string;
     showDay: boolean;
     overrides?: InstallmentOverrides;
+    lockedIndexes?: ReadonlySet<number>;
 }
 
 function toCents(value: number): number {
@@ -96,7 +99,7 @@ export function spreadInstallmentDifference(amount: number, countInput: string, 
     return next;
 }
 
-export function buildInstallmentPreview({ amount, countInput, ignoredCount = 0, startDate, showDay, overrides = NO_INSTALLMENT_OVERRIDES }: BuildInstallmentPreviewParams): InstallmentPreview {
+export function buildInstallmentPreview({ amount, countInput, ignoredCount = 0, startDate, showDay, overrides = NO_INSTALLMENT_OVERRIDES, lockedIndexes }: BuildInstallmentPreviewParams): InstallmentPreview {
     const count = parseCount(countInput);
     const empty: Omit<InstallmentPreview, "hint"> = {
         rows: [], hiddenCount: 0, count, ignoredCount: 0, amountGroups: [], lastDate: "", showDay,
@@ -115,7 +118,8 @@ export function buildInstallmentPreview({ amount, countInput, ignoredCount = 0, 
         date: addMonthsToLocalDate(startDate, index),
         amount: rowAmount,
         ignored: index < ignoredCount,
-        manual: hasAmount && Boolean(overrides[index]?.manual),
+        manual: hasAmount && Boolean(overrides[index]?.manual) && !lockedIndexes?.has(index),
+        locked: Boolean(lockedIndexes?.has(index)),
     }));
     const groups = new Map<number, number>();
     amounts.forEach((value) => groups.set(value, (groups.get(value) ?? 0) + 1));

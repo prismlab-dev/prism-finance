@@ -8,7 +8,14 @@ import { formatCurrencyBRL, getTransactionTypeMeta, resolveTransactionWallet } f
 
 const FALLBACK_COLOR = "#737373";
 
-export function MiniTransactionBlock({ transaction, showSign = true }: { transaction: Transaction; showSign?: boolean }) {
+/** Compra parcelada mostrada como um gasto só: valor total do grupo e a parcela mais recente. */
+export interface InstallmentSummary {
+    number: number;
+    count: number;
+    total: number;
+}
+
+export function MiniTransactionBlock({ transaction, showSign = true, installment }: { transaction: Transaction; showSign?: boolean; installment?: InstallmentSummary }) {
     const { openModal } = useModal();
     const wallets = useFinanceWallets();
     const creditCards = useFinanceCreditCards();
@@ -45,8 +52,18 @@ export function MiniTransactionBlock({ transaction, showSign = true }: { transac
                 </span>
             </span>
 
-            <span className={`shrink-0 text-sm font-semibold tabular-nums ${typeMeta.amountColorClass}`}>
-                {sign && `${sign} `}R$ {formatCurrencyBRL(transaction.value)}
+            <span className="shrink-0 text-right">
+                <span className={`block text-sm font-semibold tabular-nums ${typeMeta.amountColorClass}`}>
+                    {sign && `${sign} `}R$ {formatCurrencyBRL(transaction.value)}
+                </span>
+                {installment && (
+                    <span className="mt-1 flex items-center justify-end gap-1.5 text-xs tabular-nums text-neutral-500">
+                        <span className="rounded border border-white/[0.06] px-1 text-[10px] leading-4 text-neutral-500">
+                            {installment.number}/{installment.count}
+                        </span>
+                        <span>de R$ {formatCurrencyBRL(installment.total)}</span>
+                    </span>
+                )}
             </span>
         </button>
     );

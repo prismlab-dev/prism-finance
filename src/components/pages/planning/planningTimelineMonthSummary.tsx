@@ -26,7 +26,7 @@ export function buildPlanningTimelineMonthSummary(month: MonthProjection, compar
     const visibleIncome = compareMode ? month.activeIncome : month.originalIncome;
     const visibleIncomeCount = compareMode ? month.activeIncomeCount : month.originalIncomeCount;
     const visibleExpenseCount = compareMode ? month.inheritedItems.filter((item) => !item.isDisabled).length : month.inheritedItems.length;
-    const projectionItemCount = compareMode ? month.simulatedIncomeItems.length + month.simulatedExpenseItems.length + month.wishlistExpenseItems.length : 0;
+    const projectionItemCount = compareMode ? month.simulatedIncomeItems.length + month.simulatedExpenseItems.length + month.wishlistExpenseItems.length + month.budgetExpenseItems.length : 0;
     const projectionTotal = compareMode ? roundToCents(month.simulatedIncome - month.simulatedExpenses) : 0;
     const footerBalanceTone = getBalanceTone(visibleMonthBalance, compareMode ? month.currentIncome : month.originalIncome);
 

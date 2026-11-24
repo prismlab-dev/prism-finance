@@ -1,3 +1,4 @@
+import { useTeamBeneficiaryId } from "../../../context/team/TeamContext";
 import { Reorder } from "framer-motion";
 import { GripVertical } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -73,7 +74,8 @@ export function RegistryBeneficiariesSection() {
 }
 
 function BeneficiaryCard({ beneficiary, onEdit }: { beneficiary: Beneficiary; onEdit?: () => void }) {
-    const originLabel = beneficiary.source === "family_shared" ? "Membro da família" : beneficiary.isSelfProfile ? "Perfil" : (BENEFICIARY_TYPE_LABELS[beneficiary.type] ?? beneficiary.type);
+    const teamBeneficiaryId = useTeamBeneficiaryId();
+    const originLabel = beneficiary.source === "family_shared" ? "Membro da família" : beneficiary.isSelfProfile ? "Perfil" : beneficiary.id === teamBeneficiaryId ? "Equipe" : (BENEFICIARY_TYPE_LABELS[beneficiary.type] ?? beneficiary.type);
     const isMe = beneficiary.isSelfProfile && beneficiary.source === "personal";
 
     return (
@@ -88,7 +90,7 @@ function BeneficiaryCard({ beneficiary, onEdit }: { beneficiary: Beneficiary; on
                 disabled={!onEdit}
                 className="flex min-w-0 flex-1 items-center gap-3 rounded-lg px-1.5 py-1.5 text-left outline-none transition-colors enabled:hover:bg-white/[0.03] focus-visible:ring-2 focus-visible:ring-white/35"
             >
-                <BeneficiaryAvatar beneficiary={beneficiary} className="h-11 w-11 shrink-0 rounded-full" textClassName="text-base font-semibold text-white" />
+                <BeneficiaryAvatar beneficiary={beneficiary} className={`h-11 w-11 shrink-0 ${beneficiary.id === teamBeneficiaryId ? "rounded-xl" : "rounded-full"}`} textClassName="text-base font-semibold text-white" />
                 <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-2">
                         <span className="truncate font-medium text-white">{beneficiary.name}</span>

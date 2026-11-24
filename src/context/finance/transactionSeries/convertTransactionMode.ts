@@ -4,6 +4,7 @@ import { createTransactionSnapshot } from "../transactionCreation/createTransact
 import type { FinanceSnapshot, StoredTransaction, TransactionDraft, TransactionGroup } from "../domainTypes";
 import { isConsolidatedOccurrence, recurringOrdinal } from "../recurrence/updateRecurringSeries";
 import { resolveDraft } from "./draft";
+import { isEditableInScope, isSkippedSibling } from "./installmentScope";
 import { recalculateGroupTotals } from "./helpers";
 import type { TransactionSeriesUpdateResult, UpdateTransactionSeriesSnapshotParams } from "./updateTransactionSeriesSnapshot";
 
@@ -89,12 +90,21 @@ export function convertTransactionModeSnapshot(params: UpdateTransactionSeriesSn
         const ordinal = transactionOrdinal(transaction, transactionGroup);
         const inScope = scope === "single" ? transaction.id === selected.id : scope === "all" || ordinal >= selectedOrdinal;
         if (!inScope) return;
-        const protectedHistory = scope !== "single" && (
-            isConsolidatedOccurrence(transaction, transactionGroup, today) ||
-            (invoiceById.get(transaction.invoiceId ?? "")?.paidAmount ?? 0) > 0
-        );
+        // Posted card installments are still editable; only paid rows and paid invoices are history.
+        const protectedHistory = scope !== "single" && (sourceGroup.transactionMode === "installment"
+            ? !isEditableInScope(transaction, selected, scope, snapshot.creditCardInvoices)
+            : isConsolidatedOccurrence(transaction, transactionGroup, today) || (invoiceById.get(transaction.invoiceId ?? "")?.paidAmount ?? 0) > 0);
         if (!protectedHistory) removedIds.add(transaction.id);
     });
+
+    if (sourceGroup.transactionMode === "installment" && !removedIds.has(selected.id)) {
+        throw new Error("Esta parcela já foi paga ou está em uma fatura com pagamento e não pode mudar de tipo.");
+    }
+    // A whole purchase turned into one charge keeps its total, not the amount of one installment.
+    const convertedAmount = sourceGroup.transactionMode === "installment" && requestedMode === "single" && scope !== "single"
+        ? snapshot.transactions.reduce((cents, item) => removedIds.has(item.id) && !isSkippedSibling(item, selected, scope)
+            ? cents + Math.round((resolved.amount !== selected.amount ? resolved.amount : item.amount) * 100) : cents, 0) / 100
+        : resolved.amount;
 
     let remainingGroups = snapshot.transactionGroups.map((group) => {
         if (sourceGroup.transactionMode !== "recurring" || !sourceGroupIds.has(group.id) || !group.recurrenceRule) return group;
@@ -132,7 +142,7 @@ export function convertTransactionModeSnapshot(params: UpdateTransactionSeriesSn
         id: selected.id,
         groupId: targetGroupId,
         type: sourceGroup.type,
-        amount: resolved.amount,
+        amount: convertedAmount,
         scheduledDate: resolved.scheduledDate,
         status: resolved.status,
         description: resolved.title,

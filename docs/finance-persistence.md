@@ -110,3 +110,24 @@ npm run lint
 npm run build
 supabase test db
 ```
+
+## Finanças de equipe
+
+As finanças da equipe usam as mesmas tabelas das pessoais. A coluna `user_id` significa "dono do livro": um usuário ou uma equipe (`teams.id`). `finance_owners` substitui a FK para `auth.users` (migration `034`), então apagar a conta ou a equipe remove o livro em cascata, e FKs compostas, ledger, faturas e saldos continuam valendo sem regra duplicada.
+
+- `load_team_finance_snapshot(team_id)` e `load_team_finance_changes(team_id, …)`: qualquer papel da equipe.
+- `apply_team_finance_changes(team_id, expected_revision, changes, client_id)`: `owner`, `admin`, `member`; `viewer` recebe `TEAM_FINANCE_FORBIDDEN`.
+- As três chamam as RPCs pessoais com `request.jwt.claim.sub` apontando para a equipe, localmente na transação, e restauram a identidade antes de retornar.
+- Membros leem `finance_sync_state` da equipe para o Realtime; as demais tabelas da equipe só são lidas pelas RPCs.
+
+### Despesas da equipe (migration `035`)
+
+O livro próprio da equipe acima fica para contas, cartões, orçamento e categorias da equipe (fase seguinte). No MVP a equipe não tem dinheiro próprio: toda despesa é paga pelo cartão ou carteira **pessoal** de um membro.
+
+- O vínculo vive no próprio grupo pessoal, em `transaction_groups.team_expense`. O lado pessoal (saldo/fatura) e o da equipe saem da mesma linha, gravados atomicamente pela `apply_finance_changes`, sem cópia.
+  - Despesa: `{"kind":"expense","teamId","mode":"equal|percent|fixed|team","shares":[{"memberId","value"}]}`.
+  - Acerto recebido: `{"kind":"settlement","teamId","fromMemberId"}` numa receita do credor. Entra no saldo, mas não conta como receita (`systemKind = "team_settlement"`, fora de `calculateFinanceSummary` e dos relatórios).
+- O trigger `validate_team_expense` exige que pagador e membros da divisão sejam da equipe, que `percent` some 100, que `fixed` some o `total_amount` e que `team` não tenha partes. Ele só valida quando o vínculo, o total ou o tipo mudam.
+- `get_team_expenses(team_id)` é a única leitura da equipe. Devolve a projeção estreita (título, valor, data, status, pagador, divisão por ocorrência) e os saldos líquidos por membro, calculados no Postgres. Nunca devolve carteira, cartão, saldo, limite, fechamento ou vencimento. Quem já acertou a parte de cada despesa é só apresentação (`buildTeamShareStatus`): os acertos de um devedor a um credor quitam as partes mais antigas primeiro.
+- Exclusão: o pagador apaga a transação pessoal (some dos dois lados). Outro membro chama `remove_team_expense`, que grava em `team_expense_exclusions` e não toca no livro do pagador.
+- Receita da equipe (migration `041`): `team_expense.kind = "income"` numa receita pessoal de quem recebeu, com a mesma divisão. Os saldos se invertem: quem recebeu deve a parte de cada membro até confirmar o repasse (`paidAt` na parte).

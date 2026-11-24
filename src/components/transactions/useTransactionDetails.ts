@@ -10,6 +10,8 @@ interface UseTransactionDetailsOptions {
     transactionId: string;
     userId: string | null | undefined;
     loadExisting: boolean;
+    /** Anotação já preenchida numa transação nova (não carregada do banco). */
+    initialAnnotation?: string;
 }
 
 export interface TransactionDetailsController {
@@ -34,9 +36,9 @@ function formatLoadError(error: unknown): string {
     return "Não foi possível carregar os detalhes da transação.";
 }
 
-export function useTransactionDetails({ transactionId, userId, loadExisting }: UseTransactionDetailsOptions): TransactionDetailsController {
+export function useTransactionDetails({ transactionId, userId, loadExisting, initialAnnotation: prefilledAnnotation = "" }: UseTransactionDetailsOptions): TransactionDetailsController {
     const { materializeTransaction } = useFinanceActions();
-    const [annotation, setAnnotation] = useState("");
+    const [annotation, setAnnotation] = useState(prefilledAnnotation);
     const [initialAnnotation, setInitialAnnotation] = useState("");
     const [attachments, setAttachments] = useState<TransactionAttachment[]>([]);
     const [stagedFiles, setStagedFiles] = useState<File[]>([]);
@@ -46,7 +48,8 @@ export function useTransactionDetails({ transactionId, userId, loadExisting }: U
 
     useEffect(() => {
         let cancelled = false;
-        setAnnotation("");
+        // Transação nova pode chegar com a anotação preenchida (ex.: reembolso da equipe).
+        setAnnotation(loadExisting ? "" : prefilledAnnotation);
         setInitialAnnotation("");
         setAttachments([]);
         setStagedFiles([]);
@@ -84,7 +87,7 @@ export function useTransactionDetails({ transactionId, userId, loadExisting }: U
         return () => {
             cancelled = true;
         };
-    }, [loadExisting, transactionId, userId]);
+    }, [loadExisting, prefilledAnnotation, transactionId, userId]);
 
     const visibleAttachmentCount = useMemo(() => attachments.length + stagedFiles.length, [attachments.length, stagedFiles.length]);
 

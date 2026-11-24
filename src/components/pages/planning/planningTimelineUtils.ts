@@ -24,6 +24,7 @@ import {
     type SimulatedIncomeItem,
     type TimelineProjection,
     type WishlistProjectionItem,
+    type BudgetProjectionItem,
 } from "./planningTimelineTypes";
 
 const MONTH_KEY_FORMAT = "yyyy-MM";
@@ -373,6 +374,8 @@ export function buildTimelineProjection(params: {
     monthsToShow: number;
     pastMonthsToShow?: number;
     pinnedMonthKey?: string | null;
+    /** Folga do teto de cada orçamento simulado, por mês. */
+    budgetItemsByMonth?: Map<string, BudgetProjectionItem[]>;
 }): TimelineProjection {
     const currentMonth = getCurrentMonthKey();
     const safeMonthsToShow = TIMELINE_MONTH_OPTIONS.includes(params.monthsToShow as (typeof TIMELINE_MONTH_OPTIONS)[number]) ? params.monthsToShow : DEFAULT_TIMELINE_MONTHS;
@@ -451,6 +454,7 @@ export function buildTimelineProjection(params: {
                 isDisabled: disabledSimulatedExpenseIds.has(expense.id),
             }));
             const wishlistExpenseItems = wishlistSelectionsByMonth.get(monthKey) ?? [];
+            const budgetExpenseItems = params.budgetItemsByMonth?.get(monthKey) ?? [];
             const simulatedIncomeItems: SimulatedIncomeItem[] = (simulatedIncomesByMonth.get(monthKey) ?? []).map((income) => ({
                 id: income.id,
                 label: income.description.trim() || "Receita simulada",
@@ -477,7 +481,7 @@ export function buildTimelineProjection(params: {
             }
 
             const simulatedIncome = roundToCents(sumAmounts(simulatedIncomeItems.filter((item) => !item.isDisabled)));
-            const simulatedExpenses = roundToCents(sumAmounts(simulatedExpenseItems.filter((item) => !item.isDisabled)) + sumAmounts(wishlistExpenseItems));
+            const simulatedExpenses = roundToCents(sumAmounts(simulatedExpenseItems.filter((item) => !item.isDisabled)) + sumAmounts(wishlistExpenseItems) + sumAmounts(budgetExpenseItems));
             const currentIncome = roundToCents(reality.activeIncome + simulatedIncome);
             const originalMonthBalance = roundToCents(reality.originalIncome - reality.inheritedExpenses);
             const currentMonthBalance = roundToCents(currentIncome - reality.activeInheritedExpenses - simulatedExpenses);
@@ -499,6 +503,7 @@ export function buildTimelineProjection(params: {
                 simulatedExpenses,
                 simulatedExpenseItems,
                 wishlistExpenseItems,
+                budgetExpenseItems,
                 originalMonthBalance,
                 currentMonthBalance,
                 originalAccumulated,
@@ -519,6 +524,7 @@ export function mergePlanningUpdate(planning: PlanningState, update: Partial<Pla
         disabledIncomeIds: update.disabledIncomeIds ?? planning.disabledIncomeIds ?? [],
         disabledSimulatedExpenseIds: update.disabledSimulatedExpenseIds ?? planning.disabledSimulatedExpenseIds ?? [],
         disabledSimulatedIncomeIds: update.disabledSimulatedIncomeIds ?? planning.disabledSimulatedIncomeIds ?? [],
+        simulatedBudgetMonths: update.simulatedBudgetMonths ?? planning.simulatedBudgetMonths ?? [],
         invoiceMonthOverrides: update.invoiceMonthOverrides ?? planning.invoiceMonthOverrides ?? {},
         timelineSelectedWalletIds: update.timelineSelectedWalletIds ?? planning.timelineSelectedWalletIds ?? [],
         timelineSelectedCreditCardIds: update.timelineSelectedCreditCardIds ?? planning.timelineSelectedCreditCardIds ?? [],

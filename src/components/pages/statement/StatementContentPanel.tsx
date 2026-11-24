@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState, type MouseEvent, type ReactNode, Fragment } from "react";
-import { Banknote, CircleCheck, Clock, SkipForward, ChevronDown, ChevronsUpDown, ChevronUp, CreditCard as CreditCardIcon, Link, Repeat2 } from "lucide-react";
+import { isTeamSplitEntry } from "../../../context/finance/teamExpense";
+import { Banknote, CircleCheck, Clock, SkipForward, ChevronDown, ChevronsUpDown, ChevronUp, CreditCard as CreditCardIcon, Link, Repeat2, Users } from "lucide-react";
 import { type Beneficiary, type CreditCard, type CreditCardInvoice, type Transaction, useFinanceBeneficiaries, useFinanceCategories, useFinanceSession, useFinanceTransactionGroups } from "../../../context/FinanceContext";
 import { useModal } from "../../../context/ModalContext";
 import { normalizeComparisonText } from "../../../context/finance/helpers";
 import { getCategoryIconComponent } from "../../../lib/categoryIcons";
 import { useLocalPreferenceSection } from "../../../lib/localPreferences";
 import { getTransactionCategoryDisplayLabel } from "../../../lib/transactionCategory";
+import { useTeamBeneficiaryId } from "../../../context/team/TeamContext";
 import { BeneficiaryAvatar } from "../../common/BeneficiaryAvatar";
 import { TableColumnToggleBar } from "../../common/TableColumnToggleButton";
 import { ColumnResizeHandle } from "../../common/ColumnResizeHandle";
@@ -300,6 +302,7 @@ export function StatementContentPanel({
     highlightTransactionId = null,
 }: StatementContentPanelProps) {
     const beneficiaries = useFinanceBeneficiaries();
+    const teamBeneficiaryId = useTeamBeneficiaryId();
     const categories = useFinanceCategories();
     const categoryParentKeyMap = useMemo(() => buildCategoryParentKeyMap(categories), [categories]);
     const transactionGroups = useFinanceTransactionGroups();
@@ -778,6 +781,11 @@ export function StatementContentPanel({
                                                             <div className="flex min-w-0 max-w-full items-center gap-1.5">
                                                                 <span className="truncate">{transaction.description || "Sem descricao"}</span>
                                                                 <TransactionDetailIndicators flags={detailFlags} transactionId={transaction.id} />
+                                                                {isTeamSplitEntry(group?.teamExpense) && (
+                                                                    <span className="inline-flex shrink-0 text-sky-300" role="img" title="Despesa da equipe" aria-label="Despesa da equipe">
+                                                                        <Users size={13} />
+                                                                    </span>
+                                                                )}
                                                                 {isInvoicePayment && (
                                                                     <span className="inline-flex shrink-0 text-violet-300" role="img" title="Pagamento vinculado à fatura" aria-label="Pagamento vinculado à fatura">
                                                                         <Link size={13} />
@@ -832,6 +840,7 @@ export function StatementContentPanel({
                                                                         avatarImage: beneficiary?.avatarImage ?? null,
                                                                         avatarColor: beneficiary?.avatarColor ?? "#374151",
                                                                     }}
+                                                                        isTeam={Boolean(beneficiary) && beneficiary?.id === teamBeneficiaryId}
                                                                 />
                                                                 <span className="truncate">{(beneficiary?.name ?? transaction.beneficiary).trim().split(/\s+/)[0]}</span>
                                                             </div>

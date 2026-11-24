@@ -21,6 +21,7 @@ await database.exec(`
         aud text,
         role text,
         email text,
+        raw_user_meta_data jsonb,
         encrypted_password text,
         email_confirmed_at timestamptz,
         created_at timestamptz,
@@ -87,6 +88,14 @@ const migrationNames = [
     "030_clear_occurrence_on_series_exit.sql",
     "031_card_group_wallet_detach.sql",
     "032_removed_installments.sql",
+    "033_teams.sql",
+    "034_team_finance_owner.sql",
+    "035_team_expenses.sql",
+    "036_team_expense_category.sql",
+    "039_team_expense_share_paid.sql",
+    "040_team_expense_projection_payload.sql",
+    "041_team_income.sql",
+    "043_team_expense_rows_index.sql",
 ];
 
 let legacyRecurrences;
@@ -547,8 +556,122 @@ console.log(`RUNTIME OK family RLS/share, CAS, batched ${bulkSize}-row projectio
 await validateRecurrenceRuntime(database, expectDatabaseError);
 await validateRecurrenceSyncRuntime(database, projectRoot, expectDatabaseError);
 await validatePermanentDeletionRuntime(database, projectRoot);
+await validateTeams();
 await validateDeleteOwnAccount();
 await database.close();
+
+async function validateTeams() {
+    const ownerId = "10000000-0000-0000-0000-000000000001";
+    const memberId = "10000000-0000-0000-0000-000000000002";
+    const actAs = (userId) => database.query("select set_config('request.jwt.claim.sub', $1, false)", [userId]);
+    await database.exec("set role authenticated;");
+    await actAs(ownerId);
+    const teamId = (await database.query("select public.create_team('Runtime team') as id")).rows[0].id;
+    const invite = (await database.query("select public.create_team_invite($1::uuid, 'viewer') as invite", [teamId])).rows[0].invite;
+    await actAs(memberId);
+    await database.query("select public.accept_team_invite($1)", [invite.code]);
+    await expectDatabaseError(() => database.query("select public.create_team_invite($1::uuid, 'member')", [teamId]), "TEAM_ADMIN_REQUIRED");
+    await expectDatabaseError(() => database.query("update public.team_members set role = 'admin' where user_id = auth.uid()"), "permission denied");
+    await actAs(ownerId);
+    await database.query("select public.update_team_member_role($1::uuid, $2::uuid, 'admin')", [teamId, memberId]);
+    await actAs(memberId);
+    await expectDatabaseError(() => database.query("select public.remove_team_member($1::uuid, $2::uuid)", [teamId, ownerId]), "TEAM_OWNER_IS_PROTECTED");
+    const team = (await database.query("select public.get_current_team() as team")).rows[0].team;
+    if (team.current_user_role !== "admin" || team.members.length !== 2) {
+        throw new Error(`get_current_team returned unexpected data: ${JSON.stringify(team)}`);
+    }
+    console.log("RUNTIME OK teams invites, roles and owner protection");
+
+    const teamWallet = {
+        id: "team-wallet", name: "Caixa", icon: "wallet", type: "checking", balance: 0,
+        initial_balance: 0, currency: "BRL", color: "#000000", is_active: true,
+        include_in_main_totals: true, created_at: "2026-01-01T00:00:00Z",
+    };
+    const teamChanges = JSON.stringify({ protocol_version: 2, upserts: { wallets: [teamWallet] }, deletes: [] });
+    const teamCommit = (await database.query(
+        "select public.apply_team_finance_changes($1::uuid, 0, $2::jsonb, 'team-runtime') as commit", [teamId, teamChanges],
+    )).rows[0].commit;
+    const identity = (await database.query("select auth.uid()::text as uid")).rows[0].uid;
+    const teamSnapshot = (await database.query("select public.load_team_finance_snapshot($1::uuid) as snap", [teamId])).rows[0].snap;
+    const ownWallets = (await database.query("select public.load_finance_snapshot() as snap")).rows[0].snap.data?.wallets ?? [];
+    if (
+        Number(teamCommit?.revision) !== 1 || identity !== memberId ||
+        teamSnapshot.data?.wallets?.[0]?.id !== "team-wallet" || ownWallets.some((w) => w.id === "team-wallet")
+    ) {
+        throw new Error(`team finance scope leaked or failed: ${JSON.stringify({ teamCommit, identity })}`);
+    }
+    await actAs(ownerId);
+    await database.query("select public.update_team_member_role($1::uuid, $2::uuid, 'viewer')", [teamId, memberId]);
+    await actAs(memberId);
+    await database.query("select public.load_team_finance_changes($1::uuid, 0, 50)", [teamId]);
+    await expectDatabaseError(() => database.query(
+        "select public.apply_team_finance_changes($1::uuid, 1, $2::jsonb, 'viewer')", [teamId, teamChanges],
+    ), "TEAM_FINANCE_FORBIDDEN");
+    await actAs("10000000-0000-0000-0000-000000000003");
+    await expectDatabaseError(() => database.query("select public.load_team_finance_snapshot($1::uuid)", [teamId]), "TEAM_FINANCE_FORBIDDEN");
+    await expectDatabaseError(() => database.query("select * from public.wallets where user_id = $1::uuid", [teamId]).then((r) => {
+        if (r.rows.length) throw new Error("outsider read team wallets");
+        throw new Error("rls-ok");
+    }), "rls-ok");
+    await actAs(memberId);
+    console.log("RUNTIME OK team finance scope, role gating and identity restore");
+
+    await actAs(ownerId);
+    await database.query("select public.update_team_member_role($1::uuid, $2::uuid, 'member')", [teamId, memberId]);
+    const personalRevision = async () => Number((await database.query("select public.load_finance_snapshot() as snap")).rows[0].snap.revision);
+    const group = (id, type, amount, teamExpense) => ({
+        id, beneficiary_name: "Eu", category_name: "Equipe", title: id, type, transaction_mode: "single",
+        total_amount: amount, source_wallet_id: "team-pay-wallet", created_at: "2026-02-01T00:00:00Z", team_expense: teamExpense,
+    });
+    const tx = (id, amount) => ({ id, group_id: id, amount, scheduled_date: "2026-02-01", status: "paid", paid_at: "2026-02-01T12:00:00Z", created_at: "2026-02-01T12:00:00Z" });
+    const payWallet = { ...teamWallet, id: "team-pay-wallet", name: "Pessoal" };
+    const commitPersonal = async (groups, transactions) => database.query(
+        "select public.apply_finance_changes($1, $2::jsonb, 'team-expense-runtime') as commit",
+        [await personalRevision(), JSON.stringify({ protocol_version: 2, upserts: { wallets: [payWallet], transaction_groups: groups, transactions }, deletes: [] })],
+    );
+    // Dono paga 90 dividido igualmente entre os dois: o membro deve 45.
+    await commitPersonal([group("team-lunch", "expense", 90, { kind: "expense", teamId, mode: "equal", shares: [{ memberId: ownerId, value: 0 }, { memberId: memberId, value: 0 }] })], [tx("team-lunch", 90)]);
+    await expectDatabaseError(() => commitPersonal(
+        [group("team-bad", "expense", 50, { kind: "expense", teamId, mode: "fixed", shares: [{ memberId, value: 10 }] })], [tx("team-bad", 50)],
+    ), "TEAM_EXPENSE_SPLIT_MISMATCH");
+    await actAs(memberId);
+    // Membro paga 30 de software, custo 100% da equipe: não gera dívida.
+    await commitPersonal([group("team-saas", "expense", 30, { kind: "expense", teamId, mode: "team", shares: [] })], [tx("team-saas", 30)]);
+    let view = (await database.query("select public.get_team_expenses($1::uuid) as v", [teamId])).rows[0].v;
+    const net = (id) => Number(view.balances.find((b) => b.member_id === id)?.net ?? 0);
+    if (!view.expenses.every((e) => "category_name" in e) || view.expenses.length !== 2 || net(ownerId) !== 45 || net(memberId) !== -45 || JSON.stringify(view).includes("team-pay-wallet")) {
+        throw new Error(`team expense projection invalid: ${JSON.stringify(view)}`);
+    }
+    await actAs(ownerId);
+    // Dono recebe o pix de 45 do membro: acerto zera os saldos.
+    await commitPersonal([group("team-settle", "income", 45, { kind: "settlement", teamId, fromMemberId: memberId })], [tx("team-settle", 45)]);
+    view = (await database.query("select public.get_team_expenses($1::uuid) as v", [teamId])).rows[0].v;
+    if (net(ownerId) !== 0 || net(memberId) !== 0) throw new Error(`settlement did not zero balances: ${JSON.stringify(view.balances)}`);
+    // Parte confirmada dentro da despesa (paidAt) não gera dívida nem transação nova.
+    await commitPersonal([group("team-paid-share", "expense", 20, { kind: "expense", teamId, mode: "equal", shares: [{ memberId: ownerId, value: 0 }, { memberId, value: 0, paidAt: "2026-02-02T00:00:00Z" }] })], [tx("team-paid-share", 20)]);
+    view = (await database.query("select public.get_team_expenses($1::uuid) as v", [teamId])).rows[0].v;
+    const paidRow = view.expenses.find((e) => e.group_id === "team-paid-share");
+    if (net(ownerId) !== 0 || net(memberId) !== 0 || !paidRow?.shares.find((share) => share.memberId === memberId)?.paid || paidRow?.team_expense?.kind !== "expense") {
+        throw new Error(`paid share should not create debt: ${JSON.stringify({ balances: view.balances, paidRow })}`);
+    }
+    // Receita: o dono recebe 60 dividido igualmente e passa a dever 30 ao membro.
+    await commitPersonal([group("team-income", "income", 60, { kind: "income", teamId, mode: "equal", shares: [{ memberId: ownerId, value: 0 }, { memberId, value: 0 }] })], [tx("team-income", 60)]);
+    view = (await database.query("select public.get_team_expenses($1::uuid) as v", [teamId])).rows[0].v;
+    if (net(ownerId) !== -30 || net(memberId) !== 30) throw new Error(`team income balances invalid: ${JSON.stringify(view.balances)}`);
+    await expectDatabaseError(() => commitPersonal(
+        [group("team-income-bad", "expense", 10, { kind: "income", teamId, mode: "team", shares: [] })], [tx("team-income-bad", 10)],
+    ), "TEAM_EXPENSE_INVALID");
+    await actAs(memberId);
+    await database.query("select public.remove_team_expense($1::uuid, $2::uuid, 'team-lunch')", [teamId, ownerId]);
+    view = (await database.query("select public.get_team_expenses($1::uuid) as v", [teamId])).rows[0].v;
+    await actAs(ownerId);
+    const ownerStillHas = (await database.query("select count(*)::integer as c from public.transactions where user_id = auth.uid() and id = 'team-lunch'")).rows[0].c;
+    if (view.expenses.some((e) => e.group_id === "team-lunch") || ownerStillHas !== 1) {
+        throw new Error("removing from team must hide it for the team and keep it in the payer ledger");
+    }
+    await actAs(memberId);
+    console.log("RUNTIME OK team expenses: split validation, balances, settlement, removal and narrow projection");
+}
 
 async function validateDeleteOwnAccount() {
     const ownerId = "10000000-0000-0000-0000-000000000001";
@@ -563,10 +686,11 @@ async function validateDeleteOwnAccount() {
             (select count(*)::integer from public.transactions where user_id = $1) as transactions,
             (select count(*)::integer from public.ledger_entries where user_id = $1) as ledger,
             (select count(*)::integer from public.families where owner_user_id = $1) as families,
+            (select count(*)::integer from public.teams) as teams,
             (select count(*)::integer from auth.users where id = '10000000-0000-0000-0000-000000000002') as other_users
     `, [ownerId]);
     const row = leftovers.rows[0];
-    if (row.users || row.profiles || row.wallets || row.transactions || row.ledger || row.families || row.other_users !== 1) {
+    if (row.users || row.profiles || row.wallets || row.transactions || row.ledger || row.families || row.teams || row.other_users !== 1) {
         throw new Error(`delete_own_account left data behind: ${JSON.stringify(row)}`);
     }
     await database.exec("set role anon;");

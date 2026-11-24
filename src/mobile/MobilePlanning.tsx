@@ -182,6 +182,8 @@ export function MobilePlanning() {
                     onToggleSimulatedIncome={planning.handleToggleSimulatedIncome}
                     onToggleInheritedExpense={planning.handleToggleInheritedExpense}
                     onToggleWishlistSelection={planning.handleToggleWishlistSelection}
+                    budgetItems={planning.selectedMonthBudgetItems}
+                    onToggleBudget={planning.handleToggleBudgetSimulation}
                 />
             </MobileDrawer>
         </div>
