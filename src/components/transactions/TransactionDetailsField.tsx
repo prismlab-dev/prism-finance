@@ -3,6 +3,7 @@ import type { TransactionAttachment } from "../../types/transactionDetails";
 import { FIELD_EMBEDDED_INPUT_CLASS, FIELD_ICON_CONTROL_CLASS } from "./transactionForm.constants";
 import { TransactionFieldIcon } from "./TransactionFieldIcon";
 import type { TransactionDetailsController } from "./useTransactionDetails";
+import { IconButton } from "../ui/IconButton";
 
 interface TransactionDetailsFieldProps {
     details: TransactionDetailsController;
@@ -29,12 +30,12 @@ function AttachmentRow({ attachment, onDownload, onRemove, disabled }: { attachm
                 <p className="truncate text-xs text-white/82">{attachment.fileName}</p>
                 <p className="text-[10px] text-white/38">{formatFileSize(attachment.sizeBytes)}</p>
             </div>
-            <button type="button" onClick={onDownload} disabled={disabled} className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-white/45 transition-colors hover:bg-white/[0.06] hover:text-white disabled:opacity-40" aria-label={`Baixar ${attachment.fileName}`}>
+            <IconButton variant="bare" size="sm" shape="square" type="button" onClick={onDownload} disabled={disabled} aria-label={`Baixar ${attachment.fileName}`}>
                 <Download size={13} />
-            </button>
-            <button type="button" onClick={onRemove} disabled={disabled} className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-white/45 transition-colors hover:bg-red-500/10 hover:text-red-200 disabled:opacity-40" aria-label={`Remover ${attachment.fileName}`}>
+            </IconButton>
+            <IconButton variant="danger" size="sm" shape="square" type="button" onClick={onRemove} disabled={disabled} aria-label={`Remover ${attachment.fileName}`}>
                 <X size={13} />
-            </button>
+            </IconButton>
         </div>
     );
 }
@@ -88,9 +89,9 @@ export function TransactionDetailsField({ details, disabled = false }: Transacti
                                         <p className="truncate text-xs text-white/78">{file.name}</p>
                                         <p className="text-[10px] text-emerald-100/42">Novo · {formatFileSize(file.size)}</p>
                                     </div>
-                                    <button type="button" onClick={() => details.removeStagedFile(file)} disabled={controlsDisabled} className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-white/45 hover:bg-red-500/10 hover:text-red-200" aria-label={`Remover ${file.name}`}>
+                                    <IconButton variant="danger" size="sm" shape="square" type="button" onClick={() => details.removeStagedFile(file)} disabled={controlsDisabled} aria-label={`Remover ${file.name}`}>
                                         <X size={13} />
-                                    </button>
+                                    </IconButton>
                                 </div>
                             ))}
                         </>

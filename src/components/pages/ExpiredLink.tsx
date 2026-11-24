@@ -3,6 +3,7 @@ import { useState, type FormEvent } from "react";
 import { resolveSupabaseAuthErrorMessage } from "../../supabase/auth/authErrorMessages";
 import { sendSupabasePasswordReset } from "../../supabase/auth/authService";
 import { IconTextField } from "../transactions/IconTextField";
+import { Button } from "../ui/Button";
 import { SettingsFeedback } from "./settings/SettingsSection";
 
 type ExpiredLinkPageProps = {
@@ -63,20 +64,12 @@ export function ExpiredLinkPage({ isSignedIn, onLeave }: ExpiredLinkPageProps) {
 
                     <SettingsFeedback feedback={feedback} />
 
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="mt-2 rounded-xl bg-white px-4 py-3 text-sm font-semibold text-canvas transition hover:bg-neutral-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-70"
-                    >
+                    <Button type="submit" variant="solid" size="lg" disabled={loading} className="mt-2 w-full">
                         {loading ? "Enviando..." : "Enviar novo link"}
-                    </button>
-                    <button
-                        type="button"
-                        onClick={onLeave}
-                        className="rounded-xl px-4 py-2.5 text-sm text-neutral-400 transition hover:text-white focus-visible:outline-2 focus-visible:outline-white"
-                    >
+                    </Button>
+                    <Button variant="ghost" size="lg" className="font-normal! text-neutral-400!" type="button" onClick={onLeave}>
                         {isSignedIn ? "Continuar no Silus" : "Voltar para o login"}
-                    </button>
+                    </Button>
                 </form>
             </div>
         </main>

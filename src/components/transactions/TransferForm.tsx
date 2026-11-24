@@ -14,6 +14,10 @@ import type { TransactionFormTab } from "./TransactionFormTabs";
 import { FIELD_ICON_TRIGGER_CLASS } from "./transactionForm.constants";
 import { useTransactionDetails } from "./useTransactionDetails";
 import { type TransferFormPrefill, useTransferForm } from "./useTransferForm";
+import { IconButton } from "../ui/IconButton";
+import { Button } from "../ui/Button";
+import { ModalPanel } from "../modal/ModalChrome";
+import { Alert } from "../ui/Alert";
 
 interface TransferFormProps {
     prefill?: TransferFormPrefill;
@@ -85,13 +89,13 @@ export function TransferForm({ prefill, transaction, activeTab = "simple" }: Tra
     };
 
     return (
-        <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-white/[0.09] bg-surface p-4 text-white shadow-[0_26px_70px_-38px_rgba(0,0,0,0.95)]">
+        <ModalPanel className="h-full">
             <header className="flex shrink-0 items-center justify-between gap-3">
                 <h1 className="ml-1 text-sm uppercase opacity-50">{form.isEditing ? "Editando transferência" : "Nova transferência"}</h1>
-                <button type="button" onClick={closeModal} disabled={submitting} className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/[0.12] bg-white/[0.03] text-white/70 transition-colors hover:border-white/[0.22] hover:text-white disabled:opacity-55" aria-label="Fechar modal"><X size={15} /></button>
+                <IconButton onClick={closeModal} disabled={submitting} aria-label="Fechar modal"><X size={15} /></IconButton>
             </header>
 
-            {submitError ? <p className="mt-3 rounded-xl border border-red-400/25 bg-red-500/10 px-3 py-2 text-sm text-red-100">{submitError}</p> : null}
+            {submitError ? <Alert tone="error" className="mt-3">{submitError}</Alert> : null}
 
             <div className="mt-3 min-h-0 flex-1">
                 <AnimatedTransactionFormPanel activeTab={activeTab}>
@@ -119,12 +123,12 @@ export function TransferForm({ prefill, transaction, activeTab = "simple" }: Tra
                 </AnimatedTransactionFormPanel>
             </div>
 
-            {form.errorMessage ? <p className="mt-3 rounded-xl border border-red-400/25 bg-red-500/10 px-3 py-2 text-sm text-red-100">{form.errorMessage}</p> : null}
+            {form.errorMessage ? <Alert tone="error" className="mt-3">{form.errorMessage}</Alert> : null}
 
             <footer className="mt-4 flex shrink-0 items-center justify-end gap-1.5 border-t border-white/[0.06] pt-4">
-                <button type="button" onClick={closeModal} disabled={submitting} className="inline-flex min-w-24 items-center justify-center rounded-xl border border-white/[0.12] bg-white/[0.03] px-3 py-2 text-sm font-medium text-white/70 transition-colors hover:border-white/[0.2] hover:text-white disabled:opacity-60">Cancelar</button>
-                <button type="button" onClick={() => void runSubmit()} disabled={submitting} className="inline-flex min-w-28 items-center justify-center rounded-xl border border-emerald-300/35 bg-emerald-400/[0.14] px-3 py-2 text-sm font-semibold text-emerald-50 transition-colors hover:border-emerald-300/55 hover:bg-emerald-400/[0.2] disabled:opacity-60">{submitting ? "Salvando..." : transactionSaved ? "Salvar detalhes" : "Salvar e fechar"}</button>
+                <Button variant="secondary" onClick={closeModal} disabled={submitting} className="min-w-24">Cancelar</Button>
+                <Button variant="success" onClick={() => void runSubmit()} disabled={submitting} className="min-w-28">{submitting ? "Salvando..." : transactionSaved ? "Salvar detalhes" : "Salvar e fechar"}</Button>
             </footer>
-        </div>
+        </ModalPanel>
     );
 }

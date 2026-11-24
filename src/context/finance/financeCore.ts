@@ -13,6 +13,7 @@ import { getDefaultCategoryIconName, normalizeCategoryIconName } from "../../lib
 import { formatLocalDateInput, getLocalTodayDate, parseAppDate } from "../../lib/localDate";
 import { normalizeWishItemPriority } from "../../lib/wishlistPriority";
 import { DEFAULT_CREDIT_CARD_ICON, DEFAULT_WALLET_COLOR, DEFAULT_WALLET_ICON } from "../../lib/walletVisual";
+import { isRecord, roundToCents } from "../../lib/primitives";
 
 import type {
     TransactionType,
@@ -198,10 +199,6 @@ export function parseInvoicePaymentNote(note: string | null): InvoicePaymentMeta
     };
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === "object" && value !== null;
-}
-
 
 function asNullableString(value: unknown, fallback: string | null): string | null {
     if (typeof value !== "string") {
@@ -280,10 +277,6 @@ function asInvoiceStatus(value: unknown, fallback: InvoiceStatus = "open"): Invo
         return value;
     }
     return fallback;
-}
-
-function roundToCents(value: number): number {
-    return Math.round(value * 100) / 100;
 }
 
 function compareBySortOrderNameAndId(

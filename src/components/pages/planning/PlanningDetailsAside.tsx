@@ -9,6 +9,7 @@ import { PlanningListRow } from "./PlanningListRow";
 import { PlanningProjectionContextMenu, type PlanningProjectionContextMenuState } from "./PlanningProjectionContextMenu";
 import { buildPlanningProjectionContextActions, type PlanningProjectionContextAction } from "./planningProjectionContextActions";
 import { PlanningToggleRow } from "./PlanningToggleRow";
+import { EmptyState } from "../../ui/EmptyState";
 
 interface PlanningDetailsAsideProps {
     selectedMonth: MonthProjection | null;
@@ -64,7 +65,6 @@ type PlanningProjectionContextState = PlanningProjectionContextMenuState & {
     target: PlanningProjectionContextTarget;
 };
 
-const EMPTY_STATE_CLASS_NAME = "rounded-lg border border-dashed border-white/[0.1] px-3 py-6 text-center text-sm text-white/50";
 
 function normalizeSearchText(value: string): string {
     return value.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
@@ -242,7 +242,7 @@ export function PlanningDetailsAside({
 
     const renderContent = () => {
         if (!selectedMonth) {
-            return <p className={EMPTY_STATE_CLASS_NAME}>Nenhum mês disponível para planejar.</p>;
+            return <EmptyState variant="dashed">Nenhum mês disponível para planejar.</EmptyState>;
         }
 
         const incomeItems = selectedMonth.incomeItems.filter((item) => matchesSearch(item.label));
@@ -251,13 +251,13 @@ export function PlanningDetailsAside({
         const simulatedIncomeItems = selectedMonth.simulatedIncomeItems.filter((item) => matchesSearch(item.label));
         const simulatedExpenseItems = selectedMonth.simulatedExpenseItems.filter((item) => matchesSearch(item.description));
         const wishItems = activeWishItems.filter((item) => matchesSearch(item.description.trim() || "Desejo"));
-        const noResults = normalizedQuery ? <p className={EMPTY_STATE_CLASS_NAME}>Nada encontrado para “{searchQuery.trim()}”.</p> : null;
+        const noResults = normalizedQuery ? <EmptyState variant="dashed">Nada encontrado para “{searchQuery.trim()}”.</EmptyState> : null;
 
         if (selectedPanel === "income") {
             return (
                 <>
                     {selectedMonth.incomeItems.length > 0 && incomeItems.length === 0 ? noResults : null}
-                    {selectedMonth.incomeItems.length === 0 ? <p className={EMPTY_STATE_CLASS_NAME}>Nenhuma receita prevista para este mês.</p> : null}
+                    {selectedMonth.incomeItems.length === 0 ? <EmptyState variant="dashed">Nenhuma receita prevista para este mês.</EmptyState> : null}
                     {incomeItems.map((item) => (
                         <PlanningToggleRow
                             key={item.id}
@@ -286,7 +286,7 @@ export function PlanningDetailsAside({
             return (
                 <>
                     {selectedMonth.inheritedItems.length + selectedMonth.movedInvoiceItems.length > 0 && inheritedItems.length + movedInvoiceItems.length === 0 ? noResults : null}
-                    {selectedMonth.inheritedItems.length === 0 && selectedMonth.movedInvoiceItems.length === 0 ? <p className={EMPTY_STATE_CLASS_NAME}>Nenhuma despesa prevista para este mês.</p> : null}
+                    {selectedMonth.inheritedItems.length === 0 && selectedMonth.movedInvoiceItems.length === 0 ? <EmptyState variant="dashed">Nenhuma despesa prevista para este mês.</EmptyState> : null}
                     {inheritedItems.map((item) => (
                         <PlanningToggleRow
                             key={item.id}
@@ -337,7 +337,7 @@ export function PlanningDetailsAside({
         return (
             <>
                 {hasProjectionItems && !hasSimulatedIncomes && !hasSimulatedExpenses && !hasWishlistItems ? noResults : null}
-                {!hasProjectionItems ? <p className={EMPTY_STATE_CLASS_NAME}>Nenhuma projeção neste mês. Use “Nova receita” para simular uma entrada.</p> : null}
+                {!hasProjectionItems ? <EmptyState variant="dashed">Nenhuma projeção neste mês. Use “Nova receita” para simular uma entrada.</EmptyState> : null}
 
                 {hasSimulatedIncomes ? (
                     <PlanningDetailsSection title="Receitas" tone="income">

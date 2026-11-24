@@ -30,3 +30,6 @@ local.env.sh
 
 AGENTS.md
 FEATURES.md
+
+*storybook.log
+storybook-static

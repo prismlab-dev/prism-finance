@@ -4,7 +4,9 @@ import { useFinanceActions, useFinanceFamily, useFinanceSession } from "../../..
 import { resolveUserDisplayName } from "../../../lib/userProfile";
 import { BeneficiaryAvatar } from "../../common/BeneficiaryAvatar";
 import { IconTextField } from "../../transactions/IconTextField";
-import { SETTINGS_DANGER_BUTTON_CLASS, SETTINGS_PRIMARY_BUTTON_CLASS, SETTINGS_SECONDARY_BUTTON_CLASS, SettingsFeedback, SettingsSection } from "./SettingsSection";
+import { SettingsFeedback, SettingsSection } from "./SettingsSection";
+import { Button } from "../../ui/Button";
+import { Badge } from "../../ui/Badge";
 
 type FamilyMemberPhotoMap = Record<string, string | null>;
 
@@ -199,10 +201,10 @@ export function FamilySettingsTab() {
                                     placeholder={`Família de ${userName}`}
                                     disabled={!canCreateOrJoin || isCreatingFamily}
                                 />
-                                <button type="button" onClick={() => void handleCreateFamily()} disabled={!canCreateOrJoin || isCreatingFamily} className={SETTINGS_PRIMARY_BUTTON_CLASS}>
+                                <Button variant="success" size="lg" type="button" onClick={() => void handleCreateFamily()} disabled={!canCreateOrJoin || isCreatingFamily}>
                                     <Users size={16} aria-hidden />
                                     {isCreatingFamily ? "Criando..." : "Criar família"}
-                                </button>
+                                </Button>
                             </div>
                         </SettingsSection>
 
@@ -216,15 +218,10 @@ export function FamilySettingsTab() {
                                     placeholder="Código do convite"
                                     disabled={!canCreateOrJoin || isJoiningFamily}
                                 />
-                                <button
-                                    type="button"
-                                    onClick={() => void handleJoinFamily()}
-                                    disabled={!canCreateOrJoin || !inviteCodeInput.trim() || isJoiningFamily}
-                                    className={SETTINGS_SECONDARY_BUTTON_CLASS}
-                                >
+                                <Button variant="secondary" size="lg" type="button" onClick={() => void handleJoinFamily()} disabled={!canCreateOrJoin || !inviteCodeInput.trim() || isJoiningFamily}>
                                     <Link2 size={16} aria-hidden />
                                     {isJoiningFamily ? "Entrando..." : "Aceitar convite"}
-                                </button>
+                                </Button>
                             </div>
                         </SettingsSection>
                     </>
@@ -248,25 +245,19 @@ export function FamilySettingsTab() {
                                                     {member.displayName}
                                                     {isCurrentUser ? <span className="font-normal text-white/40">(você)</span> : null}
                                                     {member.role === "admin" ? (
-                                                        <span className="inline-flex items-center gap-1 rounded-full bg-white/[0.06] px-2 py-0.5 text-[11px] font-normal text-white/60">
+                                                        <Badge tone="soft" size="sm" className="gap-1 text-white/60">
                                                             <ShieldUser size={12} aria-hidden />
                                                             Admin
-                                                        </span>
+                                                        </Badge>
                                                     ) : null}
                                                 </p>
                                                 <p className="truncate text-sm text-white/45">{member.email ?? "E-mail indisponível"}</p>
                                             </div>
                                             {canRemove ? (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => void handleRemoveMember(member.uid, member.displayName)}
-                                                    disabled={removingMemberUid === member.uid}
-                                                    className={SETTINGS_DANGER_BUTTON_CLASS}
-                                                    aria-label={`Remover ${member.displayName}`}
-                                                >
+                                                <Button variant="danger" size="lg" type="button" onClick={() => void handleRemoveMember(member.uid, member.displayName)} disabled={removingMemberUid === member.uid} aria-label={`Remover ${member.displayName}`}>
                                                     <X size={15} aria-hidden />
                                                     <span className="hidden sm:inline">Remover</span>
-                                                </button>
+                                                </Button>
                                             ) : null}
                                         </li>
                                     );
@@ -277,15 +268,10 @@ export function FamilySettingsTab() {
                         {isAdmin ? (
                             <SettingsSection title="Convites" description="Gere um código e envie para quem você quer adicionar. Cada código vale para uma pessoa.">
                                 <div className="space-y-3">
-                                    <button
-                                        type="button"
-                                        onClick={() => void handleGenerateInvite()}
-                                        disabled={isGeneratingInvite || activeMembers.length >= family.maxMembers}
-                                        className={SETTINGS_PRIMARY_BUTTON_CLASS}
-                                    >
+                                    <Button variant="success" size="lg" type="button" onClick={() => void handleGenerateInvite()} disabled={isGeneratingInvite || activeMembers.length >= family.maxMembers}>
                                         <UserPlus size={16} aria-hidden />
                                         {isGeneratingInvite ? "Gerando..." : "Gerar convite"}
-                                    </button>
+                                    </Button>
                                     {pendingInvites.length === 0 ? (
                                         <p className="text-sm text-white/45">Nenhum convite pendente.</p>
                                     ) : (
@@ -296,10 +282,10 @@ export function FamilySettingsTab() {
                                                         <p className="break-all font-mono text-sm text-white">{invite.code}</p>
                                                         <p className="mt-0.5 text-xs text-white/40">Criado em {new Date(invite.createdAt).toLocaleString("pt-BR")}</p>
                                                     </div>
-                                                    <button type="button" onClick={() => void handleCopyInvite(invite.inviteId, invite.code)} className={SETTINGS_SECONDARY_BUTTON_CLASS}>
+                                                    <Button variant="secondary" size="lg" type="button" onClick={() => void handleCopyInvite(invite.inviteId, invite.code)}>
                                                         <Copy size={15} aria-hidden />
                                                         {copiedInviteId === invite.inviteId ? "Copiado" : "Copiar"}
-                                                    </button>
+                                                    </Button>
                                                 </li>
                                             ))}
                                         </ul>

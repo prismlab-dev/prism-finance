@@ -2,6 +2,7 @@ import type { Beneficiary, Category, Tag, TransactionStatus, TransactionType, Wa
 import { getCategoryIconComponent } from "../../lib/categoryIcons";
 import { BeneficiaryAvatar } from "../common/BeneficiaryAvatar";
 import { WalletAvatar } from "../common/WalletAvatar";
+import { SegmentedControl, type SegmentedOption } from "../ui/SegmentedControl";
 
 export interface WalletOptionLike {
     label: string;
@@ -82,32 +83,20 @@ export function TransactionHeader({ type, isEditing, isSeriesTransaction = false
     return <h1 className="text-sm ml-1 uppercase opacity-50">{contextLabel}</h1>;
 }
 
+const STATUS_OPTIONS: SegmentedOption<"paid" | "pending">[] = [
+    { value: "paid", label: "Pago", activeClassName: "bg-emerald-500/20 text-emerald-200" },
+    { value: "pending", label: "Pendente", activeClassName: "bg-amber-500/20 text-amber-200" },
+];
+
 export function StatusField({ status, onChange, disabled = false }: StatusFieldProps) {
     return (
-        <div aria-label="Status">
-            <div className="flex gap-1 rounded-xl border border-white/[0.1] bg-black/35 p-1">
-                <button
-                    type="button"
-                    onClick={() => onChange("paid")}
-                    disabled={disabled}
-                    className={`flex-1 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
-                        status === "paid" ? "bg-emerald-500/20 text-emerald-200" : "text-white/65 hover:bg-white/[0.06]"
-                    }`}
-                >
-                    Pago
-                </button>
-                <button
-                    type="button"
-                    onClick={() => onChange("pending")}
-                    disabled={disabled}
-                    className={`flex-1 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
-                        status === "pending" ? "bg-amber-500/20 text-amber-200" : "text-white/65 hover:bg-white/[0.06]"
-                    }`}
-                >
-                    Pendente
-                </button>
-            </div>
-        </div>
+        <SegmentedControl
+            ariaLabel="Status"
+            options={STATUS_OPTIONS}
+            value={status as "paid" | "pending"}
+            onChange={onChange}
+            disabled={disabled}
+        />
     );
 }
 

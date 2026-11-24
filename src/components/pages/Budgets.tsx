@@ -29,6 +29,7 @@ import { BUDGET_HISTORY_MONTHS, buildBudgetsOverview, previewBudgetRules, sugges
 import { PlanningPageHeader } from "./planning/PlanningPageHeader";
 import { mergePlanningUpdate } from "./planning/planningTimelineUtils";
 import { formatMonthLabel, getCurrentMonthKey } from "./statement/statementPageShared";
+import { Button } from "../ui/Button";
 
 export function BudgetsPage() {
     const planning = useFinancePlanning();
@@ -108,9 +109,9 @@ export function BudgetsPage() {
             return (
                 <div className="flex min-h-full flex-col items-center justify-center gap-3 text-center">
                     <p className="text-sm text-white/55">Este orçamento não existe mais.</p>
-                    <button type="button" onClick={backToList} className="rounded-xl border border-white/[0.1] px-3.5 py-2 text-sm text-white/80 hover:bg-white/[0.06]">
+                    <Button variant="secondary" type="button" onClick={backToList}>
                         Voltar para orçamentos
-                    </button>
+                    </Button>
                 </div>
             );
         }

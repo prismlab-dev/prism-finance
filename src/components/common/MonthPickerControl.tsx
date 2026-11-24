@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { AnchoredOverlay } from "../transactions/AnchoredOverlay";
 import { MonthGridPanel } from "./MonthGridPanel";
+import { IconButton } from "../ui/IconButton";
 
 interface MonthPickerControlProps {
     selectedMonth: string;
@@ -50,14 +51,9 @@ export function MonthPickerControl({ selectedMonth, onMonthChange, formatMonthLa
 
     return (
         <div className="flex items-center justify-between">
-            <button
-                type="button"
-                onClick={() => onMonthChange(shiftMonth(selectedMonth, -1))}
-                className="rounded-lg p-1 text-white/45 transition-colors hover:bg-white/[0.06] hover:text-white"
-                aria-label="Mes anterior"
-            >
+            <IconButton variant="bare" size="xs" shape="square" type="button" onClick={() => onMonthChange(shiftMonth(selectedMonth, -1))} aria-label="Mes anterior">
                 <ChevronLeft size={16} />
-            </button>
+            </IconButton>
             <button
                 ref={triggerRef}
                 type="button"
@@ -69,14 +65,9 @@ export function MonthPickerControl({ selectedMonth, onMonthChange, formatMonthLa
             >
                 {formatMonthLabel(selectedMonth)}
             </button>
-            <button
-                type="button"
-                onClick={() => onMonthChange(shiftMonth(selectedMonth, 1))}
-                className="rounded-lg p-1 text-white/45 transition-colors hover:bg-white/[0.06] hover:text-white"
-                aria-label="Proximo mes"
-            >
+            <IconButton variant="bare" size="xs" shape="square" type="button" onClick={() => onMonthChange(shiftMonth(selectedMonth, 1))} aria-label="Proximo mes">
                 <ChevronRight size={16} />
-            </button>
+            </IconButton>
 
             <AnchoredOverlay
                 anchorRef={triggerRef}
@@ -84,7 +75,7 @@ export function MonthPickerControl({ selectedMonth, onMonthChange, formatMonthLa
                 isOpen={isOpen}
                 overlayWidth={240}
                 align="center"
-                className="rounded-2xl border border-white/[0.1] bg-canvas/95 p-2.5 shadow-[0_24px_60px_-30px_rgba(0,0,0,0.95)] backdrop-blur-xl"
+                surface="glass" className="p-2.5"
             >
                 <MonthGridPanel
                     selectedMonth={selectedMonth}

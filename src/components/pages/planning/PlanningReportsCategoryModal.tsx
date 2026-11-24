@@ -5,6 +5,8 @@ import { CategoryRow } from "./PlanningReportsCategoryList";
 import { REPORT_MONO_STYLE } from "./PlanningReportsPanel";
 import { formatReportCurrency } from "./planningReportFormatting";
 import type { CategoryReport } from "./planningReportsUtils";
+import { IconButton } from "../../ui/IconButton";
+import { Surface } from "../../ui/Surface";
 
 interface PlanningReportsCategoryModalProps {
     title: string;
@@ -18,7 +20,7 @@ export function PlanningReportsCategoryModal({ title, totalAmount, categoryRepor
 
     return (
         <ModalStructure height="auto" width="560px">
-            <div className="flex max-h-[85vh] flex-col rounded-2xl border border-white/[0.09] bg-surface p-5 text-left text-white shadow-[0_26px_70px_-38px_rgba(0,0,0,0.95)]">
+            <Surface className="flex max-h-[85vh] flex-col p-5 text-left text-white">
                 <header className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                         <h2 className="truncate text-base font-medium">{title}</h2>
@@ -26,21 +28,16 @@ export function PlanningReportsCategoryModal({ title, totalAmount, categoryRepor
                             {formatReportCurrency(totalAmount)}
                         </p>
                     </div>
-                    <button
-                        type="button"
-                        onClick={closeModal}
-                        className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/[0.12] bg-white/[0.03] text-white/70 transition-colors hover:border-white/[0.22] hover:text-white"
-                        aria-label="Fechar"
-                    >
+                    <IconButton onClick={closeModal} aria-label="Fechar">
                         <X size={15} />
-                    </button>
+                    </IconButton>
                 </header>
                 <ul className="elegant-scrollbar mt-5 min-h-0 space-y-3.5 overflow-y-auto pr-1">
                     {categoryReports.map((category) => (
                         <CategoryRow key={category.key} category={category} showPaymentSplit={showPaymentSplit} />
                     ))}
                 </ul>
-            </div>
+            </Surface>
         </ModalStructure>
     );
 }

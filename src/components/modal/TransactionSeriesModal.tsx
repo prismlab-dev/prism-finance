@@ -27,6 +27,8 @@ import { removedInstallmentsTotal } from "../../context/finance/removedInstallme
 import { buildTransactionSeriesView, type TransactionSeriesRow, type TransactionSeriesView } from "../transactions/transactionSeriesView";
 import type { RecurrenceRule } from "../../context/finance/recurrence/types";
 import type { TransactionGroupType } from "../../context/finance/domainTypes";
+import { IconButton } from "../ui/IconButton";
+import { Badge } from "../ui/Badge";
 
 const MODE_LABELS = { single: "Transação única", installment: "Parcelamento", recurring: "Recorrência" } as const;
 const TAB_BY_TYPE: Record<TransactionGroupType, TransactionsIntentTab> = { expense: "spending", income: "income", transfer: "transfer" };
@@ -297,18 +299,12 @@ function SeriesBody({ view, fallbackTitle, resolveAccount, resolveInvoiceMonth, 
                                     <span className="text-amber-200/70">Sem conta</span>
                                 )}
                             </span>
-                            <span className={`inline-flex justify-self-end rounded-full border px-2 py-0.5 text-[11px] sm:justify-self-start ${state.chip}`}>{stateLabel(states[index], group.type)}</span>
+                            <Badge tone="custom" size="sm" className={`justify-self-end sm:justify-self-start ${state.chip}`}>{stateLabel(states[index], group.type)}</Badge>
                             <span className={`justify-self-end text-sm tabular-nums ${isMuted ? "text-white/50" : "font-semibold text-white"} ${isVoid && !isRemoved ? "line-through" : ""}`}>{money(row.amount)}</span>
                             {isRemoved ? <span className="h-8 w-8" aria-hidden="true" /> : (
-                                <button
-                                    type="button"
-                                    onClick={() => openRow(row)}
-                                    className="inline-flex h-8 w-8 items-center justify-center justify-self-end rounded-lg text-white/45 outline-none transition-colors hover:bg-white/[0.08] hover:text-white focus-visible:ring-2 focus-visible:ring-sky-400/60"
-                                    title="Ir para a transação"
-                                    aria-label={`Ir para a transação de ${formatTransactionDate(row.date, "dd/MM/yyyy")}`}
-                                >
+                                <IconButton variant="bare" size="md" shape="square" className="justify-self-end" type="button" onClick={() => openRow(row)} title="Ir para a transação" aria-label={`Ir para a transação de ${formatTransactionDate(row.date, "dd/MM/yyyy")}`}>
                                     <SquareArrowOutUpRight size={15} />
-                                </button>
+                                </IconButton>
                             )}
                         </li>
                     );

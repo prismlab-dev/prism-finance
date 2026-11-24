@@ -1,14 +1,13 @@
 import { useId, useState } from "react";
 import { PlanningReportsPanel, REPORT_MONO_STYLE } from "./PlanningReportsPanel";
 import { formatReportCurrency } from "./planningReportFormatting";
+import { compactFormatter } from "../../../lib/formatters";
 
 const GRID_LINES = 4;
 // Acima disso os rótulos dos meses se sobrepõem; mostra um a cada N.
 const MAX_MONTH_LABELS = 8;
 // Até aqui cabe o valor escrito sobre cada ponto; acima disso, só no foco.
 const MAX_VALUE_LABELS = 6;
-const compactFormatter = new Intl.NumberFormat("pt-BR", { notation: "compact", maximumFractionDigits: 1 });
-
 export interface LinePoint {
     monthKey: string;
     label: string;

@@ -13,6 +13,7 @@ import { formatReportCurrency } from "../pages/planning/planningReportFormatting
 import { IconTextField } from "../transactions/IconTextField";
 import { ModalBody, ModalCancelButton, ModalError, ModalFooter, ModalHeader, ModalPanel, ModalPrimaryButton } from "./ModalChrome";
 import { ModalStructure } from "./ModalStructure";
+import { Surface } from "../ui/Surface";
 
 export type BudgetFormDraft = Pick<PlanningBudget, "name" | "include" | "exclude" | "amount" | "alertPercent">;
 
@@ -93,9 +94,9 @@ export function BudgetFormModal({ initialBudget, ruleOptions, labelOf, monthLabe
             aside={
                 include.length > 0 ? (
                     // ponytail: só cabe fora do modal a partir de 2xl (760 + 2×356px); abaixo disso a prévia fica dentro.
-                    <div className="hidden rounded-xl border border-white/[0.09] bg-surface shadow-[0_26px_70px_-38px_rgba(0,0,0,0.95)] 2xl:block">
+                    <Surface className="hidden 2xl:block">
                         <BudgetRulesPreviewPanel preview={preview} monthLabel={monthLabel} budgetNameById={budgetNameById} />
-                    </div>
+                    </Surface>
                 ) : null
             }
         >

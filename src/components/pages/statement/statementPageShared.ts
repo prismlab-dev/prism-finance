@@ -1,6 +1,10 @@
 import { type CreditCard, type CreditCardInvoice, type Transaction } from "../../../context/FinanceContext";
 import { getCreditCardInvoiceOpenAmount, getCreditCardInvoiceReadState, type CreditCardInvoiceVisualStatus } from "../../../context/finance/invoiceStatus";
 import { buildCreditCardInvoiceId, getMonthKeyFromDateValue, resolveOpenCreditCardInvoiceCycle } from "../../../context/financeTypes";
+import { formatCurrency } from "../../../lib/formatters";
+import { formatMonthLabel, getCurrentMonthKey, shiftMonth } from "../../../lib/monthKey";
+
+export { formatCurrency };
 
 export type StatementInvoiceVisualStatus = CreditCardInvoiceVisualStatus;
 
@@ -103,59 +107,12 @@ export const STATEMENT_STATUS_TEXT_CLASS: Record<StatementInvoiceVisualStatus, s
     future: "text-zinc-400",
 };
 
-const monthLabelFormatter = new Intl.DateTimeFormat("pt-BR", {
-    month: "long",
-    year: "numeric",
-});
-
-const currencyFormatter = new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    minimumFractionDigits: 2,
-});
-
 export const INITIAL_STATEMENT_FILTER_STATE: StatementFilterState = {
     selectedMonth: getCurrentMonthKey(),
     selectedCardIds: [],
 };
 
-function padMonthPart(value: number): string {
-    return String(value).padStart(2, "0");
-}
-
-export function getCurrentMonthKey(referenceDate = new Date()): string {
-    return `${referenceDate.getFullYear()}-${padMonthPart(referenceDate.getMonth() + 1)}`;
-}
-
-export function shiftMonth(monthKey: string, offset: number): string {
-    const [yearPart, monthPart] = monthKey.split("-");
-    const year = Number(yearPart);
-    const month = Number(monthPart);
-
-    if (!Number.isInteger(year) || !Number.isInteger(month) || month < 1 || month > 12) {
-        return getCurrentMonthKey();
-    }
-
-    const shifted = new Date(year, month - 1 + offset, 1);
-    return getCurrentMonthKey(shifted);
-}
-
-export function formatMonthLabel(monthKey: string): string {
-    const [yearPart, monthPart] = monthKey.split("-");
-    const year = Number(yearPart);
-    const month = Number(monthPart);
-
-    if (!Number.isInteger(year) || !Number.isInteger(month) || month < 1 || month > 12) {
-        return monthKey;
-    }
-
-    const formatted = monthLabelFormatter.format(new Date(year, month - 1, 1));
-    return formatted.charAt(0).toUpperCase() + formatted.slice(1);
-}
-
-export function formatCurrency(value: number): string {
-    return currencyFormatter.format(value);
-}
+export { formatMonthLabel, getCurrentMonthKey, shiftMonth };
 
 export function getInvoiceOpenAmount(invoice: CreditCardInvoice): number {
     return getCreditCardInvoiceOpenAmount(invoice);

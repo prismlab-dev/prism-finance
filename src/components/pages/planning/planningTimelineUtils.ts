@@ -1,4 +1,4 @@
-import { addMonths, format, isValid, parse, startOfMonth } from "date-fns";
+import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type {
     CreditCard,
@@ -25,6 +25,11 @@ import {
     type TimelineProjection,
     type WishlistProjectionItem,
 } from "./planningTimelineTypes";
+import { currencyFormatter } from "../../../lib/formatters";
+import { isIncludedStatus } from "./planningPageShared";
+import { getCurrentMonthKey, monthKeyToDate, shiftMonth } from "../../../lib/monthKey";
+import { roundToCents, capitalizeLabel } from "../../../lib/primitives";
+export { roundToCents } from "../../../lib/primitives";
 
 const MONTH_KEY_FORMAT = "yyyy-MM";
 const TRANSFER_ICON_NAME = "arrow-right-left";
@@ -34,45 +39,11 @@ const INHERITED_EXPENSE_SOURCE_ORDER: Record<InheritedExpenseItem["source"], num
     invoice: 2,
 };
 
-const currencyFormatter = new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    minimumFractionDigits: 2,
-});
-
-export function roundToCents(value: number): number {
-    return Math.round(value * 100) / 100;
-}
-
-function capitalizeLabel(value: string): string {
-    return value.charAt(0).toUpperCase() + value.slice(1);
-}
-
-function parseMonthKey(monthKey: string): Date | null {
-    const parsedDate = parse(monthKey.trim(), MONTH_KEY_FORMAT, new Date());
-    if (!isValid(parsedDate)) {
-        return null;
-    }
-
-    return startOfMonth(parsedDate);
-}
-
-export function getCurrentMonthKey(referenceDate = new Date()): string {
-    return format(startOfMonth(referenceDate), MONTH_KEY_FORMAT);
-}
-
-function shiftMonth(monthKey: string, offset: number): string {
-    const parsedMonth = parseMonthKey(monthKey);
-    if (!parsedMonth) {
-        return getCurrentMonthKey();
-    }
-
-    return format(addMonths(parsedMonth, offset), MONTH_KEY_FORMAT);
-}
+export { getCurrentMonthKey };
 
 function getMonthOffset(fromMonthKey: string, toMonthKey: string): number | null {
-    const fromMonth = parseMonthKey(fromMonthKey);
-    const toMonth = parseMonthKey(toMonthKey);
+    const fromMonth = monthKeyToDate(fromMonthKey);
+    const toMonth = monthKeyToDate(toMonthKey);
 
     if (!fromMonth || !toMonth) {
         return null;
@@ -82,7 +53,7 @@ function getMonthOffset(fromMonthKey: string, toMonthKey: string): number | null
 }
 
 function formatMonthLabel(monthKey: string, pattern = "MMMM 'de' yyyy"): string {
-    const parsedMonth = parseMonthKey(monthKey);
+    const parsedMonth = monthKeyToDate(monthKey);
     return parsedMonth ? capitalizeLabel(format(parsedMonth, pattern, { locale: ptBR }).replace(".", "")) : monthKey;
 }
 
@@ -105,16 +76,12 @@ export function parseCurrencyInput(input: string): number {
     return roundToCents(Math.max(0, Math.abs(parsed)));
 }
 
-function isIncludedStatus(status: Transaction["status"]): boolean {
-    return status === "paid" || status === "pending";
-}
-
 function getTransactionDisplayName(transaction: Transaction): string {
     return transaction.description.trim() || "Sem descrição";
 }
 
 function getMonthStartTime(monthKey: string): number {
-    return parseMonthKey(monthKey)?.getTime() ?? Date.now();
+    return monthKeyToDate(monthKey)?.getTime() ?? Date.now();
 }
 
 function getOpeningBalance(monthKey: string, wallets: Wallet[], ledgerEntries: LedgerEntry[]): number {

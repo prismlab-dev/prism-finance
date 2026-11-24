@@ -1,4 +1,6 @@
-const CHANNEL_NAME = "prism.finance.cross-tab";
+import { isRecord } from "../../lib/primitives";
+
+const CHANNEL_NAME ="prism.finance.cross-tab";
 const MESSAGE_VERSION = 2;
 
 export interface FinanceCrossTabRevisionMessage {
@@ -10,10 +12,6 @@ export interface FinanceCrossTabRevisionMessage {
     sentAt: string;
     revision: number;
     updatedBy: string | null;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === "object" && value !== null;
 }
 
 function createMessageId(): string {

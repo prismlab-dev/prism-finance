@@ -3,6 +3,7 @@ import { createLedgerEntriesForPaidTransaction } from "./financeCore";
 import { mergeSeriesRevisions } from "./recurrence/mergeSeriesRevisions";
 import { rebaseLocalDeletions } from "./rebaseLocalDeletions";
 import { reconcileInvoicePaymentMerge } from "./reconcileInvoicePaymentMerge";
+import { isRecord } from "../../lib/primitives";
 
 function stableStringify(value: unknown): string {
     return JSON.stringify(value);
@@ -10,10 +11,6 @@ function stableStringify(value: unknown): string {
 
 function isSameValue<T>(a: T | undefined, b: T | undefined): boolean {
     return stableStringify(a ?? null) === stableStringify(b ?? null);
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function mergeValue<T>(baseValue: T, remoteValue: T, targetValue: T): T {

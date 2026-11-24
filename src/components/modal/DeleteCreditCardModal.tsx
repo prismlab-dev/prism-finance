@@ -7,6 +7,7 @@ import { CardPaymentsChoice, type CardPaymentsChoiceValue } from "./CardPayments
 import { groupCardPaymentsByWallet } from "./cardPaymentsByWallet";
 import { ModalBody, ModalCancelButton, ModalError, ModalFooter, ModalHeader, ModalPanel } from "./ModalChrome";
 import { ModalStructure } from "./ModalStructure";
+import { Button } from "../ui/Button";
 
 const REMOVAL_SUMMARY = "As compras, parcelas, recorrências e faturas deste cartão serão apagadas. Parcelas movidas para outro cartão ou carteira são mantidas.";
 
@@ -73,14 +74,9 @@ export function DeleteCreditCardModal({ creditCard }: { creditCard: CreditCard }
                 {error ? <ModalError>{error}</ModalError> : null}
                 <ModalFooter>
                     <ModalCancelButton disabled={submitting} />
-                    <button
-                        type="button"
-                        onClick={() => void handleConfirm()}
-                        disabled={submitting}
-                        className="inline-flex items-center justify-center rounded-xl border border-red-400/40 bg-red-500/15 px-3 py-2 text-sm font-semibold text-red-100 transition-colors hover:border-red-400/60 hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
+                    <Button variant="danger" type="button" onClick={() => void handleConfirm()} disabled={submitting}>
                         {submitting ? "Excluindo..." : choice === "keep" ? "Excluir cartão e manter pagamentos" : "Excluir cartão e pagamentos"}
-                    </button>
+                    </Button>
                 </ModalFooter>
             </ModalPanel>
         </ModalStructure>

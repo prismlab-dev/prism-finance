@@ -1,4 +1,5 @@
 import { createFinanceSnapshot, DEFAULT_PLANNING_STATE, type FinanceSnapshot, type PlanningState } from "../../context/financeTypes";
+import { toRevision } from "../../lib/primitives";
 import { getSupabaseClient } from "../supabaseClient";
 import {
     fromBeneficiaryRow,
@@ -85,11 +86,6 @@ export class FinanceRevisionConflictError extends Error {
 
 function readPlanning(value: unknown): PlanningState {
     return (typeof value === "object" && value !== null ? value : {}) as PlanningState;
-}
-
-function toRevision(value: number | string | null | undefined): number {
-    const revision = Number(value);
-    return Number.isFinite(revision) && revision >= 0 ? revision : 0;
 }
 
 interface AtomicFinanceSnapshotRow {

@@ -1,5 +1,6 @@
 import { useLayoutEffect, useState, type CSSProperties, type ReactNode, type RefObject } from "react";
 import { createPortal } from "react-dom";
+import { SURFACE_CLASS, type SurfaceVariant } from "../ui/Surface";
 
 interface AnchoredOverlayPosition {
     bottom?: number;
@@ -13,6 +14,8 @@ interface AnchoredOverlayProps<T extends HTMLElement> {
     anchorRef: RefObject<T | null>;
     children: ReactNode;
     className?: string;
+    /** Aparência da superfície do overlay (borda, fundo, sombra). Padding e demais ajustes vão em `className`. */
+    surface?: SurfaceVariant;
     isOpen: boolean;
     overlayRef: RefObject<HTMLDivElement | null>;
     preferredMaxHeight?: number;
@@ -29,6 +32,7 @@ export function AnchoredOverlay<T extends HTMLElement>({
     anchorRef,
     children,
     className = "",
+    surface,
     isOpen,
     overlayRef,
     preferredMaxHeight = 360,
@@ -109,7 +113,7 @@ export function AnchoredOverlay<T extends HTMLElement>({
         <div
             ref={overlayRef}
             data-modal-overlay-root="true"
-            className={`fixed z-[220] overflow-y-auto ${className}`.trim()}
+            className={`fixed z-[220] overflow-y-auto ${surface ? SURFACE_CLASS[surface] : ""} ${className}`.replace(/\s+/g, " ").trim()}
             style={style}
         >
             {children}

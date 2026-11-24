@@ -1,3 +1,4 @@
+import { IconButton } from "../ui/IconButton";
 import { CircleUserRound, Pencil, Trash } from "lucide-react";
 import { useModal } from "../../context/ModalContext";
 import { type Transaction, useFinanceActions, useFinanceWallets } from "../../context/FinanceContext";
@@ -33,12 +34,12 @@ export function TransactionBlock({ transaction }: { transaction: Transaction }) 
             <div className=" flex flex-col text-right gap-2">
                 <p className="text-xl capitalize">{transaction.status}</p>
                 <div className="flex justify-end gap-1">
-                    <button onClick={() => openModal(<EditTransaction transaction={transaction} />)} className="default-button p-2">
-                        <Pencil size={20} />
-                    </button>
-                    <button onClick={() => deleteTransaction(transaction)} className="default-button p-2">
-                        <Trash size={20} />
-                    </button>
+                    <IconButton aria-label="Editar transação" onClick={() => openModal(<EditTransaction transaction={transaction} />)}>
+                        <Pencil size={16} />
+                    </IconButton>
+                    <IconButton aria-label="Excluir transação" onClick={() => deleteTransaction(transaction)}>
+                        <Trash size={16} />
+                    </IconButton>
                 </div>
             </div>
         </div>

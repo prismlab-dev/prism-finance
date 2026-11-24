@@ -2,17 +2,17 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useEffect, useMemo, useState } from "react";
 import { type CreditCard, type CreditCardInvoice, type Wallet, useFinanceActions, useFinanceWallets } from "../../context/FinanceContext";
-import { extractCurrencyDigits, formatCurrencyFromDigits, parseCurrencyDigitsToNumber } from "../../lib/currencyMask";
+import { extractCurrencyDigits, formatCurrencyFromDigits, parseCurrencyDigitsToNumber, formatAmountInputFromValue } from "../../lib/currencyMask";
 import { getLocalTodayDate, parseAppDate } from "../../lib/localDate";
 import { useModal } from "../../context/ModalContext";
 import { WalletAvatar } from "../common/WalletAvatar";
 import { DateField } from "../transactions/DateField";
 import { SingleSelectCombobox, type ComboboxOptionBase } from "../transactions/SingleSelectCombobox";
 import { CircleDollarSign } from "lucide-react";
-import { TransactionFieldIcon } from "../transactions/TransactionFieldIcon";
-import { FIELD_EMBEDDED_INPUT_CLASS, FIELD_ICON_CONTROL_CLASS } from "../transactions/transactionForm.constants";
+
 import { ModalBody, ModalCancelButton, ModalError, ModalFooter, ModalHeader, ModalPanel, ModalPrimaryButton } from "./ModalChrome";
 import { ModalStructure } from "./ModalStructure";
+import { IconTextField } from "../transactions/IconTextField";
 
 interface PayCreditCardInvoiceModalProps {
     invoice: CreditCardInvoice;
@@ -24,11 +24,6 @@ const NO_WALLET_OPTION_ID = "__no-wallet__";
 
 interface WalletOption extends ComboboxOptionBase {
     wallet: Wallet | null;
-}
-
-function formatAmountInputFromValue(value: number): string {
-    const cents = Math.max(0, Math.round(Math.abs(value) * 100));
-    return formatCurrencyFromDigits(String(cents));
 }
 
 function formatMoney(value: number): string {
@@ -183,18 +178,7 @@ export function PayCreditCardInvoiceModal({ invoice, creditCard, defaultSettleWi
                         </div>
 
                         <div className="flex flex-col gap-2 px-3 pb-5 pt-2">
-                            <label className={`${FIELD_ICON_CONTROL_CLASS} flex min-h-[50px] items-center gap-2`}>
-                                <TransactionFieldIcon icon={CircleDollarSign} />
-                                <input
-                                    aria-label="Valor do pagamento"
-                                    value={amountInput}
-                                    onChange={(event) => setAmountInput(formatCurrencyFromDigits(extractCurrencyDigits(event.target.value)))}
-                                    disabled={submitting}
-                                    className={`${FIELD_EMBEDDED_INPUT_CLASS} tabular-nums`}
-                                    placeholder="R$ 0,00"
-                                    inputMode="numeric"
-                                />
-                            </label>
+                            <IconTextField ariaLabel="Valor do pagamento" value={amountInput} onChange={(value) => setAmountInput(formatCurrencyFromDigits(extractCurrencyDigits(value)))} placeholder="R$ 0,00" icon={CircleDollarSign} inputMode="numeric" tabular disabled={submitting} />
 
                             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                                 <SingleSelectCombobox

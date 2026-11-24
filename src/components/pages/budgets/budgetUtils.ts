@@ -2,6 +2,7 @@ import type { Category, CreditCardInvoice, PlanningBudget, Transaction } from ".
 import { getMonthKeyFromDateValue, parseCreditCardInvoiceId } from "../../../context/financeTypes";
 import { shiftMonth } from "../statement/statementPageShared";
 import { buildBudgetRuleContext, matchesBudgetRules, type BudgetRuleContext, type BudgetRuleSet } from "./budgetRules";
+import { roundToCents } from "../../../lib/primitives";
 
 export const BUDGET_HISTORY_MONTHS = 6;
 const SUGGESTION_MONTHS = 3;
@@ -64,10 +65,6 @@ export interface BudgetComputationInput {
 }
 
 const STATUS_SEVERITY: Record<BudgetStatus, number> = { exceeded: 3, at_risk: 2, warning: 1, ok: 0 };
-
-function roundToCents(value: number): number {
-    return Math.round(value * 100) / 100;
-}
 
 function sumValues(transactions: Transaction[]): number {
     return roundToCents(transactions.reduce((sum, transaction) => sum + transaction.value, 0));

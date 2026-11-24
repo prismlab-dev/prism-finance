@@ -6,7 +6,8 @@ import { uploadAvatarToCloudinary } from "../../../../lib/cloudinary";
 import { resolveSupabaseAuthErrorMessage } from "../../../../supabase/auth/authErrorMessages";
 import { updateSupabaseProfile } from "../../../../supabase/auth/authService";
 import { IconTextField } from "../../../transactions/IconTextField";
-import { SETTINGS_PRIMARY_BUTTON_CLASS, SETTINGS_SECONDARY_BUTTON_CLASS, SettingsFeedback, SettingsSection } from "../SettingsSection";
+import { SettingsFeedback, SettingsSection } from "../SettingsSection";
+import { Button } from "../../../ui/Button";
 
 type ProfileSectionProps = {
     user: AppUser;
@@ -140,20 +141,20 @@ export function ProfileSection({ user, userName, userPhotoUrl }: ProfileSectionP
                         {previewPhotoUrl ? <img src={previewPhotoUrl} alt="" className="h-full w-full object-cover" /> : (displayName.trim() || userName).charAt(0).toUpperCase()}
                     </span>
                     <div className="flex flex-wrap gap-2">
-                        <button type="button" onClick={() => fileInputRef.current?.click()} className={SETTINGS_SECONDARY_BUTTON_CLASS}>
+                        <Button variant="secondary" size="lg" type="button" onClick={() => fileInputRef.current?.click()}>
                             <ImagePlus size={15} aria-hidden />
                             {previewPhotoUrl ? "Trocar foto" : "Enviar foto"}
-                        </button>
+                        </Button>
                         {photoMode !== "keep" ? (
-                            <button type="button" onClick={handleUndoPhoto} className={SETTINGS_SECONDARY_BUTTON_CLASS}>
+                            <Button variant="secondary" size="lg" type="button" onClick={handleUndoPhoto}>
                                 <Undo2 size={15} aria-hidden />
                                 Desfazer
-                            </button>
+                            </Button>
                         ) : userPhotoUrl ? (
-                            <button type="button" onClick={handleRemovePhoto} className={SETTINGS_SECONDARY_BUTTON_CLASS}>
+                            <Button variant="secondary" size="lg" type="button" onClick={handleRemovePhoto}>
                                 <Trash2 size={15} aria-hidden />
                                 Remover
-                            </button>
+                            </Button>
                         ) : null}
                     </div>
                     <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePhotoFileChange} className="hidden" />
@@ -175,9 +176,9 @@ export function ProfileSection({ user, userName, userPhotoUrl }: ProfileSectionP
 
                 <SettingsFeedback feedback={feedback} />
 
-                <button type="submit" disabled={loading || !hasChanges} className={SETTINGS_PRIMARY_BUTTON_CLASS}>
+                <Button variant="success" size="lg" type="submit" disabled={loading || !hasChanges}>
                     {loading ? "Salvando..." : "Salvar perfil"}
-                </button>
+                </Button>
             </form>
         </SettingsSection>
     );

@@ -1,8 +1,12 @@
-import { addMonths, format, isValid, parse, startOfMonth } from "date-fns";
+import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { Beneficiary, CreditCardInvoice, ReportPeriod, Tag, Transaction } from "../../../context/FinanceContext";
 import { getMonthKeyFromDateValue } from "../../../context/financeTypes";
 import { getTransactionCategoryDisplay } from "../../../lib/transactionCategory";
+import { isIncludedStatus } from "./planningPageShared";
+import { getCurrentMonthKey, monthKeyToDate, parseMonthKey, shiftMonth } from "../../../lib/monthKey";
+import { roundToCents } from "../../../lib/primitives";
+export { roundToCents } from "../../../lib/primitives";
 
 export type { ReportPeriod } from "../../../context/FinanceContext";
 
@@ -113,38 +117,15 @@ export interface ReportScope {
     creditCardIds: string[];
 }
 
-const MONTH_KEY_FORMAT = "yyyy-MM";
 const CATEGORY_FALLBACK_COLOR = "#737373";
 
-export function roundToCents(value: number): number {
-    return Math.round(value * 100) / 100;
-}
-
-function parseMonthKey(monthKey: string): Date | null {
-    const parsedDate = parse(monthKey.trim(), MONTH_KEY_FORMAT, new Date());
-    return isValid(parsedDate) ? startOfMonth(parsedDate) : null;
-}
-
-function getCurrentMonthKey(referenceDate = new Date()): string {
-    return format(startOfMonth(referenceDate), MONTH_KEY_FORMAT);
-}
-
-function shiftMonth(monthKey: string, offset: number): string {
-    const parsedMonth = parseMonthKey(monthKey);
-    return format(addMonths(parsedMonth ?? startOfMonth(new Date()), offset), MONTH_KEY_FORMAT);
-}
-
 export function formatMonthLabel(monthKey: string, pattern = "MMM/yy"): string {
-    const parsedMonth = parseMonthKey(monthKey);
+    const parsedMonth = monthKeyToDate(monthKey);
     if (!parsedMonth) {
         return monthKey;
     }
 
     return format(parsedMonth, pattern, { locale: ptBR }).replace(".", "");
-}
-
-function isIncludedStatus(status: Transaction["status"]): boolean {
-    return status === "paid" || status === "pending";
 }
 
 function isIncludedType(transaction: Transaction): boolean {

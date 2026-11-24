@@ -17,6 +17,8 @@ npm run test -- -t "nome do caso"                                     # single c
 npm run test:migrations  # replays supabase/migrations in PGlite + runtime assertions
 ```
 
+Storybook (mesma pasta, config em `.storybook/`): `npm run storybook` (porta 6006) e `npm run build-storybook`. Taxonomia: `Tokens/` (`src/stories/tokens/`), `Componentes/` (stories ao lado do componente, `title: "Componentes/Nome"`) e `Telas/` (`src/stories/telas/`); o toolbar "Tema" troca o `data-theme`. Todas as stories rodam dentro de `MockFinanceProvider` (`src/stories/mocks/`, dados fictícios, sem Supabase), então componentes com `useFinance*` renderizam normalmente; `parameters: { route }` define a rota. `npm run test:stories` renderiza todas as stories em happy-dom (fica fora do `npm run test` de propósito). Componente novo precisa de story. Antes de escrever um `<button>` com classes próprias, veja `src/components/ui/` (`Button`, `IconButton`, `Switch`).
+
 `--configLoader runner` is required for build/test (Vite/Vitest config loading in this environment); keep it when adding scripts.
 
 Env: `.env.local` with `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` (anon key only, never service_role).

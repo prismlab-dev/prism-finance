@@ -1,12 +1,9 @@
 import type { PlanningBudget, PlanningBudgetRule } from "./domainTypes";
 import { asNumber, asString } from "./valueNormalization";
+import { isRecord } from "../../lib/primitives";
 
 export const DEFAULT_BUDGET_ALERT_PERCENT = 80;
 const MAX_BUDGET_NAME_LENGTH = 60;
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
-}
 
 function normalizeBudgetRule(value: unknown): PlanningBudgetRule | null {
     if (!isRecord(value)) {

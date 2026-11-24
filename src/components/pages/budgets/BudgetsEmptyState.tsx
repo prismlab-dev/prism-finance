@@ -1,3 +1,4 @@
+import { Button } from "../../ui/Button";
 import { Plus } from "lucide-react";
 
 /** Silhueta da barra do topo: mostra o que a página vira quando houver orçamentos. */
@@ -18,14 +19,10 @@ export function BudgetsEmptyState({ onCreate }: { onCreate: () => void }) {
                     Escolha quais despesas entram — categorias, despesas recorrentes, tags, beneficiários ou um trecho da descrição — e quais ficam de fora. O Silus acompanha o
                     lançado, o previsto e avisa antes de estourar.
                 </p>
-                <button
-                    type="button"
-                    onClick={onCreate}
-                    className="mt-6 inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-canvas transition-colors hover:bg-white/85"
-                >
+                <Button variant="solid" onClick={onCreate} className="mt-6">
                     <Plus size={15} />
                     Criar primeiro orçamento
-                </button>
+                </Button>
             </div>
         </div>
     );

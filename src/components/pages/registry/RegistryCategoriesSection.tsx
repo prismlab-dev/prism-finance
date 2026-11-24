@@ -8,6 +8,8 @@ import { AddCategory } from "../../modal/AddCategory";
 import { RegistryListItemEntrance } from "./RegistryListItemEntrance";
 import { RegistrySectionHeader } from "./RegistrySectionHeader";
 import { readableTint } from "../../../lib/colorContrast";
+import { Badge } from "../../ui/Badge";
+import { EmptyState } from "../../ui/EmptyState";
 
 interface CategoryColumnProps {
     title: string;
@@ -107,7 +109,7 @@ function CategoryColumn({ title, accentClassName, index, items, childrenByParent
                 </div>
 
                 {orderedRoots.length < 1 ? (
-                    <p className="py-4 text-sm text-white/45">Nenhuma categoria deste tipo.</p>
+                    <EmptyState variant="plain" size="sm">Nenhuma categoria deste tipo.</EmptyState>
                 ) : (
                     <Reorder.Group axis="y" values={orderedRoots} onReorder={setOrderedRoots} className="divide-y divide-white/[0.06]">
                         {orderedRoots.map((category, itemIndex) => (
@@ -153,7 +155,7 @@ function CategoryItem({ category, children, onEdit, onReorder }: CategoryItemPro
                         <Icon size={17} />
                     </span>
                     <span className="min-w-0 flex-1 truncate font-medium text-white">{category.name}</span>
-                    {!category.isActive && <span className="shrink-0 rounded-full bg-white/[0.06] px-2 py-0.5 text-[11px] text-white/50">Inativo</span>}
+                    {!category.isActive && <Badge tone="soft" size="sm">Inativo</Badge>}
                     {orderedChildren.length > 0 ? <span className="shrink-0 text-xs tabular-nums text-white/35">{orderedChildren.length === 1 ? "1 subcategoria" : `${orderedChildren.length} subcategorias`}</span> : null}
                 </button>
             </div>
@@ -174,7 +176,7 @@ function CategoryItem({ category, children, onEdit, onReorder }: CategoryItemPro
                                     >
                                         <ChildIcon size={14} className="shrink-0" style={{ color: readableTint(child.color ?? color) }} />
                                         <span className="min-w-0 flex-1 truncate">{child.name}</span>
-                                        {!child.isActive && <span className="shrink-0 rounded-full bg-white/[0.06] px-2 py-0.5 text-[11px] text-white/50">Inativo</span>}
+                                        {!child.isActive && <Badge tone="soft" size="sm">Inativo</Badge>}
                                     </button>
                                 </Reorder.Item>
                             );

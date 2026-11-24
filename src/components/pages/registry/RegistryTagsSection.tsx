@@ -7,6 +7,8 @@ import { AddTag } from "../../modal/AddTag";
 import { RegistryListItemEntrance } from "./RegistryListItemEntrance";
 import { RegistrySectionHeader } from "./RegistrySectionHeader";
 import { readableTint } from "../../../lib/colorContrast";
+import { Badge } from "../../ui/Badge";
+import { EmptyState } from "../../ui/EmptyState";
 
 export function RegistryTagsSection() {
     const tags = useFinanceTags();
@@ -44,7 +46,7 @@ export function RegistryTagsSection() {
             <div className="elegant-scrollbar min-h-0 flex-1 overflow-y-auto overflow-x-hidden pr-2">
                 {orderedTags.length < 1 ? (
                     <RegistryListItemEntrance index={0}>
-                        <div className="py-4 text-sm text-white/45">Nenhuma tag para os filtros atuais.</div>
+                        <EmptyState variant="plain" size="sm">Nenhuma tag para os filtros atuais.</EmptyState>
                     </RegistryListItemEntrance>
                 ) : (
                     <Reorder.Group axis="y" values={orderedTags} onReorder={setOrderedTags} className="divide-y divide-white/[0.06]">
@@ -83,7 +85,7 @@ function TagCard({ tag, onEdit }: { tag: FinanceTag; onEdit: () => void }) {
                     <span aria-hidden="true" className="opacity-80">#</span>
                     <span className="truncate text-white/90">{tag.name}</span>
                 </span>
-                {!tag.isActive && <span className="shrink-0 rounded-full bg-white/[0.06] px-2 py-0.5 text-[11px] text-white/50">Inativo</span>}
+                {!tag.isActive && <Badge tone="soft" size="sm">Inativo</Badge>}
             </button>
         </div>
     );

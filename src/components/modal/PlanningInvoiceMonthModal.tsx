@@ -2,8 +2,11 @@ import { CreditCard, X } from "lucide-react";
 import { useState } from "react";
 import { useModal } from "../../context/ModalContext";
 import { formatCurrency, getCurrentMonthKey } from "../pages/planning/planningTimelineUtils";
+import { Button } from "../ui/Button";
+import { IconButton } from "../ui/IconButton";
 import { ModalStructure } from "./ModalStructure";
 import { formatMonthDisplay, PlanningMonthField } from "./PlanningSimulationModal";
+import { ModalPanel } from "./ModalChrome";
 
 interface PlanningInvoiceMonthModalProps {
     label: string;
@@ -30,18 +33,12 @@ export function PlanningInvoiceMonthModal({ label, amount, dueMonthKey, chargeMo
 
     return (
         <ModalStructure height="auto" width="480px">
-            <div className="rounded-xl border border-white/[0.09] bg-surface p-4 text-white shadow-[0_26px_70px_-38px_rgba(0,0,0,0.95)]">
+            <ModalPanel>
                 <header className="flex items-center justify-between gap-3">
                     <h2 className="ml-1 text-sm uppercase opacity-50">Mover cobrança da fatura</h2>
-                    <button
-                        type="button"
-                        onClick={closeModal}
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/[0.12] bg-white/[0.03] text-white/70 transition-colors hover:border-white/[0.22] hover:text-white"
-                        aria-label="Fechar modal"
-                        title="Fechar"
-                    >
+                    <IconButton onClick={closeModal} aria-label="Fechar modal" title="Fechar">
                         <X size={15} />
-                    </button>
+                    </IconButton>
                 </header>
 
                 <section className="mt-4 flex flex-col gap-3">
@@ -71,22 +68,14 @@ export function PlanningInvoiceMonthModal({ label, amount, dueMonthKey, chargeMo
                 {error ? <p className="mt-3 text-sm text-amber-200/90">{error}</p> : null}
 
                 <div className="mt-5 flex items-center justify-end gap-2">
-                    <button
-                        type="button"
-                        onClick={closeModal}
-                        className="inline-flex min-w-24 items-center justify-center rounded-xl border border-white/[0.12] bg-white/[0.03] px-4 py-2 text-sm font-medium text-white/70 transition-colors hover:border-white/[0.2] hover:text-white"
-                    >
+                    <Button variant="secondary" onClick={closeModal} className="min-w-24">
                         Cancelar
-                    </button>
-                    <button
-                        type="button"
-                        onClick={handleSubmit}
-                        className="inline-flex min-w-32 items-center justify-center rounded-xl border border-emerald-400/35 bg-emerald-500/15 px-4 py-2 text-sm font-semibold text-emerald-100 transition-colors hover:border-emerald-400/55 hover:bg-emerald-500/20"
-                    >
+                    </Button>
+                    <Button variant="success" onClick={handleSubmit} className="min-w-32">
                         Salvar
-                    </button>
+                    </Button>
                 </div>
-            </div>
+            </ModalPanel>
         </ModalStructure>
     );
 }

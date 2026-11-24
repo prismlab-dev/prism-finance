@@ -7,6 +7,8 @@ import { ConfirmActionModal } from "./ConfirmActionModal";
 import { FIELD_EMBEDDED_INPUT_CLASS, FIELD_ICON_CONTROL_CLASS } from "../transactions/transactionForm.constants";
 import { ModalBody, ModalCancelButton, ModalFooter, ModalFooterAction, ModalHeader, ModalPanel, ModalPrimaryButton } from "./ModalChrome";
 import { ModalStructure } from "./ModalStructure";
+import { ColorField } from "../common/ColorField";
+import { Alert } from "../ui/Alert";
 
 
 interface AddTagProps {
@@ -122,7 +124,7 @@ export function AddTag({ mode = "create", tagId, initialTag }: AddTagProps) {
                 <ModalHeader title={isEditMode ? "Editando tag" : "Nova tag"} disabled={submitting} />
 
                 <ModalBody className="flex flex-col gap-3">
-                    {mode === "edit" && !editingTag && <p className="rounded-xl border border-amber-400/25 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">Tag não encontrada.</p>}
+                    {mode === "edit" && !editingTag && <Alert tone="warning">Tag não encontrada.</Alert>}
 
                     <label className={`${FIELD_ICON_CONTROL_CLASS} flex min-h-[50px] items-center gap-2`}>
                         <span
@@ -143,10 +145,7 @@ export function AddTag({ mode = "create", tagId, initialTag }: AddTagProps) {
                         />
                     </label>
 
-                    <label className={`${FIELD_ICON_CONTROL_CLASS} flex min-h-[50px] items-center gap-2`}>
-                        <input aria-label="Cor" type="color" value={color} onChange={(event) => setColor(event.target.value)} className="h-7 w-7 shrink-0 cursor-pointer rounded-md border border-white/[0.12] bg-transparent p-0.5" />
-                        <input aria-label="Código da cor" type="text" value={color} onChange={(event) => setColor(event.target.value)} className={FIELD_EMBEDDED_INPUT_CLASS} placeholder="#64748B" />
-                    </label>
+                    <ColorField ariaLabel="Cor" value={color} onChange={setColor} placeholder="#64748B" />
                 </ModalBody>
 
                 <ModalFooter

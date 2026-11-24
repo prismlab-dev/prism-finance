@@ -5,9 +5,9 @@ import { getMonthKeyFromDateValue } from "../../../context/financeTypes";
 import { normalizeComparisonText } from "../../../context/finance/helpers";
 import { usePage } from "../../../context/PageContext";
 import { getTransactionSearchSource } from "../../pages/transactions/transactionsPageShared";
+import { currencyFormatter } from "../../../lib/formatters";
 
 const MAX_RESULTS = 6;
-const currencyFormatter = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 const dateFormatter = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" });
 
 export function HeaderSearch() {

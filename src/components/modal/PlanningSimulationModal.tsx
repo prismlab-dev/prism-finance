@@ -9,8 +9,10 @@ import { SingleSelectCombobox, type ComboboxOptionBase } from "../transactions/S
 import { FIELD_ICON_CONTROL_CLASS } from "../transactions/transactionForm.constants";
 import { IconTextField } from "../transactions/IconTextField";
 import { TransactionFieldIcon } from "../transactions/TransactionFieldIcon";
-import { ModalBody, ModalCancelButton, ModalFooter, ModalHeader, ModalPanel } from "./ModalChrome";
+import { ModalBody, ModalCancelButton, ModalFooter, ModalHeader, ModalPanel, ModalPrimaryButton } from "./ModalChrome";
 import { ModalStructure } from "./ModalStructure";
+import { monthKeyToDate } from "../../lib/monthKey";
+import { capitalizeLabel } from "../../lib/primitives";
 
 const MONTH_LABEL_FORMATTER = new Intl.DateTimeFormat("pt-BR", {
     month: "long",
@@ -88,28 +90,9 @@ function resolveInitialKind(tone: "income" | "expense", initialValues?: Planning
     return initialValues.tone === "expense" && initialValues.installmentCount ? "installment_expense" : initialValues.tone;
 }
 
-function capitalizeLabel(value: string): string {
-    return value.charAt(0).toUpperCase() + value.slice(1);
-}
-
-function parseMonthKey(monthKey: string): Date | null {
-    const match = /^(\d{4})-(\d{2})$/.exec(monthKey.trim());
-    if (!match) {
-        return null;
-    }
-
-    const year = Number(match[1]);
-    const month = Number(match[2]);
-    if (!Number.isInteger(year) || !Number.isInteger(month) || month < 1 || month > 12) {
-        return null;
-    }
-
-    return new Date(year, month - 1, 1);
-}
-
 
 export function formatMonthDisplay(monthKey: string): string {
-    const parsed = parseMonthKey(monthKey);
+    const parsed = monthKeyToDate(monthKey);
     if (!parsed) {
         return "Selecione um mes";
     }
@@ -180,7 +163,7 @@ export function PlanningMonthField({ value, onChange }: { value: string; onChang
                 overlayRef={overlayRef}
                 isOpen={isOpen}
                 overlayWidth={240}
-                className="rounded-2xl border border-white/[0.1] bg-canvas/95 p-2.5 shadow-[0_24px_60px_-30px_rgba(0,0,0,0.95)] backdrop-blur-xl"
+                surface="glass" className="p-2.5"
             >
                 <MonthGridPanel
                     selectedMonth={value}
@@ -230,7 +213,6 @@ export function PlanningSimulationModal({ tone, monthKey, initialValues, title =
             ? splitAmountAcrossInstallments(amountCents / 100, installmentCount)
             : null;
     const descriptionPlaceholder = selectedTone === "income" ? "Descrição da receita" : "Descrição do gasto";
-    const submitClassName = "border-emerald-400/35 bg-emerald-500/15 text-emerald-100 hover:border-emerald-400/55 hover:bg-emerald-500/20";
 
     useEffect(() => {
         setSelectedKind(resolveInitialKind(tone, initialValues));
@@ -351,14 +333,9 @@ export function PlanningSimulationModal({ tone, monthKey, initialValues, title =
 
                 <ModalFooter>
                     <ModalCancelButton disabled={submitting} />
-                    <button
-                        type="button"
-                        onClick={() => void handleSubmit()}
-                        disabled={submitting}
-                        className={`inline-flex min-w-28 items-center justify-center rounded-xl border px-3 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${submitClassName}`}
-                    >
+                    <ModalPrimaryButton onClick={() => void handleSubmit()} disabled={submitting}>
                         {submitting ? "Salvando..." : "Salvar"}
-                    </button>
+                    </ModalPrimaryButton>
                 </ModalFooter>
             </ModalPanel>
         </ModalStructure>

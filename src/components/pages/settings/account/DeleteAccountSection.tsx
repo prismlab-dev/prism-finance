@@ -2,7 +2,8 @@ import { TextCursorInput, Trash2 } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { deleteOwnSupabaseAccount } from "../../../../supabase/auth/authService";
 import { IconTextField } from "../../../transactions/IconTextField";
-import { SETTINGS_DANGER_BUTTON_CLASS, SETTINGS_SECONDARY_BUTTON_CLASS, SettingsFeedback, SettingsSection } from "../SettingsSection";
+import { SettingsFeedback, SettingsSection } from "../SettingsSection";
+import { Button } from "../../../ui/Button";
 
 const DELETE_CONFIRMATION_TEXT = "EXCLUIR";
 
@@ -39,10 +40,10 @@ export function DeleteAccountSection() {
     return (
         <SettingsSection title="Excluir conta" description="Apaga a conta e todos os dados dela: carteiras, cartões, transações, orçamentos e desejos. Não dá para desfazer.">
             {!open ? (
-                <button type="button" onClick={() => setOpen(true)} className={SETTINGS_DANGER_BUTTON_CLASS}>
+                <Button variant="danger" size="lg" type="button" onClick={() => setOpen(true)}>
                     <Trash2 size={16} aria-hidden />
                     Excluir conta
-                </button>
+                </Button>
             ) : (
                 <form onSubmit={handleSubmit} className="max-w-md space-y-3 rounded-2xl border border-red-400/20 bg-red-500/[0.06] p-4">
                     <p className="text-sm leading-relaxed text-red-100/90">
@@ -61,13 +62,13 @@ export function DeleteAccountSection() {
                     />
                     <SettingsFeedback feedback={error ? { type: "error", message: error } : null} />
                     <div className="flex flex-wrap gap-2">
-                        <button type="submit" disabled={!confirmed || loading} className={SETTINGS_DANGER_BUTTON_CLASS}>
+                        <Button variant="danger" size="lg" type="submit" disabled={!confirmed || loading}>
                             <Trash2 size={16} aria-hidden />
                             {loading ? "Excluindo..." : "Excluir conta para sempre"}
-                        </button>
-                        <button type="button" onClick={handleCancel} disabled={loading} className={SETTINGS_SECONDARY_BUTTON_CLASS}>
+                        </Button>
+                        <Button variant="secondary" size="lg" type="button" onClick={handleCancel} disabled={loading}>
                             Cancelar
-                        </button>
+                        </Button>
                     </div>
                 </form>
             )}

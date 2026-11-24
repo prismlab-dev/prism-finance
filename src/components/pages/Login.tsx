@@ -7,6 +7,8 @@ import { ArrowLeft, CircleAlert, CircleCheck, Eye, EyeOff, Hexagon, LoaderCircle
 import { LoginShowcase } from "./login/LoginShowcase";
 import { ConfirmEmailPanel } from "./login/ConfirmEmailPanel";
 import { GoogleIcon } from "../common/GoogleIcon";
+import { Button } from "../ui/Button";
+import { IconButton } from "../ui/IconButton";
 
 function SilusMark() {
     return (
@@ -169,15 +171,10 @@ export function LoginPage() {
                             <p className="mt-2 text-sm text-neutral-400">Primeira vez aqui? Sua conta é criada no mesmo passo.</p>
 
                             <div className="mt-8 flex flex-col gap-3">
-                                <button
-                                    type="button"
-                                    onClick={() => void handleGoogleLogin()}
-                                    disabled={isLoading}
-                                    className="flex w-full items-center justify-center gap-3 rounded-xl bg-white px-4 py-3.5 text-sm font-semibold text-canvas transition hover:bg-neutral-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-70"
-                                >
+                                <Button variant="solid" size="lg" onClick={() => void handleGoogleLogin()} disabled={isLoading} className="w-full gap-3">
                                     {authActionLoading === "google" ? <LoaderCircle size={18} aria-hidden className="animate-spin" /> : <GoogleIcon />}
                                     {authActionLoading === "google" ? "Conectando..." : "Continuar com Google"}
-                                </button>
+                                </Button>
                                 <button
                                     type="button"
                                     onClick={() => {
@@ -240,7 +237,7 @@ export function LoginPage() {
 
                             <form onSubmit={handleEmailAuth} className="mt-8 flex flex-col gap-4">
                                 <span className="relative block">
-                                    <Mail size={16} aria-hidden className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-500" />
+                                    <Mail size={16} aria-hidden className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-500!" />
                                     <input
                                         type="email"
                                         autoFocus
@@ -256,7 +253,7 @@ export function LoginPage() {
 
                                 <div>
                                     <span className="relative block">
-                                        <Lock size={16} aria-hidden className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-500" />
+                                        <Lock size={16} aria-hidden className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-500!" />
                                         <input
                                             type={showPassword ? "text" : "password"}
                                             aria-label="Senha"
@@ -267,30 +264,20 @@ export function LoginPage() {
                                             required
                                             className={`${inputClass} pr-11`}
                                         />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowPassword((current) => !current)}
-                                            aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
-                                            className="absolute right-2 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-neutral-500 outline-none transition hover:text-white focus-visible:ring-2 focus-visible:ring-sky-400/60"
-                                        >
+                                        <IconButton variant="bare" size="md" shape="square" className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-500!" type="button" onClick={() => setShowPassword((current) => !current)} aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}>
                                             {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                                        </button>
+                                        </IconButton>
                                     </span>
                                     {!isSignUpMode ? (
-                                        <button
-                                            type="button"
-                                            onClick={() => void handlePasswordReset()}
-                                            disabled={isLoading}
-                                            className="ml-auto mt-2 block text-xs text-neutral-500 underline-offset-4 transition hover:text-white hover:underline disabled:cursor-not-allowed disabled:opacity-60"
-                                        >
+                                        <Button variant="link" className="ml-auto mt-2 text-xs! text-neutral-500! underline-offset-4" type="button" onClick={() => void handlePasswordReset()} disabled={isLoading}>
                                             Esqueci minha senha
-                                        </button>
+                                        </Button>
                                     ) : null}
                                 </div>
 
                                 {isSignUpMode && (
                                     <span className="relative block">
-                                        <Lock size={16} aria-hidden className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-500" />
+                                        <Lock size={16} aria-hidden className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-500!" />
                                         <input
                                             type={showPassword ? "text" : "password"}
                                             aria-label="Confirmar senha"
@@ -317,14 +304,10 @@ export function LoginPage() {
                                     </p>
                                 )}
 
-                                <button
-                                    type="submit"
-                                    disabled={isLoading}
-                                    className="mt-2 flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-semibold text-canvas transition hover:bg-neutral-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-70"
-                                >
+                                <Button type="submit" variant="solid" size="lg" disabled={isLoading} className="mt-2 w-full">
                                     {authActionLoading === "email" && <LoaderCircle size={16} aria-hidden className="animate-spin" />}
                                     {authActionLoading === "email" ? (isSignUpMode ? "Criando conta..." : "Entrando...") : isSignUpMode ? "Criar conta" : "Entrar"}
-                                </button>
+                                </Button>
                             </form>
                         </>
                     )}

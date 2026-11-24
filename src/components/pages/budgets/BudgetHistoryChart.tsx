@@ -4,12 +4,11 @@ import { PlanningReportsPanel, REPORT_MONO_STYLE } from "../planning/PlanningRep
 import { formatReportCurrency } from "../planning/planningReportFormatting";
 import { formatMonthLabel } from "../statement/statementPageShared";
 import type { BudgetHistoryPoint } from "./budgetUtils";
+import { compactFormatter } from "../../../lib/formatters";
 
 const GRID_LINES = 4;
 const OVER_COLOR = "#f87171";
 const CHART_HEIGHT_CLASS = "h-56";
-const compactFormatter = new Intl.NumberFormat("pt-BR", { notation: "compact", maximumFractionDigits: 1 });
-
 interface BudgetHistoryChartProps {
     history: BudgetHistoryPoint[];
     cap: number;

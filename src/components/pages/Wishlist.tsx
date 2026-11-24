@@ -8,6 +8,9 @@ import { WishlistContextMenu, type WishlistContextMenuState } from "./wishlist/W
 import { buildWishlistContextActions, type WishlistContextAction } from "./wishlist/wishlistContextActions";
 import { useWishlistContextActionHandler } from "./wishlist/useWishlistContextActionHandler";
 import { useWishlistTabs } from "./wishlist/useWishlistTabs";
+import { Button } from "../ui/Button";
+import { SegmentedControl } from "../ui/SegmentedControl";
+import { EmptyState } from "../ui/EmptyState";
 
 type WishlistSortOption = "price" | "priority";
 
@@ -139,50 +142,19 @@ export function WishlistPage() {
                             />
                         </div>
 
-                        <div role="radiogroup" aria-label="Ordenar por" className="inline-flex rounded-xl border border-white/[0.08] bg-black/25 p-0.5 text-xs font-medium">
-                            {SORT_OPTIONS.map((option) => (
-                                <button
-                                    key={option.value}
-                                    type="button"
-                                    role="radio"
-                                    aria-checked={sortOption === option.value}
-                                    onClick={() => setSortOption(option.value)}
-                                    className={`rounded-lg px-3 py-1.5 transition-colors ${sortOption === option.value ? "bg-white/10 text-white" : "text-white/55 hover:text-white"}`}
-                                >
-                                    {option.label}
-                                </button>
-                            ))}
-                        </div>
+                        <SegmentedControl variant="compact" ariaLabel="Ordenar por" options={SORT_OPTIONS} value={sortOption} onChange={setSortOption} />
 
                         {isOwnWishlist ? (
-                            <button
-                                type="button"
-                                onClick={() => openModal(<AddWishItem />)}
-                                className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-emerald-300/25 bg-emerald-500/10 px-3 py-2 text-xs font-medium text-emerald-100 transition-colors hover:bg-emerald-500/16"
-                            >
+                            <Button variant="success" className="text-xs!" type="button" onClick={() => openModal(<AddWishItem />)}>
                                 <Plus size={14} />
                                 Adicionar
-                            </button>
+                            </Button>
                         ) : null}
                     </div>
                     {activeWishlist.items.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-white/[0.08] bg-white/[0.02] px-6 py-14 text-center">
-                            <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/[0.05] text-white/70">
-                                <Gift size={22} />
-                            </span>
-                            <div>
-                                <p className="text-base font-medium text-white">{isOwnWishlist ? "Nenhum desejo salvo ainda" : `${activeWishlist.owner.name} não criou uma lista de desejos.`}</p>
-                            </div>
-                        </div>
+                        <EmptyState variant="dashed" size="lg" icon={<Gift size={22} />}>{isOwnWishlist ? "Nenhum desejo salvo ainda" : `${activeWishlist.owner.name} não criou uma lista de desejos.`}</EmptyState>
                     ) : visibleItems.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-white/[0.08] bg-white/[0.02] px-6 py-14 text-center">
-                            <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/[0.05] text-white/70">
-                                <Gift size={22} />
-                            </span>
-                            <div>
-                                <p className="text-base font-medium text-white">Nenhum item encontrado para essa busca.</p>
-                            </div>
-                        </div>
+                        <EmptyState variant="dashed" size="lg" icon={<Gift size={22} />}>Nenhum item encontrado para essa busca.</EmptyState>
                     ) : (
                         <div className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
                             {visibleItems.map((wishItem) => (

@@ -4,7 +4,9 @@ import { useState, type ReactNode } from "react";
 import { resolveSupabaseAuthErrorMessage } from "../../../../supabase/auth/authErrorMessages";
 import { linkGoogleIdentity, unlinkSupabaseIdentity } from "../../../../supabase/auth/authService";
 import { GoogleIcon } from "../../../common/GoogleIcon";
-import { SETTINGS_DANGER_BUTTON_CLASS, SETTINGS_PRIMARY_BUTTON_CLASS, SettingsFeedback, SettingsSection } from "../SettingsSection";
+import { SettingsFeedback, SettingsSection } from "../SettingsSection";
+import { Button } from "../../../ui/Button";
+import { Badge } from "../../../ui/Badge";
 
 type SignInMethodsSectionProps = {
     email: string | null;
@@ -28,11 +30,9 @@ function MethodRow({ icon, name, detail, linked, action }: { icon: ReactNode; na
             <div className="min-w-0 flex-1">
                 <p className="flex items-center gap-2 text-sm font-medium text-white">
                     {name}
-                    <span
-                        className={`rounded-full px-2 py-0.5 text-[11px] font-normal ${linked ? "bg-emerald-500/15 text-emerald-200" : "bg-white/[0.06] text-white/50"}`}
-                    >
+                    <Badge tone={linked ? "success" : "soft"} size="sm">
                         {linked ? "Conectado" : "Não conectado"}
-                    </span>
+                    </Badge>
                 </p>
                 <p className="mt-0.5 truncate text-sm text-white/45">{detail}</p>
             </div>
@@ -100,20 +100,14 @@ export function SignInMethodsSection({ email, identities, loading, redirectError
                             loading ? (
                                 <LoaderCircle size={18} aria-label="Carregando" className="animate-spin text-white/40" />
                             ) : googleIdentity ? (
-                                <button
-                                    type="button"
-                                    onClick={() => void handleUnlinkGoogle()}
-                                    disabled={!canUnlinkGoogle || pending !== null}
-                                    title={canUnlinkGoogle ? undefined : "É a única forma de entrar nesta conta."}
-                                    className={SETTINGS_DANGER_BUTTON_CLASS}
-                                >
+                                <Button variant="danger" size="lg" type="button" onClick={() => void handleUnlinkGoogle()} disabled={!canUnlinkGoogle || pending !== null} title={canUnlinkGoogle ? undefined : "É a única forma de entrar nesta conta."}>
                                     {pending === "unlink" ? "Desvinculando..." : "Desvincular"}
-                                </button>
+                                </Button>
                             ) : (
-                                <button type="button" onClick={() => void handleLinkGoogle()} disabled={pending !== null} className={SETTINGS_PRIMARY_BUTTON_CLASS}>
+                                <Button variant="success" size="lg" type="button" onClick={() => void handleLinkGoogle()} disabled={pending !== null}>
                                     {pending === "link" ? <LoaderCircle size={16} className="animate-spin" aria-hidden /> : null}
                                     {pending === "link" ? "Abrindo Google..." : "Vincular Google"}
-                                </button>
+                                </Button>
                             )
                         }
                     />

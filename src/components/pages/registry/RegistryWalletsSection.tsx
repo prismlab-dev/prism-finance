@@ -19,6 +19,7 @@ import { RegistryAssetSummary } from "./RegistryAssetSummary";
 import { formatRegistryCurrency } from "./registryFormatters";
 import { useRegistryAssetActionHandler } from "./useRegistryAssetActionHandler";
 import { useRegistryAssetMenu } from "./useRegistryAssetMenu";
+import { EmptyState } from "../../ui/EmptyState";
 
 function WalletDelta({ delta }: { delta: number }) {
     const DeltaIcon = delta >= 0 ? TrendingUp : TrendingDown;
@@ -84,7 +85,7 @@ export function RegistryWalletsSection() {
             <div className="elegant-scrollbar order-2 min-h-0 flex-1 overflow-y-auto overflow-x-hidden pr-2 lg:order-1">
                 {visibleWallets.length < 1 ? (
                     <RegistryListItemEntrance index={0}>
-                        <div className="py-4 text-sm text-white/45">Nenhuma carteira para os filtros atuais.</div>
+                        <EmptyState variant="plain" size="sm">Nenhuma carteira para os filtros atuais.</EmptyState>
                     </RegistryListItemEntrance>
                 ) : (
                     <ul className="divide-y divide-white/[0.06]">

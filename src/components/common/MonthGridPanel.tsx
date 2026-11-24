@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { CalendarCheck, ChevronLeft, ChevronRight } from "lucide-react";
+import { getCurrentMonthKey, padMonthPart } from "../../lib/monthKey";
+import { IconButton } from "../ui/IconButton";
 
 interface MonthGridPanelProps {
     selectedMonth: string;
@@ -10,14 +12,6 @@ interface MonthGridPanelProps {
 }
 
 const MONTHS = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-
-function padMonthPart(value: number): string {
-    return String(value).padStart(2, "0");
-}
-
-function getCurrentMonthKey(referenceDate = new Date()): string {
-    return `${referenceDate.getFullYear()}-${padMonthPart(referenceDate.getMonth() + 1)}`;
-}
 
 function parseYear(monthKey: string): number | null {
     const match = /^(\d{4})-(\d{2})$/.exec(monthKey.trim());
@@ -48,21 +42,18 @@ export function MonthGridPanel({ selectedMonth, onMonthChange, shortcutMonth, sh
     }, [selectedMonth]);
 
     const currentMonthKey = getCurrentMonthKey();
-    const yearNavClass =
-        "inline-flex h-7 w-7 items-center justify-center rounded-lg text-white/45 transition-colors hover:bg-white/[0.07] hover:text-white";
-
     return (
         <div className="relative">
             <div className="flex items-center justify-between">
-                <button type="button" onClick={() => setPickerYear((current) => current - 1)} className={yearNavClass} aria-label="Ano anterior" title="Ano anterior">
+                <IconButton variant="bare" size="sm" shape="square" type="button" onClick={() => setPickerYear((current) => current - 1)} aria-label="Ano anterior" title="Ano anterior">
                     <ChevronLeft size={15} />
-                </button>
+                </IconButton>
                 <p className="text-sm font-semibold tabular-nums tracking-[0.12em] text-white/90">
                     {pickerYear}
                 </p>
-                <button type="button" onClick={() => setPickerYear((current) => current + 1)} className={yearNavClass} aria-label="Próximo ano" title="Próximo ano">
+                <IconButton variant="bare" size="sm" shape="square" type="button" onClick={() => setPickerYear((current) => current + 1)} aria-label="Próximo ano" title="Próximo ano">
                     <ChevronRight size={15} />
-                </button>
+                </IconButton>
             </div>
 
             <div className="mt-2 grid grid-cols-3 gap-1">

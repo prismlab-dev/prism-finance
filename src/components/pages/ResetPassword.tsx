@@ -4,6 +4,7 @@ import { finishPasswordRecovery } from "../../auth/passwordRecovery";
 import { resolveSupabaseAuthErrorMessage } from "../../supabase/auth/authErrorMessages";
 import { setSupabasePassword, signOutSupabase } from "../../supabase/auth/authService";
 import { IconTextField } from "../transactions/IconTextField";
+import { Button } from "../ui/Button";
 import { SettingsFeedback } from "./settings/SettingsSection";
 
 type ResetPasswordPageProps = {
@@ -91,21 +92,12 @@ export function ResetPasswordPage({ email }: ResetPasswordPageProps) {
 
                     <SettingsFeedback feedback={error ? { type: "error", message: error } : null} />
 
-                    <button
-                        type="submit"
-                        disabled={loading !== null}
-                        className="mt-2 rounded-xl bg-white px-4 py-3 text-sm font-semibold text-canvas transition hover:bg-neutral-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-70"
-                    >
+                    <Button type="submit" variant="solid" size="lg" disabled={loading !== null} className="mt-2 w-full">
                         {loading === "save" ? "Salvando..." : "Salvar nova senha"}
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => void handleCancel()}
-                        disabled={loading !== null}
-                        className="rounded-xl px-4 py-2.5 text-sm text-neutral-400 transition hover:text-white focus-visible:outline-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-60"
-                    >
+                    </Button>
+                    <Button variant="ghost" size="lg" className="font-normal! text-neutral-400!" type="button" onClick={() => void handleCancel()} disabled={loading !== null}>
                         {loading === "signOut" ? "Saindo..." : "Cancelar e sair"}
-                    </button>
+                    </Button>
                 </form>
             </div>
         </main>

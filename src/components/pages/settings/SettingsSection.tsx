@@ -40,12 +40,3 @@ export function SettingsFeedback({ feedback }: SettingsFeedbackProps) {
         </p>
     );
 }
-
-export const SETTINGS_PRIMARY_BUTTON_CLASS =
-    "inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-400/30 bg-emerald-500/15 px-4 py-2.5 text-sm font-medium text-emerald-50 transition-colors hover:border-emerald-400/45 hover:bg-emerald-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/40 disabled:cursor-not-allowed disabled:opacity-60";
-
-export const SETTINGS_SECONDARY_BUTTON_CLASS =
-    "inline-flex items-center justify-center gap-2 rounded-xl border border-white/[0.1] bg-white/[0.04] px-4 py-2.5 text-sm text-white/80 transition-colors hover:border-white/[0.16] hover:bg-white/[0.07] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 disabled:cursor-not-allowed disabled:opacity-60";
-
-export const SETTINGS_DANGER_BUTTON_CLASS =
-    "inline-flex items-center justify-center gap-2 rounded-xl border border-red-400/20 bg-red-500/10 px-4 py-2.5 text-sm text-red-100 transition-colors hover:border-red-400/30 hover:bg-red-500/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400/40 disabled:cursor-not-allowed disabled:opacity-60";

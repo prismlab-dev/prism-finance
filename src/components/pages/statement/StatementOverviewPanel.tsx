@@ -15,6 +15,8 @@ import {
     STATEMENT_STATUS_TEXT_CLASS,
     type StatementSummary,
 } from "./statementPageShared";
+import { Button } from "../../ui/Button";
+import { Badge } from "../../ui/Badge";
 
 // dueDate vem como YYYY-MM-DD; evita Date/timezone so para mostrar dia/mes.
 function formatDayMonth(isoDate: string): string {
@@ -129,13 +131,13 @@ export function StatementOverviewPanel({
                             {formatCurrency(summary.spentInMonth)}
                         </p>
                     </div>
-                    <span
-                        className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] ${
-                            focusedInvoice ? STATEMENT_STATUS_BADGE_CLASS[focusedInvoice.status] : "border-white/[0.12] bg-white/[0.03] text-white/45"
-                        }`}
+                    <Badge
+                        tone="custom"
+                        uppercase
+                        className={`font-semibold ${focusedInvoice ? STATEMENT_STATUS_BADGE_CLASS[focusedInvoice.status] : "border-white/[0.12] bg-white/[0.03] text-white/45"}`}
                     >
                         {focusedInvoice ? STATEMENT_STATUS_LABELS[focusedInvoice.status] : "Sem gastos"}
-                    </span>
+                    </Badge>
                 </div>
 
                 {focusedInvoice && (
@@ -148,36 +150,24 @@ export function StatementOverviewPanel({
                 {(payableInvoice || manualActionMode) && (
                     <div className="mt-3 space-y-1.5 border-t border-white/[0.06] pt-3">
                         {payableInvoice && payableCreditCard && (
-                            <button
-                                type="button"
-                                onClick={() => onPayInvoice(payableInvoice, payableCreditCard)}
-                                className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-emerald-300/30 bg-emerald-500/15 px-3 py-2 text-xs font-semibold uppercase tracking-[0.05em] text-emerald-100 transition-colors hover:border-emerald-300/45 hover:bg-emerald-500/25"
-                            >
+                            <Button variant="success" className="w-full text-xs! uppercase tracking-[0.05em]" type="button" onClick={() => onPayInvoice(payableInvoice, payableCreditCard)}>
                                 <Wallet size={13} />
                                 {payButtonLabel}
-                            </button>
+                            </Button>
                         )}
 
                         <div className="flex flex-wrap gap-1.5">
                             {payableInvoice && payableCreditCard && (
-                                <button
-                                    type="button"
-                                    onClick={() => onPayInvoice(payableInvoice, payableCreditCard, true)}
-                                    className="inline-flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-lg border border-white/[0.1] bg-white/[0.03] px-2.5 py-1.5 text-[11px] font-medium text-white/60 transition-colors hover:border-white/[0.2] hover:text-white"
-                                >
+                                <Button variant="secondary" size="sm" className="min-w-0 flex-1 text-[11px]!" type="button" onClick={() => onPayInvoice(payableInvoice, payableCreditCard, true)}>
                                     <CircleSlash size={12} />
                                     Quitar sem carteira
-                                </button>
+                                </Button>
                             )}
                             {manualActionMode && (
-                                <button
-                                    type="button"
-                                    onClick={() => onInvoiceStateAdjustment(manualActionInvoices, manualActionMode)}
-                                    className="inline-flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-lg border border-white/[0.1] bg-white/[0.03] px-2.5 py-1.5 text-[11px] font-medium text-sky-200/80 transition-colors hover:border-sky-300/35 hover:bg-sky-500/10 hover:text-sky-100"
-                                >
+                                <Button variant="secondary" size="sm" className="min-w-0 flex-1 text-[11px]! text-sky-200/80! hover:border-sky-300/35 hover:bg-sky-500/10 hover:text-sky-100!" type="button" onClick={() => onInvoiceStateAdjustment(manualActionInvoices, manualActionMode)}>
                                     {manualActionMode === "close" ? <Lock size={12} /> : <RotateCcw size={12} />}
                                     {manualActionLabel}
-                                </button>
+                                </Button>
                             )}
                         </div>
                     </div>

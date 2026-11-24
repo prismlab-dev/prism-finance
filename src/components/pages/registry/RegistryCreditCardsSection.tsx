@@ -19,6 +19,7 @@ import { buildRegistryAssetActions } from "./registryAssetTypes";
 import { formatRegistryCurrency } from "./registryFormatters";
 import { useRegistryAssetActionHandler } from "./useRegistryAssetActionHandler";
 import { useRegistryAssetMenu } from "./useRegistryAssetMenu";
+import { EmptyState } from "../../ui/EmptyState";
 
 export function RegistryCreditCardsSection() {
     const creditCards = useFinanceCreditCards();
@@ -71,7 +72,7 @@ export function RegistryCreditCardsSection() {
             <div className="elegant-scrollbar order-2 min-h-0 flex-1 overflow-y-auto overflow-x-hidden pr-2 lg:order-1">
                 {visibleCreditCards.length < 1 ? (
                     <RegistryListItemEntrance index={0}>
-                        <div className="py-4 text-sm text-white/45">Nenhum cartão para os filtros atuais.</div>
+                        <EmptyState variant="plain" size="sm">Nenhum cartão para os filtros atuais.</EmptyState>
                     </RegistryListItemEntrance>
                 ) : (
                     <ul className="divide-y divide-white/[0.06]">

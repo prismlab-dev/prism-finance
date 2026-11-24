@@ -21,7 +21,7 @@ import {
 } from "../../context/FinanceContext";
 import { createId, findCurrentUserSelfBeneficiary, normalizeComparisonText } from "../../context/finance/helpers";
 import { getLocalDateFromOffset, getLocalTodayDate, parseDateOnlyToLocalDate } from "../../lib/localDate";
-import { extractCurrencyDigits, formatCurrencyFromDigits, parseCurrencyDigitsToNumber } from "../../lib/currencyMask";
+import { extractCurrencyDigits, formatCurrencyFromDigits, parseCurrencyDigitsToNumber, formatAmountInputFromValue } from "../../lib/currencyMask";
 
 export interface TransactionFormPrefill {
     initialDate?: string;
@@ -99,11 +99,6 @@ export interface TransactionFormState {
     duplicate: () => Promise<boolean>;
     ignore: () => Promise<boolean>;
     cancelTransaction: () => Promise<boolean>;
-}
-
-function formatAmountInputFromValue(value: number): string {
-    const cents = Math.max(0, Math.round(Math.abs(value) * 100));
-    return formatCurrencyFromDigits(String(cents));
 }
 
 function getDefaultDescriptionByType(type: TransactionType): string {

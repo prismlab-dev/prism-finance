@@ -1,4 +1,5 @@
 import type { PlanningState } from "../../../context/FinanceContext";
+import { capitalizeLabel } from "../../../lib/primitives";
 
 const MONTH_LABEL_FORMATTER = new Intl.DateTimeFormat("pt-BR", {
     month: "short",
@@ -8,10 +9,6 @@ const MONTH_LABEL_FORMATTER = new Intl.DateTimeFormat("pt-BR", {
 export interface WishlistProjectionMonth {
     monthKey: string;
     label: string;
-}
-
-function capitalizeLabel(value: string): string {
-    return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
 function formatProjectionMonthLabel(monthKey: string): string {

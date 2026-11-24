@@ -1,0 +1,20 @@
+import { Meta } from '@storybook/addon-docs/blocks'
+
+<Meta title="Introdução" />
+
+# Prism Finance — biblioteca de UI
+
+O Storybook segue três níveis. Cada um usa só o que está abaixo dele.
+
+| Nível | O que é | Onde fica o arquivo |
+| --- | --- | --- |
+| **Tokens** | Valores de base: cores, espaçamento, gaps, margens, arredondamento, tipografia, sombras e breakpoints. | `src/stories/tokens/` |
+| **Componentes** | Peças reaproveitáveis da UI (`Button`, `IconButton`, `Switch`…). | Ao lado do componente: `Componente.stories.tsx` |
+| **Telas** | Exemplos de tela real, montados com os componentes e tokens acima. | `src/stories/telas/` |
+
+## Como contribuir
+
+- **Novo componente reaproveitável:** crie o `.stories.tsx` ao lado dele, com `title: "Componentes/<Nome>"`.
+- **Cor ou medida nova:** primeiro veja se já existe em *Tokens*. Se não existir, use a escala do Tailwind em vez de um valor solto como `px-[13px]`.
+- **Botão com classes próprias:** use `Button` ou `IconButton` (`src/components/ui/`). Se faltar uma variante, adicione-a lá.
+- **Tema:** a barra de ferramentas tem o seletor **Tema**. Tokens e componentes precisam funcionar nos seis temas.

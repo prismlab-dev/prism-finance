@@ -3,104 +3,26 @@ import { CircleDollarSign, ImageUp, Link2, RotateCcw, Sigma, Trash2, Wallet as W
 import { v4 as uuidv4 } from "uuid";
 import { type Wallet, useFinanceActions, useFinanceFavoriteWallet, useFinanceWallets } from "../../context/FinanceContext";
 import { useModal } from "../../context/ModalContext";
-import { extractCurrencyDigits, formatCurrencyFromDigits, parseCurrencyDigitsToNumber } from "../../lib/currencyMask";
+import { extractCurrencyDigits, formatCurrencyFromDigits, formatAmountInputFromValue, parseAmountInput } from "../../lib/currencyMask";
 import { DEFAULT_WALLET_COLOR, DEFAULT_WALLET_ICON, isDefaultWalletIcon, normalizeWalletColor, normalizeWalletIcon } from "../../lib/walletVisual";
 import { ToggleSwitch } from "../common/ToggleSwitch";
 import { WalletAvatar } from "../common/WalletAvatar";
 import { ConfirmActionModal } from "./ConfirmActionModal";
 import { IconTextField } from "../transactions/IconTextField";
 import { TransactionFieldIcon } from "../transactions/TransactionFieldIcon";
-import { FIELD_EMBEDDED_INPUT_CLASS, FIELD_ICON_CONTROL_CLASS } from "../transactions/transactionForm.constants";
+import { FIELD_ICON_CONTROL_CLASS } from "../transactions/transactionForm.constants";
 import { ModalBody, ModalCancelButton, ModalError, ModalFooter, ModalFooterAction, ModalHeader, ModalPanel, ModalPrimaryButton } from "./ModalChrome";
+import { Button } from "../ui/Button";
+import { ColorField } from "../common/ColorField";
+import { optimizeImageFile, normalizeHttpImageUrl } from "../../lib/imageUpload";
+import { Alert } from "../ui/Alert";
 
-const MAX_IMAGE_SIZE_BYTES = 350 * 1024;
-const MAX_IMAGE_DIMENSION = 320;
 
 interface AddWalletProps {
     mode?: "create" | "edit";
     walletId?: string;
     initialWallet?: Wallet;
 }
-
-function estimateDataUrlBytes(dataUrl: string): number {
-    const commaIndex = dataUrl.indexOf(",");
-    const payload = commaIndex >= 0 ? dataUrl.slice(commaIndex + 1) : dataUrl;
-    return Math.ceil((payload.length * 3) / 4);
-}
-
-function loadImageFromDataUrl(dataUrl: string): Promise<HTMLImageElement> {
-    return new Promise((resolve, reject) => {
-        const image = new Image();
-        image.onload = () => resolve(image);
-        image.onerror = () => reject(new Error("Nao foi possivel carregar a imagem."));
-        image.src = dataUrl;
-    });
-}
-
-function readFileAsDataUrl(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result ?? ""));
-        reader.onerror = () => reject(new Error("Falha ao ler o arquivo."));
-        reader.readAsDataURL(file);
-    });
-}
-
-async function optimizeImageFile(file: File): Promise<string> {
-    const sourceDataUrl = await readFileAsDataUrl(file);
-    const image = await loadImageFromDataUrl(sourceDataUrl);
-
-    const ratio = Math.min(1, MAX_IMAGE_DIMENSION / Math.max(image.width, image.height));
-    const width = Math.max(1, Math.round(image.width * ratio));
-    const height = Math.max(1, Math.round(image.height * ratio));
-
-    const canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
-    const context = canvas.getContext("2d");
-    if (!context) {
-        throw new Error("Falha ao processar a imagem.");
-    }
-
-    context.drawImage(image, 0, 0, width, height);
-
-    let quality = 0.86;
-    let output = canvas.toDataURL("image/jpeg", quality);
-
-    while (estimateDataUrlBytes(output) > MAX_IMAGE_SIZE_BYTES && quality > 0.45) {
-        quality -= 0.08;
-        output = canvas.toDataURL("image/jpeg", quality);
-    }
-
-    if (estimateDataUrlBytes(output) > MAX_IMAGE_SIZE_BYTES) {
-        throw new Error("A imagem continua grande demais mesmo apos compressao.");
-    }
-
-    return output;
-}
-
-function normalizeHttpImageUrl(value: string): string | null {
-    const normalized = value.trim();
-    if (!normalized) {
-        return null;
-    }
-    if (/^https?:\/\//i.test(normalized)) {
-        return normalized;
-    }
-    return null;
-}
-
-function formatAmountInputFromValue(value: number): string {
-    const cents = Math.max(0, Math.round(Math.abs(value) * 100));
-    return formatCurrencyFromDigits(String(cents));
-}
-
-function parseAmountInput(value: string): number {
-    return parseCurrencyDigitsToNumber(extractCurrencyDigits(value));
-}
-
-const SECONDARY_BUTTON_CLASS =
-    "rounded-lg border border-white/[0.18] px-3 py-2 text-xs font-medium uppercase tracking-[0.08em] text-white/75 transition-colors hover:border-white/[0.28] hover:bg-white/[0.08]";
 
 export function AddWallet({ mode = "create", walletId, initialWallet }: AddWalletProps) {
     const wallets = useFinanceWallets();
@@ -337,7 +259,7 @@ export function AddWallet({ mode = "create", walletId, initialWallet }: AddWalle
                 }}
             >
                 <ModalBody className="flex flex-col gap-2">
-                    {mode === "edit" && !editingWallet && <p className="rounded-xl border border-amber-400/25 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">Carteira não encontrada.</p>}
+                    {mode === "edit" && !editingWallet && <Alert tone="warning">Carteira não encontrada.</Alert>}
 
                     <div className="flex items-stretch gap-2">
                         <label
@@ -353,44 +275,30 @@ export function AddWallet({ mode = "create", walletId, initialWallet }: AddWalle
 
                         <div className="flex min-w-0 flex-1 flex-col gap-2">
                             <IconTextField ariaLabel="Nome da carteira" value={name} onChange={setName} placeholder="Nome da carteira. Ex.: Banco X" icon={WalletIcon} maxLength={70} />
-                            <label className={`${FIELD_ICON_CONTROL_CLASS} flex min-h-[50px] items-center gap-2`}>
-                                <TransactionFieldIcon icon={CircleDollarSign} />
-                                <input
-                                    id="wallet-balance"
-                                    aria-label="Saldo inicial"
-                                    inputMode="numeric"
-                                    value={initialBalanceInput}
-                                    onChange={(event) => setInitialBalanceInput(formatCurrencyFromDigits(extractCurrencyDigits(event.target.value)))}
-                                    className={`${FIELD_EMBEDDED_INPUT_CLASS} tabular-nums`}
-                                    placeholder="Saldo inicial"
-                                />
-                            </label>
+                            <IconTextField ariaLabel="Saldo inicial" value={initialBalanceInput} onChange={(value) => setInitialBalanceInput(formatCurrencyFromDigits(extractCurrencyDigits(value)))} placeholder="Saldo inicial" icon={CircleDollarSign} id="wallet-balance" inputMode="numeric" tabular />
                         </div>
                     </div>
 
-                    <div className={`${FIELD_ICON_CONTROL_CLASS} flex min-h-[50px] items-center gap-2`}>
-                        <TransactionFieldIcon icon={Link2} />
-                        <input
-                            id="wallet-url-input"
-                            aria-label="URL da imagem"
-                            type="text"
-                            value={iconUrlInput}
-                            onChange={(event) => setIconUrlInput(event.target.value)}
-                            className={FIELD_EMBEDDED_INPUT_CLASS}
-                            placeholder="Ou cole a URL de uma imagem"
-                        />
-                        <button type="button" onClick={applyImageUrl} disabled={!iconUrlInput.trim()} className={SECONDARY_BUTTON_CLASS}>
-                            Usar
-                        </button>
-                        <button type="button" onClick={clearCustomIcon} className={SECONDARY_BUTTON_CLASS}>
-                            Ícone padrão
-                        </button>
-                    </div>
+                    <IconTextField
+                        ariaLabel="URL da imagem"
+                        value={iconUrlInput}
+                        onChange={setIconUrlInput}
+                        placeholder="Ou cole a URL de uma imagem"
+                        icon={Link2}
+                        id="wallet-url-input"
+                        trailing={
+                            <>
+                                <Button variant="secondary" size="sm" className="uppercase tracking-[0.06em]" type="button" onClick={applyImageUrl} disabled={!iconUrlInput.trim()}>
+                                    Usar
+                                </Button>
+                                <Button variant="secondary" size="sm" className="uppercase tracking-[0.06em]" type="button" onClick={clearCustomIcon}>
+                                    Ícone padrão
+                                </Button>
+                            </>
+                        }
+                    />
 
-                    <label className={`${FIELD_ICON_CONTROL_CLASS} flex min-h-[50px] items-center gap-2`}>
-                        <input aria-label="Cor da carteira" type="color" value={walletColor} onChange={(event) => setWalletColor(event.target.value)} className="h-7 w-7 shrink-0 cursor-pointer rounded-md border border-white/[0.12] bg-transparent p-0.5" />
-                        <input aria-label="Código da cor" type="text" value={walletColor} onChange={(event) => setWalletColor(event.target.value)} className={FIELD_EMBEDDED_INPUT_CLASS} placeholder={DEFAULT_WALLET_COLOR} />
-                    </label>
+                    <ColorField ariaLabel="Cor da carteira" value={walletColor} onChange={setWalletColor} placeholder={DEFAULT_WALLET_COLOR} />
 
                     <div className={`${FIELD_ICON_CONTROL_CLASS} flex min-h-[50px] items-center justify-between gap-3`}>
                         <span className="flex items-center gap-2 text-sm text-white/80">

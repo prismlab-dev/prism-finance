@@ -1,4 +1,5 @@
 import type { FinanceSnapshot } from "../context/financeTypes";
+import { isRecord } from "./primitives";
 import {
     readFinanceBackupsFromIndexedDb,
     replaceFinanceBackupsInIndexedDb,
@@ -56,10 +57,6 @@ interface BuildFinanceBackupParams {
 
 interface SaveLocalFinanceBackupParams extends BuildFinanceBackupParams {
     trigger: string;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === "object" && value !== null;
 }
 
 function asOptionalString(value: unknown): string | null {

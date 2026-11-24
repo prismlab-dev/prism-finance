@@ -1,5 +1,6 @@
 import { Plus } from "lucide-react";
 import { MonthPickerControl } from "../../common/MonthPickerControl";
+import { Button } from "../../ui/Button";
 import { formatMonthLabel, getCurrentMonthKey, shiftMonth } from "../statement/statementPageShared";
 
 interface BudgetsToolbarProps {
@@ -23,14 +24,10 @@ export function BudgetsToolbar({ monthKey, onMonthChange, onCreate }: BudgetsToo
                 />
             </div>
             {onCreate ? (
-                <button
-                    type="button"
-                    onClick={onCreate}
-                    className="inline-flex h-[40px] items-center gap-2 rounded-xl bg-white px-3.5 text-sm font-semibold text-canvas transition-colors hover:bg-white/85"
-                >
+                <Button variant="solid" onClick={onCreate} className="h-[40px]">
                     <Plus size={15} />
                     Novo orçamento
-                </button>
+                </Button>
             ) : null}
         </div>
     );

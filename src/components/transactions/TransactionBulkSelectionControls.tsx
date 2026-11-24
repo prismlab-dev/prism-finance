@@ -1,5 +1,6 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { CalendarCheck, Check, CircleCheckBig, Minus, PencilLine, X, type LucideIcon } from "lucide-react";
+import { IconButton } from "../ui/IconButton";
 
 interface BulkHeaderCheckboxProps {
     checked: boolean;
@@ -105,15 +106,9 @@ export function FloatingTransactionBulkFooter({ selectedCount, selectedAmount, o
                     {onMarkAsPaid ? <FooterActionButton icon={CircleCheckBig} label="Marcar como pagas" onClick={onMarkAsPaid} /> : null}
                     {onPayToday ? <FooterActionButton icon={CalendarCheck} label="Pagar hoje" onClick={onPayToday} /> : null}
                 </div>
-                <button
-                    type="button"
-                    onClick={onClear}
-                    aria-label="Limpar seleção"
-                    title="Limpar seleção"
-                    className="ml-1 inline-flex h-8 w-8 items-center justify-center rounded-lg text-white/55 transition-colors hover:bg-white/[0.08] hover:text-white"
-                >
+                <IconButton variant="bare" size="md" shape="square" className="ml-1" type="button" onClick={onClear} aria-label="Limpar seleção" title="Limpar seleção">
                     <X size={16} />
-                </button>
+                </IconButton>
             </motion.div>
         </div>
     );

@@ -6,6 +6,7 @@ import { useModal } from "../../context/ModalContext";
 import { getCategoryIconComponent } from "../../lib/categoryIcons";
 import { MobileListToolbar } from "../MobileListToolbar";
 import { readableTint } from "../../lib/colorContrast";
+import { SegmentedControl } from "../../components/ui/SegmentedControl";
 
 const TYPES = [
     { key: "expense" as const, label: "Despesas", active: "border-red-300/45 bg-red-500/18 text-red-100" },
@@ -46,20 +47,14 @@ export function MobileCategoriesSection() {
                 onCreate={() => openModal(<AddCategory mode="create" />)}
             />
 
-            <div className="grid grid-cols-2 gap-1 rounded-2xl bg-white/[0.04] p-1" role="tablist">
-                {TYPES.map((item) => (
-                    <button
-                        key={item.key}
-                        type="button"
-                        role="tab"
-                        aria-selected={type === item.key}
-                        onClick={() => setType(item.key)}
-                        className={`rounded-xl border py-2 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-sky-400/60 ${type === item.key ? item.active : "border-transparent text-neutral-400"}`}
-                    >
-                        {item.label}
-                    </button>
-                ))}
-            </div>
+            <SegmentedControl
+                variant="tabs"
+                role="tab"
+                ariaLabel="Tipo de categoria"
+                options={TYPES.map((item) => ({ value: item.key, label: item.label, activeClassName: item.active }))}
+                value={type}
+                onChange={setType}
+            />
 
             {roots.length === 0 ? (
                 <p className="py-10 text-center text-sm text-neutral-500">Nenhuma categoria deste tipo. Toque em Nova categoria para criar uma.</p>

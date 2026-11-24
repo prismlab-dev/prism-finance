@@ -6,9 +6,9 @@ import { usePage } from "../../../context/PageContext";
 import { OPEN_COMMAND_PALETTE_EVENT } from "./openCommandPalette";
 import { rankCommandItems } from "./rankCommandItems";
 import { useCommandItems, type CommandItem } from "./useCommandItems";
+import { currencyFormatter } from "../../../lib/formatters";
 
 const MAX_RESULTS = 40;
-const currencyFormatter = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 const AMOUNT_TONE = { income: "text-emerald-300", spending: "text-white/80", neutral: "text-white/50" } as const;
 
 // Cada tipo de resultado é uma faixa do espectro: a cor diz o que o item é.

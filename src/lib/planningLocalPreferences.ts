@@ -4,6 +4,7 @@ import {
     type PlanningState,
     type ReportPeriod,
 } from "../context/finance/financeCore";
+import { isRecord } from "./primitives";
 
 export const PLANNING_LOCAL_PREFERENCES_SECTION = "planning";
 
@@ -25,10 +26,6 @@ export type PlanningLocalPreferences = Pick<
 >;
 
 export type SyncedPlanningPayload = Pick<PlanningState, "simulatedExpenses" | "simulatedIncomes" | "wishlistSelections" | "revenueOverrides" | "budgets">;
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
-}
 
 function asStringArray(value: unknown, fallback: string[]): string[] {
     if (!Array.isArray(value)) {

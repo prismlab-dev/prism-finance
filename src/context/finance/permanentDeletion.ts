@@ -1,6 +1,7 @@
 import { parseInvoicePaymentNote, type Beneficiary, type Category, type CreditCard, type CreditCardInvoice, type LedgerEntry, type StoredTransaction, type Tag, type TransactionGroup, type TransactionTag, type Wallet, type WishItem } from "./financeCore";
 import { resolveTransactionCreditCardId, resolveTransactionDestinationWalletId, resolveTransactionSourceWalletId } from "./transactionResolution";
 import { excludeRemovedOccurrences } from "./recurrence/excludeRemovedOccurrences";
+import { normalizeComparisonText } from "./helpers";
 
 interface TransactionPruneParams {
     transactionGroups: TransactionGroup[];
@@ -62,14 +63,6 @@ interface PermanentlyDeleteTagParams {
     tags: Tag[];
     transactionTags: TransactionTag[];
     transactionGroups: TransactionGroup[];
-}
-
-function normalizeComparisonText(value: string): string {
-    return value
-        .normalize("NFD")
-        .replace(/\p{Diacritic}/gu, "")
-        .trim()
-        .toLowerCase();
 }
 
 function pruneTransactionsAndRelatedData(params: TransactionPruneParams): TransactionPruneResult {

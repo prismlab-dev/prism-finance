@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { useFinanceCategories, useFinanceTransactions } from "../../../../context/FinanceContext";
 import { transactionSettlementDate } from "../../../../lib/transactionSettlementDate";
 import { getCategoryIconComponent } from "../../../../lib/categoryIcons";
+import { EmptyState } from "../../../ui/EmptyState";
 
 interface CategoryChartItem {
     key: string;
@@ -131,7 +132,7 @@ export function GastosPorCategoria() {
             </div>
 
             {groups.length === 0 ? (
-                <p className="mt-5 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-6 text-center text-sm text-neutral-400">Nenhuma despesa paga neste mês</p>
+                <EmptyState variant="soft" size="md" className="mt-5">Nenhuma despesa paga neste mês</EmptyState>
             ) : (
                 <>
                     <div className="mt-4 flex h-3 gap-[3px]" role="img" aria-label="Distribuição dos gastos por categoria">

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { CircleAlert, CircleCheck, LoaderCircle, MailCheck } from "lucide-react";
 import { resolveSupabaseAuthErrorMessage } from "../../../supabase/auth/authErrorMessages";
 import { resendSignUpConfirmation } from "../../../supabase/auth/authService";
+import { Button } from "../../ui/Button";
 
 interface ConfirmEmailPanelProps {
     email: string;
@@ -54,22 +55,13 @@ export function ConfirmEmailPanel({ email, onBack }: ConfirmEmailPanelProps) {
                     </p>
                 )}
 
-                <button
-                    type="button"
-                    onClick={() => void handleResend()}
-                    disabled={resending}
-                    className="flex items-center justify-center gap-2 rounded-xl border border-white/[0.1] bg-surface px-4 py-3 text-sm font-medium text-neutral-100 transition hover:border-white/20 hover:bg-white/[0.04] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-70"
-                >
+                <Button variant="secondary" size="lg" className="gap-2" type="button" onClick={() => void handleResend()} disabled={resending}>
                     {resending && <LoaderCircle size={16} aria-hidden className="animate-spin" />}
                     {resending ? "Reenviando..." : "Reenviar link"}
-                </button>
-                <button
-                    type="button"
-                    onClick={onBack}
-                    className="rounded-xl px-4 py-3 text-sm font-semibold text-neutral-400 transition hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-                >
+                </Button>
+                <Button variant="ghost" size="lg" className="text-neutral-400!" type="button" onClick={onBack}>
                     Já confirmei, entrar
-                </button>
+                </Button>
             </div>
         </div>
     );

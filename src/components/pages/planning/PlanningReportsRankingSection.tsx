@@ -2,6 +2,7 @@ import { BeneficiaryAvatar } from "../../common/BeneficiaryAvatar";
 import { PlanningReportsPanel, REPORT_MONO_STYLE } from "./PlanningReportsPanel";
 import { formatReportCurrency } from "./planningReportFormatting";
 import type { BeneficiaryReport } from "./planningReportsUtils";
+import { EmptyState } from "../../ui/EmptyState";
 
 const RANKING_LIMIT = 5;
 
@@ -36,7 +37,7 @@ export function PlanningReportsRankingSection({ beneficiaryReports }: { benefici
                     ))}
                 </ul>
             ) : (
-                <p className="py-8 text-center text-sm text-white/45">Nenhuma despesa com beneficiário no período.</p>
+                <EmptyState variant="plain" align="center">Nenhuma despesa com beneficiário no período.</EmptyState>
             )}
         </PlanningReportsPanel>
     );

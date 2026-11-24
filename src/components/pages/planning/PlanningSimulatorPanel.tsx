@@ -4,6 +4,8 @@ import type { CreditCard, Wallet } from "../../../context/FinanceContext";
 import { INPUT_CLASS, SELECT_CLASS } from "../transactions/transactionsPageShared";
 import type { PlanningSimulationResult } from "./planningPageShared";
 import { formatCurrency, formatDateLabel, formatMonthLabel } from "./planningPageShared";
+import { Button } from "../../ui/Button";
+import { Surface } from "../../ui/Surface";
 
 interface PlanningSimulatorPanelProps {
     amountInput: string;
@@ -48,7 +50,7 @@ export function PlanningSimulatorPanel({
     const hasMoreInstallments = simulation.installments.length > visibleInstallments.length;
 
     return (
-        <section className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-surface p-4 text-left shadow-[0_24px_60px_-32px_rgba(0,0,0,0.9)]">
+        <Surface as="section" className="relative overflow-hidden p-4 text-left">
             <div className="pointer-events-none absolute -right-10 -top-12 h-32 w-32 rounded-full bg-orange-500/10 blur-3xl" />
             <div className="pointer-events-none absolute -left-16 -bottom-16 h-36 w-36 rounded-full bg-yellow-500/10 blur-3xl" />
 
@@ -57,14 +59,10 @@ export function PlanningSimulatorPanel({
                     <p className="text-lg font-medium text-white">Simulador de compras</p>
                     <p className="text-sm text-white/55">Projete como uma compra pode impactar seu saldo do mes.</p>
                 </div>
-                <button
-                    type="button"
-                    onClick={onResetSimulation}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.12] bg-white/[0.04] px-3 py-1 text-xs uppercase tracking-[0.06em] text-white/75 transition-colors hover:border-white/[0.2] hover:bg-white/[0.08] hover:text-white"
-                >
+                <Button variant="secondary" size="sm" shape="pill" className="uppercase tracking-[0.06em]" type="button" onClick={onResetSimulation}>
                     <RefreshCcw size={12} />
                     Limpar simulacao
-                </button>
+                </Button>
             </div>
 
             <div className="relative mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
@@ -181,6 +179,6 @@ export function PlanningSimulatorPanel({
                     {hasMoreInstallments && <p className="mt-2 text-xs text-white/45">Exibindo 8 de {simulation.installments.length} parcelas.</p>}
                 </div>
             )}
-        </section>
+        </Surface>
     );
 }

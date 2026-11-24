@@ -8,8 +8,11 @@ import { SingleSelectCombobox, type ComboboxOptionBase } from "../transactions/S
 import { BeneficiaryOptionContent, CategoryOptionContent, TagOptionContent } from "../transactions/TransactionFormParts";
 import { TransactionFieldIcon } from "../transactions/TransactionFieldIcon";
 import { FIELD_ICON_TRIGGER_CLASS } from "../transactions/transactionForm.constants";
+import { ToggleSwitch } from "../common/ToggleSwitch";
 import { ModalBody, ModalCancelButton, ModalFooter, ModalHeader, ModalPanel, ModalPrimaryButton } from "./ModalChrome";
 import { ModalStructure } from "./ModalStructure";
+import { Badge } from "../ui/Badge";
+import { Alert } from "../ui/Alert";
 
 interface BulkTransactionEditModalProps {
     transactions: Transaction[];
@@ -36,7 +39,6 @@ interface StatusOption extends ComboboxOptionBase {
 }
 
 const BULK_FIELD_ROW_CLASS = "rounded-xl border border-white/[0.08] bg-white/[0.02] p-2";
-const BULK_CHECKBOX_CLASS = "h-4 w-4 rounded border-white/20 bg-black/35 accent-emerald-400";
 
 function getStatusOptions(context: BulkTransactionEditModalProps["context"]): StatusOption[] {
     if (context === "invoice") {
@@ -59,10 +61,10 @@ function StatusOptionContent({ option }: { option: StatusOption }) {
 
 function BulkFieldToggle({ checked, label, onChange }: { checked: boolean; label: string; onChange: (checked: boolean) => void }) {
     return (
-        <label className="mb-2 flex cursor-pointer items-center gap-2 pl-1 text-sm text-white/75">
-            <input type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} className={BULK_CHECKBOX_CLASS} />
+        <div className="mb-2 flex items-center gap-2 pl-1 text-sm text-white/75">
+            <ToggleSwitch checked={checked} onChange={onChange} label={label} />
             {label}
-        </label>
+        </div>
     );
 }
 
@@ -212,9 +214,9 @@ export function BulkTransactionEditModal({ transactions, context, onApplied }: B
         <ModalStructure height="auto" width="680px">
             <ModalPanel>
                 <ModalHeader title="Edição em massa" disabled={submitting}>
-                    <span className="rounded-full border border-white/[0.12] bg-white/[0.04] px-2 py-0.5 text-xs tabular-nums text-white/70">
+                    <Badge size="sm" className="tabular-nums text-white/70">
                         {transactions.length} {transactions.length === 1 ? "selecionada" : "selecionadas"}
-                    </span>
+                    </Badge>
                 </ModalHeader>
 
                 <ModalBody>
@@ -290,9 +292,9 @@ export function BulkTransactionEditModal({ transactions, context, onApplied }: B
                     {tagsEnabled ? <p className="mt-2 pl-1 text-xs text-white/45">As tags escolhidas serão adicionadas sem remover as atuais.</p> : null}
 
                     {willSplitGroups ? (
-                        <p className="mt-3 rounded-xl border border-amber-400/25 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
+                        <Alert tone="warning" className="mt-3">
                             Algumas transações fazem parte de séries ou parcelamentos. Apenas as linhas selecionadas serão alteradas.
-                        </p>
+                        </Alert>
                     ) : null}
                 </ModalBody>
 

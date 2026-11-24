@@ -10,6 +10,8 @@ import { BudgetEntriesTimeline } from "./BudgetEntriesTimeline";
 import { BudgetHistoryChart } from "./BudgetHistoryChart";
 import { BudgetsToolbar } from "./BudgetsToolbar";
 import type { BudgetProgress } from "./budgetUtils";
+import { IconButton } from "../../ui/IconButton";
+import { EmptyState } from "../../ui/EmptyState";
 
 interface BudgetDetailViewProps {
     progress: BudgetProgress;
@@ -23,9 +25,6 @@ interface BudgetDetailViewProps {
     onEdit: () => void;
     onDelete: () => void;
 }
-
-const ICON_BUTTON_CLASS =
-    "inline-flex h-[40px] w-[40px] shrink-0 items-center justify-center rounded-xl border border-white/[0.1] text-white/65 transition-colors hover:bg-white/[0.06] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60";
 
 /** Fração do mês corrente já decorrida; só usada quando há `dailyAllowance` (mês corrente). */
 function currentMonthPace(): number {
@@ -74,14 +73,9 @@ export function BudgetDetailView({ progress, name, iconName, color, monthKey, on
         <div className="flex min-h-full flex-col gap-6">
             <header className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-2">
-                    <button
-                        type="button"
-                        onClick={onBack}
-                        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white/65 transition-colors hover:bg-white/[0.08] hover:text-white focus-visible:bg-white/[0.08] focus-visible:outline-none"
-                        aria-label="Voltar para orçamentos"
-                    >
+                    <IconButton variant="ghost" size="lg" type="button" onClick={onBack} aria-label="Voltar para orçamentos">
                         <ArrowLeft size={18} />
-                    </button>
+                    </IconButton>
                     <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ color: color ?? "#e5e5e5", backgroundColor: `${color ?? "#ffffff"}1f` }}>
                         <Icon size={17} />
                     </span>
@@ -91,12 +85,12 @@ export function BudgetDetailView({ progress, name, iconName, color, monthKey, on
                     <div className="min-w-0 flex-1 sm:flex-none">
                         <BudgetsToolbar monthKey={monthKey} onMonthChange={onMonthChange} />
                     </div>
-                    <button type="button" onClick={onEdit} className={ICON_BUTTON_CLASS} aria-label="Editar orçamento" title="Editar">
+                    <IconButton variant="outline" size="lg" shape="square" type="button" onClick={onEdit} aria-label="Editar orçamento" title="Editar">
                         <Pencil size={15} />
-                    </button>
-                    <button type="button" onClick={onDelete} className={`${ICON_BUTTON_CLASS} hover:text-red-300`} aria-label="Excluir orçamento" title="Excluir">
+                    </IconButton>
+                    <IconButton variant="outline" size="lg" shape="square" className="hover:text-red-300!" onClick={onDelete} aria-label="Excluir orçamento" title="Excluir">
                         <Trash2 size={15} />
-                    </button>
+                    </IconButton>
                 </div>
             </header>
 
@@ -115,7 +109,7 @@ export function BudgetDetailView({ progress, name, iconName, color, monthKey, on
                     }
                 >
                     {entries.length === 0 ? (
-                        <p className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-10 text-center text-sm text-white/45">Nenhuma despesa entrou neste orçamento no mês.</p>
+                        <EmptyState variant="soft" size="lg">Nenhuma despesa entrou neste orçamento no mês.</EmptyState>
                     ) : (
                         <BudgetEntriesTimeline entries={entries} cap={budget.amount} color={color} resolveSourceLabel={resolveSourceLabel} budgetNameById={budgetNameById} onOpenTransaction={openTransaction} />
                     )}

@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
+import { Badge } from "../ui/Badge";
 
 export type SummaryCardTone = "positive" | "negative" | "warning" | "neutral";
 
@@ -82,7 +83,7 @@ export function SummaryCard({ title, value, tone, badge, helper, icon: Icon, ind
                     <span className="truncate">{title}</span>
                 </p>
                 {badge !== undefined && (
-                    <span className="shrink-0 rounded-full border border-white/10 bg-white/[0.04] px-1.5 py-0.5 text-[10px] font-medium text-white/60">{badge}</span>
+                    <Badge>{badge}</Badge>
                 )}
             </div>
             <p className={`relative mt-1.5 text-lg font-semibold tracking-wide ${styles.text}`}>{value}</p>

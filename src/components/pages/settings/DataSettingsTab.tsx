@@ -6,7 +6,8 @@ import { buildFinanceBackupFile, downloadFinanceBackupFile, listLocalFinanceBack
 import { CreditCardInvoiceCsvImportCard } from "./CreditCardInvoiceCsvImportCard";
 import { CsvTransactionImportCard } from "./CsvTransactionImportCard";
 import { IconTextField } from "../../transactions/IconTextField";
-import { SETTINGS_DANGER_BUTTON_CLASS, SETTINGS_PRIMARY_BUTTON_CLASS, SETTINGS_SECONDARY_BUTTON_CLASS, SettingsFeedback, SettingsSection } from "./SettingsSection";
+import { SettingsFeedback, SettingsSection } from "./SettingsSection";
+import { Button } from "../../ui/Button";
 
 const IMPORT_CONFIRMATION_TEXT = "IMPORTAR";
 
@@ -208,10 +209,10 @@ export function DataSettingsTab() {
                         <h2 className="text-2xl font-semibold tracking-tight text-white sm:text-[28px]">Seus dados</h2>
                         <p className="mt-1 max-w-xl text-sm text-white/50">Tudo o que está guardado na sua conta hoje. Baixe um backup antes de importar ou restaurar.</p>
                     </div>
-                    <button type="button" onClick={handleExportCurrent} disabled={!finance || loading} className={SETTINGS_PRIMARY_BUTTON_CLASS}>
+                    <Button variant="success" size="lg" type="button" onClick={handleExportCurrent} disabled={!finance || loading}>
                         <Download size={16} aria-hidden />
                         Baixar backup
-                    </button>
+                    </Button>
                 </div>
                 {finance ? (
                     <div className="mt-6">
@@ -233,10 +234,10 @@ export function DataSettingsTab() {
                 >
                     <div className="space-y-4">
                         <input ref={fileInputRef} type="file" accept="application/json" onChange={handleFileChange} className="hidden" />
-                        <button type="button" onClick={() => fileInputRef.current?.click()} className={SETTINGS_SECONDARY_BUTTON_CLASS}>
+                        <Button variant="secondary" size="lg" type="button" onClick={() => fileInputRef.current?.click()}>
                             <FileUp size={16} aria-hidden />
                             Escolher arquivo de backup
-                        </button>
+                        </Button>
 
                         {pendingImport ? (
                             <div className="max-w-2xl space-y-4 rounded-2xl border border-red-400/20 bg-red-500/[0.06] p-4">
@@ -258,13 +259,13 @@ export function DataSettingsTab() {
                                     />
                                 </div>
                                 <div className="flex flex-wrap gap-2">
-                                    <button type="button" onClick={() => void handleConfirmImport()} disabled={isImporting || loading} className={SETTINGS_DANGER_BUTTON_CLASS}>
+                                    <Button variant="danger" size="lg" type="button" onClick={() => void handleConfirmImport()} disabled={isImporting || loading}>
                                         <FileUp size={16} aria-hidden />
                                         {isImporting ? "Restaurando..." : "Restaurar backup"}
-                                    </button>
-                                    <button type="button" onClick={cancelPendingImport} disabled={isImporting} className={SETTINGS_SECONDARY_BUTTON_CLASS}>
+                                    </Button>
+                                    <Button variant="secondary" size="lg" type="button" onClick={cancelPendingImport} disabled={isImporting}>
                                         Cancelar
-                                    </button>
+                                    </Button>
                                 </div>
                             </div>
                         ) : null}
@@ -286,13 +287,13 @@ export function DataSettingsTab() {
                                         </p>
                                     </div>
                                     <div className="flex gap-2">
-                                        <button type="button" onClick={() => queueLocalBackupForImport(backup)} className={SETTINGS_SECONDARY_BUTTON_CLASS}>
+                                        <Button variant="secondary" size="lg" type="button" onClick={() => queueLocalBackupForImport(backup)}>
                                             Restaurar
-                                        </button>
-                                        <button type="button" onClick={() => downloadFinanceBackupFile(backup, "prism-backup-local")} className={SETTINGS_SECONDARY_BUTTON_CLASS}>
+                                        </Button>
+                                        <Button variant="secondary" size="lg" type="button" onClick={() => downloadFinanceBackupFile(backup, "prism-backup-local")}>
                                             <Download size={15} aria-hidden />
                                             <span className="sr-only sm:not-sr-only">Baixar</span>
-                                        </button>
+                                        </Button>
                                     </div>
                                 </li>
                             ))}

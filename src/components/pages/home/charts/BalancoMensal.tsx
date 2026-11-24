@@ -2,6 +2,7 @@ import type { ChartData, ChartOptions, ScriptableContext } from "chart.js";
 import { Line } from "react-chartjs-2";
 import { type Transaction, useFinanceTransactions } from "../../../../context/FinanceContext";
 import { transactionSettlementDate } from "../../../../lib/transactionSettlementDate";
+import { EmptyState } from "../../../ui/EmptyState";
 
 const INCOME_COLOR = "#34d399";
 const SPENDING_COLOR = "#fb7185";
@@ -198,7 +199,7 @@ export function BalancoMensal({ monthKey, transactions: scopedTransactions, hide
             </div>
 
             {isEmpty ? (
-                <p className="mt-5 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-6 text-center text-sm text-neutral-400">Nenhuma receita ou despesa paga neste mês</p>
+                <EmptyState variant="soft" size="md" className="mt-5">Nenhuma receita ou despesa paga neste mês</EmptyState>
             ) : (
                 <>
                     <div className="mt-4 h-44">

@@ -17,12 +17,14 @@ import { WalletAvatar } from "../common/WalletAvatar";
 import { AuthShell } from "../layout/AuthShell";
 import { BalanceModal } from "../modal/BalanceModal";
 import { CreditCardModal } from "../modal/CreditCardModal";
+import { Button } from "../ui/Button";
+import { Badge } from "../ui/Badge";
+import { Surface, SURFACE_CLASS } from "../ui/Surface";
+import { EmptyState } from "../ui/EmptyState";
+import { currencyFormatter } from "../../lib/formatters";
+import { isRecord } from "../../lib/primitives";
 
-const currencyFormatter = new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    minimumFractionDigits: 2,
-});
+const META_CHIP_CLASS = "text-xs px-2.5 py-0.5 bg-neutral-200/5 text-white/45 border border-white/10 rounded-full";
 
 interface BalancePagePreferences {
     showArchivedWallets: boolean;
@@ -34,10 +36,6 @@ const DEFAULT_BALANCE_PAGE_PREFERENCES: BalancePagePreferences = {
     showArchivedWallets: false,
     showArchivedCreditCards: false,
 };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
-}
 
 function normalizeBalancePagePreferences(value: unknown): BalancePagePreferences {
     if (!isRecord(value)) {
@@ -77,7 +75,7 @@ export function BalancePage() {
         <AuthShell mainClassName="text-white">
             <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-6 pb-10 lg:flex-row lg:items-start">
                 <section className="w-full lg:w-[80%]">
-                    <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-surface p-4 shadow-[0_24px_60px_-32px_rgba(0,0,0,0.9)]">
+                    <Surface className="relative overflow-hidden p-4">
                         <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-sky-500/10 blur-3xl" />
                         <div className="pointer-events-none absolute -bottom-20 -left-20 h-40 w-40 rounded-full bg-emerald-500/10 blur-3xl" />
 
@@ -87,27 +85,19 @@ export function BalancePage() {
                             </div>
 
                             <div className="flex flex-row-reverse gap-1.5 items-center">
-                                <button
-                                    type="button"
-                                    onClick={() => openModal(<BalanceModal mode="create" />)}
-                                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-white/[0.1] bg-white/[0.04] px-3 py-1 text-xs font-semibold uppercase tracking-[0.05em] text-white/80 transition-all hover:border-white/[0.18] hover:bg-white/[0.08]"
-                                >
+                                <Button variant="secondary" size="sm" shape="pill" className="cursor-pointer uppercase tracking-[0.05em]" type="button" onClick={() => openModal(<BalanceModal mode="create" />)}>
                                     <Plus size={13} />
                                     Criar carteira
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setPreferences((current) => ({ ...current, showArchivedWallets: !current.showArchivedWallets }))}
-                                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-white/[0.1] bg-white/[0.04] px-3 py-1 text-xs uppercase tracking-[0.05em] text-white/80 transition-all hover:border-white/[0.18] hover:bg-white/[0.08]"
-                                >
+                                </Button>
+                                <Button variant="secondary" size="sm" shape="pill" className="cursor-pointer uppercase tracking-[0.05em]" type="button" onClick={() => setPreferences((current) => ({ ...current, showArchivedWallets: !current.showArchivedWallets }))}>
                                     {showArchivedWallets ? <EyeOff size={13} /> : <Eye size={13} />}
                                     {showArchivedWallets ? "Arquivadas" : "Arquivadas"}
-                                </button>
+                                </Button>
                             </div>
                         </div>
 
                         <div className="relative mt-4 space-y-2">
-                            {visibleWallets.length < 1 && <p className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-3 text-sm text-white/55">Nenhuma carteira para os filtros atuais.</p>}
+                            {visibleWallets.length < 1 && <EmptyState variant="soft" size="sm">Nenhuma carteira para os filtros atuais.</EmptyState>}
                             {visibleWallets.map((wallet, index) => {
                                 const isFavorite = wallet.id === favoriteWalletId;
                                 
@@ -129,17 +119,17 @@ export function BalancePage() {
                                                 <div className="flex items-center gap-2">
                                                     <p className="truncate text-[15px] font-medium text-white">{wallet.name}</p>
                                                     {!wallet.isActive && (
-                                                        <span className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-white/55">
+                                                        <Badge uppercase>
                                                             Arquivada
-                                                        </span>
+                                                        </Badge>
                                                     )}
                                                 </div>
                                                
                                                 <div className="flex gap-1 mt-1">
-                                                    <p className="text-xs px-2.5 py-0.5 bg-neutral-200/5 text-white/45 border border-white/10 rounded-full">
+                                                    <p className={META_CHIP_CLASS}>
                                                         Saldo inicial: {currencyFormatter.format(wallet.initialBalance)}
                                                     </p>
-                                                    <p className="text-xs px-2.5 py-0.5 bg-neutral-200/5 text-white/45 border border-white/10 rounded-full">
+                                                    <p className={META_CHIP_CLASS}>
                                                         Saldo atual: {currencyFormatter.format(wallet.balance)}
                                                     </p>
                                                 </div>
@@ -147,16 +137,10 @@ export function BalancePage() {
                                         </div>
 
                                         <div className="flex items-center gap-2">
-                                            <button
-                                                type="button"
-                                                onClick={() => openModal(<BalanceModal mode="edit" walletId={wallet.id} />)}
-                                                className={[
-                                                    "inline-flex items-center gap-2 rounded-full border border-white/[0.12] bg-white/[0.03] px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.04em] text-white/70 transition-all hover:border-white/[0.2] hover:text-white",
-                                                ].join(" ")}
-                                            >
+                                            <Button variant="secondary" size="sm" shape="pill" className="uppercase tracking-[0.04em]" type="button" onClick={() => openModal(<BalanceModal mode="edit" walletId={wallet.id} />)}>
                                                 <Pencil size={14} />
                                                 Editar
-                                            </button>
+                                            </Button>
                                             <button
                                                 type="button"
                                                 onClick={() => {
@@ -182,9 +166,9 @@ export function BalancePage() {
                                 );
                             })}
                         </div>
-                    </div>
+                    </Surface>
 
-                    <div className="relative mt-3 overflow-hidden rounded-2xl border border-white/[0.08] bg-surface p-4 shadow-[0_24px_60px_-32px_rgba(0,0,0,0.9)]">
+                    <Surface className="relative mt-3 overflow-hidden p-4">
                         <div className="pointer-events-none absolute -right-12 -top-10 h-36 w-36 rounded-full bg-amber-500/12 blur-3xl" />
                         <div className="pointer-events-none absolute -bottom-20 -left-20 h-40 w-40 rounded-full bg-orange-500/10 blur-3xl" />
 
@@ -194,27 +178,19 @@ export function BalancePage() {
                             </div>
 
                             <div className="flex flex-row-reverse gap-1.5">
-                                <button
-                                    type="button"
-                                    onClick={() => openModal(<CreditCardModal mode="create" />)}
-                                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-white/[0.1] bg-white/[0.04] px-3 py-1 text-xs font-semibold uppercase tracking-[0.05em] text-white/80 transition-all hover:border-white/[0.18] hover:bg-white/[0.08]"
-                                >
+                                <Button variant="secondary" size="sm" shape="pill" className="cursor-pointer uppercase tracking-[0.05em]" type="button" onClick={() => openModal(<CreditCardModal mode="create" />)}>
                                     <Plus size={13} />
                                     Criar cartao
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setPreferences((current) => ({ ...current, showArchivedCreditCards: !current.showArchivedCreditCards }))}
-                                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-white/[0.1] bg-white/[0.04] px-3 py-1 text-xs  uppercase tracking-[0.05em] text-white/80 transition-all hover:border-white/[0.18] hover:bg-white/[0.08]"
-                                >
+                                </Button>
+                                <Button variant="secondary" size="sm" shape="pill" className="cursor-pointer uppercase tracking-[0.05em]" type="button" onClick={() => setPreferences((current) => ({ ...current, showArchivedCreditCards: !current.showArchivedCreditCards }))}>
                                     {showArchivedCreditCards ? <EyeOff size={13} /> : <Eye size={13} />}
                                     {showArchivedCreditCards ? " arquivados" : " arquivados"}
-                                </button>
+                                </Button>
                             </div>
                         </div>
 
                         <div className="relative mt-4 space-y-2">
-                            {visibleCreditCards.length < 1 && <p className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-3 text-sm text-white/55">Nenhum cartao para os filtros atuais.</p>}
+                            {visibleCreditCards.length < 1 && <EmptyState variant="soft" size="sm">Nenhum cartao para os filtros atuais.</EmptyState>}
                             {visibleCreditCards.map((creditCard, index) => {
                                 const isFavorite = creditCard.id === favoriteCreditCardId;
 
@@ -235,28 +211,24 @@ export function BalancePage() {
                                                 <div className="flex items-center gap-2">
                                                     <p className="truncate text-[15px] font-medium text-white">{creditCard.name}</p>
                                                     {!creditCard.isActive && (
-                                                        <span className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-white/55">
+                                                        <Badge uppercase>
                                                             Arquivado
-                                                        </span>
+                                                        </Badge>
                                                     )}
                                                 </div>
                                                 <div className="flex gap-1 mt-1">
-                                                    <p className="text-xs px-2.5 py-0.5 bg-neutral-200/5 text-white/45 border border-white/10 rounded-full">Limite: {currencyFormatter.format(creditCard.limit)}</p>
-                                                    <p className="text-xs px-2.5 py-0.5 bg-neutral-200/5 text-white/45 border border-white/10 rounded-full">Fechamento: {creditCard.closingDay}</p>
-                                                    <p className="text-xs px-2.5 py-0.5 bg-neutral-200/5 text-white/45 border border-white/10 rounded-full">Vencimento: {creditCard.dueDay}</p>
+                                                    <p className={META_CHIP_CLASS}>Limite: {currencyFormatter.format(creditCard.limit)}</p>
+                                                    <p className={META_CHIP_CLASS}>Fechamento: {creditCard.closingDay}</p>
+                                                    <p className={META_CHIP_CLASS}>Vencimento: {creditCard.dueDay}</p>
                                                 </div>
                                             </div>
                                         </div>
 
                                         <div className="flex items-center gap-2">
-                                            <button
-                                                type="button"
-                                                onClick={() => openModal(<CreditCardModal mode="edit" creditCardId={creditCard.id} />)}
-                                                className="inline-flex items-center gap-2 rounded-full border border-white/[0.12] bg-white/[0.03] px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.04em] text-white/70 transition-all hover:border-white/[0.2] hover:text-white"
-                                            >
+                                            <Button variant="secondary" size="sm" shape="pill" className="uppercase tracking-[0.04em]" type="button" onClick={() => openModal(<CreditCardModal mode="edit" creditCardId={creditCard.id} />)}>
                                                 <Pencil size={14} />
                                                 Editar
-                                            </button>
+                                            </Button>
                                             <button
                                                 type="button"
                                                 onClick={() => {
@@ -282,7 +254,7 @@ export function BalancePage() {
                                 );
                             })}
                         </div>
-                    </div>
+                    </Surface>
                 </section>
 
                 <aside className="w-full space-y-2 lg:w-[30%]">
@@ -292,7 +264,7 @@ export function BalancePage() {
                             initial={{ opacity: 0, y: 12 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.2, delay: 0.05 + index * 0.04, ease: "easeOut" }}
-                            className="rounded-2xl border border-white/[0.08] bg-surface p-4 text-left shadow-[0_24px_60px_-32px_rgba(0,0,0,0.9)]"
+                            className={`${SURFACE_CLASS.solid} p-4 text-left`}
                         >
                             <p className="text-xs uppercase tracking-[0.2em] text-white/35">{metric.label}</p>
                             <p className="mt-1 text-lg font-medium text-white">{metric.value}</p>

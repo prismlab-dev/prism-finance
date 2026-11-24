@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
+import { isRecord } from "./primitives";
 
 const LOCAL_PREFERENCES_VERSION = 1;
 
@@ -17,10 +18,6 @@ type LocalPreferenceNormalizer<T> = (value: unknown) => T;
 function getLocalPreferencesStorageKey(userId: string | null | undefined): string {
     const ownerId = userId?.trim() || "anonymous";
     return `prism.local-preferences.v${LOCAL_PREFERENCES_VERSION}.${ownerId}`;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function readLocalPreferencesRecord(userId: string | null | undefined): LocalPreferencesRecord {

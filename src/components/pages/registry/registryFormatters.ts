@@ -1,9 +1,4 @@
-const currencyFormatter = new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    minimumFractionDigits: 2,
-});
-
+import { currencyFormatter } from "../../../lib/formatters";
 export function formatRegistryCurrency(value: number): string {
     return currencyFormatter.format(value);
 }

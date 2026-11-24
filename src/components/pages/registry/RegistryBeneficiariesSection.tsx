@@ -7,6 +7,8 @@ import { BeneficiaryAvatar } from "../../common/BeneficiaryAvatar";
 import { AddBeneficiary } from "../../modal/AddBeneficiary";
 import { RegistryListItemEntrance } from "./RegistryListItemEntrance";
 import { RegistrySectionHeader } from "./RegistrySectionHeader";
+import { Badge } from "../../ui/Badge";
+import { EmptyState } from "../../ui/EmptyState";
 
 const BENEFICIARY_TYPE_LABELS: Record<string, string> = {
     person: "Pessoa",
@@ -51,7 +53,7 @@ export function RegistryBeneficiariesSection() {
             <div className="elegant-scrollbar min-h-0 flex-1 overflow-y-auto overflow-x-hidden pr-2">
                 {orderedBeneficiaries.length < 1 ? (
                     <RegistryListItemEntrance index={0}>
-                        <div className="py-4 text-sm text-white/45">Nenhum beneficiário para os filtros atuais.</div>
+                        <EmptyState variant="plain" size="sm">Nenhum beneficiário para os filtros atuais.</EmptyState>
                     </RegistryListItemEntrance>
                 ) : (
                     <Reorder.Group axis="y" values={orderedBeneficiaries} onReorder={setOrderedBeneficiaries} className="divide-y divide-white/[0.06]">
@@ -92,11 +94,11 @@ function BeneficiaryCard({ beneficiary, onEdit }: { beneficiary: Beneficiary; on
                 <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-2">
                         <span className="truncate font-medium text-white">{beneficiary.name}</span>
-                        {isMe ? <span className="shrink-0 rounded-full bg-white/[0.08] px-2 py-0.5 text-[11px] font-medium text-white/80">Você</span> : null}
+                        {isMe ? <Badge tone="soft" size="sm" className="bg-white/[0.08] font-medium text-white/80">Você</Badge> : null}
                     </span>
                     <span className="block truncate text-xs text-white/45">{originLabel}</span>
                 </span>
-                {!beneficiary.isActive && <span className="shrink-0 rounded-full bg-white/[0.06] px-2 py-0.5 text-[11px] text-white/50">Inativo</span>}
+                {!beneficiary.isActive && <Badge tone="soft" size="sm">Inativo</Badge>}
             </button>
         </div>
     );

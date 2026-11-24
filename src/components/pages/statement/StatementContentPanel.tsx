@@ -34,6 +34,10 @@ import {
     formatCurrency,
     formatMonthLabel,
 } from "./statementPageShared";
+import { Badge } from "../../ui/Badge";
+import { EmptyState } from "../../ui/EmptyState";
+import { isRecord } from "../../../lib/primitives";
+import { DATA_CELL_CLASS, DATA_CELL_MUTED_CLASS } from "../../ui/tableClasses";
 
 interface StatementContentPanelProps {
     selectedMonth: string;
@@ -108,10 +112,6 @@ const DEFAULT_STATEMENT_TABLE_VIEW_PREFERENCES: StatementTableViewPreferences = 
     showValue: true,
 };
 
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
-}
 
 function normalizeStatementSortMode(value: unknown): StatementSortMode {
     return typeof value === "string" && /^(status|wallet|date|description|category|beneficiary|value)-(asc|desc)$/.test(value)
@@ -634,10 +634,7 @@ export function StatementContentPanel({
                     </div>
 
                     {sortedTransactionSnapshots.length < 1 ? (
-                        <div className="mx-4 mb-4 rounded-xl border border-dashed border-white/[0.1] px-4 py-10 text-center">
-                            <p className="text-sm text-white/70">Nenhuma compra encontrada para {invoiceMonthLabel}.</p>
-                            <p className="mt-1 text-xs text-white/40">{canCreateCardSpending ? "Troque o mês ou o cartão para ver outras faturas." : "Cadastre um cartão para lançar gastos em fatura."}</p>
-                        </div>
+                        <EmptyState variant="dashed" size="lg" className="mx-4 mb-4" description={canCreateCardSpending ? "Troque o mês ou o cartão para ver outras faturas." : "Cadastre um cartão para lançar gastos em fatura."}>Nenhuma compra encontrada para {invoiceMonthLabel}.</EmptyState>
                     ) : (
                         <div className="elegant-scrollbar min-w-0 overflow-x-auto px-2 pb-2">
                             <table className="finance-table w-full max-w-full table-fixed border-separate border-spacing-0 text-sm text-white/85">
@@ -733,7 +730,7 @@ export function StatementContentPanel({
                                                     <Fragment key={column}>
                                                         {({
                                                             status: showStatus && (
-                                                        <td className="overflow-hidden whitespace-nowrap border-b border-white/[0.04] px-3 py-2.5 text-white/70">
+                                                        <td className={DATA_CELL_MUTED_CLASS}>
                                                             <div className="flex min-w-0 items-center gap-2 overflow-hidden whitespace-nowrap">
                                                                 {transactionStatus ? (
                                                                     <span
@@ -754,7 +751,7 @@ export function StatementContentPanel({
                                                         </td>
                                                     ),
                                                             wallet: showWallet && (
-                                                        <td className="overflow-hidden whitespace-nowrap border-b border-white/[0.04] px-3 py-2.5">
+                                                        <td className={DATA_CELL_CLASS}>
                                                             <div className="flex min-w-0 max-w-full items-center gap-2">
                                                                 {creditCard ? (
                                                                     <WalletAvatar wallet={creditCard} className="h-8 w-8 rounded-md border border-white/[0.1]" iconSize={16} iconStrokeWidth={1.8} />
@@ -768,7 +765,7 @@ export function StatementContentPanel({
                                                         </td>
                                                     ),
                                                             date: showDate && (
-                                                        <td className="overflow-hidden whitespace-nowrap border-b border-white/[0.04] px-3 py-2.5">
+                                                        <td className={DATA_CELL_CLASS}>
                                                             <span className="font-medium text-white/85">{formatTransactionDate(transaction.date, "dd")}</span>
                                                             <span className="text-white/40">{formatTransactionDate(transaction.date, "/MM/yyyy")}</span>
                                                         </td>
@@ -787,7 +784,7 @@ export function StatementContentPanel({
                                                         </td>
                                                     ),
                                                             category: showCategory && (
-                                                        <td className="overflow-hidden whitespace-nowrap border-b border-white/[0.04] px-3 py-2.5 text-white/70">
+                                                        <td className={DATA_CELL_MUTED_CLASS}>
                                                             <div className="flex min-w-0 max-w-full items-center gap-2">
                                                                 <span
                                                                     className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg"
@@ -800,7 +797,7 @@ export function StatementContentPanel({
                                                         </td>
                                                     ),
                                                             tags: showTags && (
-                                                        <td className="overflow-hidden whitespace-nowrap border-b border-white/[0.04] px-3 py-2.5 text-white/70">
+                                                        <td className={DATA_CELL_MUTED_CLASS}>
                                                             {visibleTags.length < 1 ? (
                                                                 <span className="text-white/25">—</span>
                                                             ) : (
@@ -815,16 +812,16 @@ export function StatementContentPanel({
                                                                         </span>
                                                                     ))}
                                                                     {hiddenTagsCount > 0 && (
-                                                                        <span className="shrink-0 rounded-full border border-white/10 bg-white/[0.03] px-2 py-0.5 text-[10px] font-medium text-white/55">
+                                                                        <Badge className="font-medium">
                                                                             +{hiddenTagsCount}
-                                                                        </span>
+                                                                        </Badge>
                                                                     )}
                                                                 </div>
                                                             )}
                                                         </td>
                                                     ),
                                                             beneficiary: showBeneficiary && (
-                                                        <td className="overflow-hidden whitespace-nowrap border-b border-white/[0.04] px-3 py-2.5">
+                                                        <td className={DATA_CELL_CLASS}>
                                                             <div className="flex min-w-0 max-w-full items-center gap-2 text-white/70">
                                                                 <BeneficiaryAvatar
                                                                     beneficiary={{
@@ -838,7 +835,7 @@ export function StatementContentPanel({
                                                         </td>
                                                     ),
                                                             value: showValue && (
-                                                        <td className={`overflow-hidden whitespace-nowrap border-b border-white/[0.04] px-3 py-2.5 text-right font-semibold ${isInvoicePayment ? "text-emerald-300" : "text-red-400"}`}>
+                                                        <td className={`${DATA_CELL_CLASS} text-right font-semibold ${isInvoicePayment ? "text-emerald-300" : "text-red-400"}`}>
                                                             <span className="mr-1 text-xs font-normal opacity-50">R$</span>
                                                             {formatCurrencyBRL(isInvoicePayment ? -transaction.value : transaction.value)}
                                                         </td>

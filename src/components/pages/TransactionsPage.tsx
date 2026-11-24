@@ -31,6 +31,8 @@ import {
     type TransactionsTabKey,
     type TransactionsSummary,
 } from "./transactions/transactionsPageShared";
+import { Button } from "../ui/Button";
+import { isRecord } from "../../lib/primitives";
 
 interface TransactionsPagePreferences {
     activeTab: TransactionsTabKey;
@@ -45,10 +47,6 @@ const DEFAULT_TRANSACTIONS_PAGE_PREFERENCES: TransactionsPagePreferences = {
 const VALID_TRANSACTION_TABS = new Set<TransactionsTabKey>(["income", "spending", "transfer"]);
 const VALID_TRANSACTION_STATUS_FILTERS = new Set<TransactionsFilterState["selectedStatus"]>(["all", "pending", "paid", "cancelled", "skipped"]);
 const VALID_TRANSACTION_DATE_MODES = new Set<TransactionsFilterState["dateMode"]>(["month", "period"]);
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
-}
 
 function asString(value: unknown, fallback: string): string {
     return typeof value === "string" ? value : fallback;
@@ -439,14 +437,10 @@ export function TransactionsPage() {
                                 onDateToChange={(value) => setFilter("dateTo", value)}
                                 summary={summary}
                             />
-                            <button
-                                type="button"
-                                onClick={handleCreateFromActiveTab}
-                                className="mt-2 inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-emerald-300/30 bg-emerald-500/15 px-3 py-2 text-xs font-semibold uppercase tracking-[0.05em] text-emerald-100 transition-all hover:border-emerald-300/45 hover:bg-emerald-500/20"
-                            >
+                            <Button variant="success" className="mt-2 w-full cursor-pointer text-xs! uppercase tracking-[0.05em]" type="button" onClick={handleCreateFromActiveTab}>
                                 <Plus size={14} />
                                 {activeTab === "income" ? "Adicionar receita" : activeTab === "spending" ? "Adicionar despesa" : "Adicionar transferência"}
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 </div>

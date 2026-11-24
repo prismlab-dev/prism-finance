@@ -9,10 +9,11 @@ import { ConfirmActionModal } from "./ConfirmActionModal";
 import { ModalStructure } from "./ModalStructure";
 import { ModalBody, ModalCancelButton, ModalFooter, ModalFooterAction, ModalHeader, ModalPanel, ModalPrimaryButton } from "./ModalChrome";
 import { IconTextField } from "../transactions/IconTextField";
-import { TransactionFieldIcon } from "../transactions/TransactionFieldIcon";
-import { FIELD_EMBEDDED_INPUT_CLASS, FIELD_ICON_CONTROL_CLASS } from "../transactions/transactionForm.constants";
 
-const INLINE_BUTTON_CLASS = "shrink-0 rounded-lg border border-white/[0.12] bg-white/[0.03] px-2 py-1 text-[11px] uppercase tracking-[0.04em] text-white/62 transition-colors hover:border-white/[0.28] hover:text-white disabled:cursor-not-allowed disabled:opacity-45";
+import { Button } from "../ui/Button";
+import { ColorField } from "../common/ColorField";
+import { optimizeImageFile } from "../../lib/imageUpload";
+import { Alert } from "../ui/Alert";
 
 type BeneficiaryTypeOption = {
     value: Beneficiary["type"];
@@ -36,8 +37,6 @@ const LEGACY_BENEFICIARY_TYPE: BeneficiaryTypeOption = {
     isLegacy: true,
 };
 
-const MAX_IMAGE_SIZE_BYTES = 350 * 1024;
-const MAX_IMAGE_DIMENSION = 320;
 
 interface AddBeneficiaryProps {
     mode?: "create" | "edit";
@@ -60,63 +59,6 @@ function BeneficiaryTypeOptionContent({ option }: { option: BeneficiaryTypeCombo
             <span className="truncate">{option.label}</span>
         </div>
     );
-}
-
-function estimateDataUrlBytes(dataUrl: string): number {
-    const commaIndex = dataUrl.indexOf(",");
-    const payload = commaIndex >= 0 ? dataUrl.slice(commaIndex + 1) : dataUrl;
-    return Math.ceil((payload.length * 3) / 4);
-}
-
-function loadImageFromDataUrl(dataUrl: string): Promise<HTMLImageElement> {
-    return new Promise((resolve, reject) => {
-        const image = new Image();
-        image.onload = () => resolve(image);
-        image.onerror = () => reject(new Error("Nao foi possivel carregar a imagem."));
-        image.src = dataUrl;
-    });
-}
-
-function readFileAsDataUrl(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result ?? ""));
-        reader.onerror = () => reject(new Error("Falha ao ler o arquivo."));
-        reader.readAsDataURL(file);
-    });
-}
-
-async function optimizeImageFile(file: File): Promise<string> {
-    const sourceDataUrl = await readFileAsDataUrl(file);
-    const image = await loadImageFromDataUrl(sourceDataUrl);
-
-    const ratio = Math.min(1, MAX_IMAGE_DIMENSION / Math.max(image.width, image.height));
-    const width = Math.max(1, Math.round(image.width * ratio));
-    const height = Math.max(1, Math.round(image.height * ratio));
-
-    const canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
-    const context = canvas.getContext("2d");
-    if (!context) {
-        throw new Error("Falha ao processar a imagem.");
-    }
-
-    context.drawImage(image, 0, 0, width, height);
-
-    let quality = 0.86;
-    let output = canvas.toDataURL("image/jpeg", quality);
-
-    while (estimateDataUrlBytes(output) > MAX_IMAGE_SIZE_BYTES && quality > 0.45) {
-        quality -= 0.08;
-        output = canvas.toDataURL("image/jpeg", quality);
-    }
-
-    if (estimateDataUrlBytes(output) > MAX_IMAGE_SIZE_BYTES) {
-        throw new Error("A imagem continua grande demais mesmo apos compressao.");
-    }
-
-    return output;
 }
 
 function normalizeAvatarImage(value: string): string | null {
@@ -317,7 +259,7 @@ export function AddBeneficiary({ mode = "create", beneficiaryId, initialBenefici
                 <ModalHeader title={isEditMode ? "Editando beneficiário" : "Novo beneficiário"} disabled={submitting} />
 
                 <ModalBody className="flex flex-col gap-2">
-                    {mode === "edit" && !editingBeneficiary && <p className="rounded-xl border border-amber-400/25 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">Beneficiário não encontrado.</p>}
+                    {mode === "edit" && !editingBeneficiary && <Alert tone="warning">Beneficiário não encontrado.</Alert>}
                     {isEditMode && isReadOnlyBeneficiary && <p className="rounded-xl border border-cyan-400/25 bg-cyan-500/10 px-3 py-2 text-sm text-cyan-100">{readOnlyMessage}</p>}
 
                     <div className="flex items-stretch gap-2">
@@ -354,32 +296,29 @@ export function AddBeneficiary({ mode = "create", beneficiaryId, initialBenefici
                         </div>
                     </div>
 
-                    <div className={`${FIELD_ICON_CONTROL_CLASS} flex min-h-[50px] items-center gap-2 ${isReadOnlyBeneficiary ? "opacity-60" : ""}`}>
-                        <TransactionFieldIcon icon={Link2} />
-                        <input
-                            aria-label="URL da imagem"
-                            type="text"
-                            value={avatarUrlInput}
-                            onChange={(event) => setAvatarUrlInput(event.target.value)}
-                            className={FIELD_EMBEDDED_INPUT_CLASS}
-                            placeholder="Ou cole a URL de uma imagem"
-                            disabled={submitting || isReadOnlyBeneficiary}
-                        />
-                        <button type="button" onClick={applyImageUrl} disabled={submitting || isReadOnlyBeneficiary || !avatarUrlInput.trim()} className={INLINE_BUTTON_CLASS}>
-                            Usar
-                        </button>
-                        {avatarImage ? (
-                            <button type="button" onClick={clearImage} disabled={submitting || isReadOnlyBeneficiary} className={INLINE_BUTTON_CLASS}>
-                                Remover foto
-                            </button>
-                        ) : null}
-                    </div>
+                    <IconTextField
+                        ariaLabel="URL da imagem"
+                        value={avatarUrlInput}
+                        onChange={setAvatarUrlInput}
+                        placeholder="Ou cole a URL de uma imagem"
+                        icon={Link2}
+                        disabled={submitting || isReadOnlyBeneficiary}
+                        trailing={
+                            <>
+                                <Button variant="secondary" size="sm" className="uppercase tracking-[0.04em]" type="button" onClick={applyImageUrl} disabled={submitting || isReadOnlyBeneficiary || !avatarUrlInput.trim()}>
+                                    Usar
+                                </Button>
+                                {avatarImage ? (
+                                <Button variant="secondary" size="sm" className="uppercase tracking-[0.04em]" type="button" onClick={clearImage} disabled={submitting || isReadOnlyBeneficiary}>
+                                    Remover foto
+                                </Button>
+                                ) : null}
+                            </>
+                        }
+                    />
                     {uploadError && <p className="pl-1 text-sm text-amber-200">{uploadError}</p>}
 
-                    <label className={`${FIELD_ICON_CONTROL_CLASS} flex min-h-[50px] items-center gap-2 ${isColorReadOnly ? "opacity-60" : ""}`}>
-                        <input aria-label="Cor do avatar" type="color" value={avatarColor} onChange={(event) => setAvatarColor(event.target.value)} className="h-7 w-7 shrink-0 cursor-pointer rounded-md border border-white/[0.12] bg-transparent p-0.5" disabled={submitting || isColorReadOnly} />
-                        <input aria-label="Código da cor" type="text" value={avatarColor} onChange={(event) => setAvatarColor(event.target.value)} className={FIELD_EMBEDDED_INPUT_CLASS} placeholder="#4B5563" disabled={submitting || isColorReadOnly} />
-                    </label>
+                    <ColorField ariaLabel="Cor do avatar" value={avatarColor} onChange={setAvatarColor} placeholder="#4B5563" disabled={submitting || isColorReadOnly} />
                 </ModalBody>
 
                 <ModalFooter

@@ -2,6 +2,7 @@ import { BALANCE_TONE_CLASS_NAMES, type MonthProjection, type PlanningPanel } fr
 import { buildPlanningTimelineMonthSummary } from "./planningTimelineMonthSummary";
 import { formatCurrency } from "./planningTimelineUtils";
 import { PlanningTimelineSection } from "./PlanningTimelineSection";
+import { Badge } from "../../ui/Badge";
 
 interface PlanningMonthCardProps {
     month: MonthProjection;
@@ -27,7 +28,7 @@ export function PlanningMonthCard({ month, compareMode, isSelected, selectedPane
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
-                    {month.isCurrentMonth ? <span className="rounded-full bg-cyan-500/12 px-2 py-1 text-[10px] uppercase tracking-[0.08em] text-cyan-200">Atual</span> : null}
+                    {month.isCurrentMonth ? <Badge tone="custom" uppercase className="border-transparent bg-cyan-500/12 text-cyan-200">Atual</Badge> : null}
                 </div>
             </div>
 

@@ -2,6 +2,7 @@ import type { CreditCard, CreditCardInvoice } from "../../context/finance/domain
 import { buildCreditCardInvoiceId, getCreditCardInvoiceMonthKey, resolveCreditCardInvoiceCycleFromCycleKey } from "../../context/finance/financeCore";
 import { getCreditCardInvoiceReadState, type CreditCardInvoiceVisualStatus } from "../../context/finance/invoiceStatus";
 import { addMonthsToLocalDate } from "../../lib/localDate";
+import { formatMonthLabel } from "../../lib/monthKey";
 import type { ComboboxOptionBase } from "./SingleSelectCombobox";
 
 export interface InvoiceOption extends ComboboxOptionBase {
@@ -15,13 +16,7 @@ export const INVOICE_STATUS_LABELS: Record<InvoiceOption["visualStatus"], string
     open: "Aberta", future: "Futura", closed: "Fechada", overdue: "Vencida", paid: "Paga · consulta", forecast: "Previsão",
 };
 
-const monthFormatter = new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" });
-export function formatMonthLabel(monthKey: string): string {
-    const [year, month] = monthKey.split("-").map(Number);
-    if (!Number.isInteger(year) || !Number.isInteger(month) || month < 1 || month > 12) return monthKey;
-    const formatted = monthFormatter.format(new Date(year, month - 1, 1));
-    return formatted.charAt(0).toUpperCase() + formatted.slice(1);
-}
+export { formatMonthLabel };
 export function shiftCycleKey(cycleKey: string, offset: number): string {
     if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(cycleKey)) return "";
     return addMonthsToLocalDate(`${cycleKey}-01`, offset).slice(0, 7);

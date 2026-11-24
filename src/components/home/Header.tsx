@@ -11,6 +11,7 @@ import { HeaderNotifications } from "./header/HeaderNotifications";
 import { HeaderProfileMenu } from "./header/HeaderProfileMenu";
 import { HeaderSearchTrigger } from "./header/HeaderSearchTrigger";
 import { useHeaderAmounts } from "./header/useHeaderAmounts";
+import { IconButton } from "../ui/IconButton";
 
 interface HeaderProps {
     onOpenSidebar?: () => void;
@@ -82,14 +83,9 @@ export function Header({ onOpenSidebar, layout = "classic" }: HeaderProps) {
                 {isLumen ? <div aria-hidden className="hidden h-5 w-px shrink-0 bg-white/[0.06] laptop:block" /> : null}
                 <div className={`flex items-center justify-between gap-2 sm:gap-3 ${isLumen ? "min-w-0 flex-1 pl-3 desktop:pl-5" : ""}`}>
                     <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-                        <button
-                            type="button"
-                            onClick={onOpenSidebar}
-                            aria-label="Abrir menu lateral"
-                            className="inline-flex h-10 w-10 items-center justify-center rounded-[10px] border border-white/[0.08] bg-white/[0.03] text-white/75 transition-[background-color,color,transform] duration-200 hover:scale-[1.04] hover:bg-white/[0.07] hover:text-white laptop:hidden"
-                        >
+                        <IconButton variant="outline" size="lg" shape="square" type="button" onClick={onOpenSidebar} aria-label="Abrir menu lateral">
                             <Menu size={18} />
-                        </button>
+                        </IconButton>
                         <div className="elegant-scrollbar min-w-0 flex-1 overflow-x-auto pb-0.5">
                             <HeaderMetricsRow amounts={metricAmounts} />
                         </div>

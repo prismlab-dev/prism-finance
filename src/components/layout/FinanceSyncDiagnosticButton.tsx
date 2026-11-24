@@ -1,3 +1,4 @@
+import { Button } from "../ui/Button";
 import { useState } from "react";
 import { useFinanceSync } from "../../context/FinanceContext";
 
@@ -9,7 +10,7 @@ export function FinanceSyncDiagnosticButton() {
             .then(() => setLabel("Diagnóstico copiado"))
             .catch(() => setLabel("Não foi possível copiar"));
     };
-    return <button type="button" onClick={handleCopy} className="text-left text-xs text-orange-200 underline underline-offset-2 hover:text-orange-100">
+    return <Button variant="link" onClick={handleCopy} className="text-xs! text-orange-200! underline hover:text-orange-100!">
         {label}
-    </button>;
+    </Button>;
 }

@@ -1,10 +1,8 @@
 import type { Beneficiary, Category, TransactionDraft, TransactionGroup, Wallet } from "./domainTypes";
 import { DEFAULT_BENEFICIARY_ID, DEFAULT_WALLET_ID, SYSTEM_EXPENSE_CARD_INVOICE_CATEGORY_ID } from "./domainConstants";
 import { getLocalTodayDate } from "../../lib/localDate";
-
-export function roundToCents(value: number): number {
-    return Math.round(value * 100) / 100;
-}
+import { roundToCents } from "../../lib/primitives";
+export { roundToCents } from "../../lib/primitives";
 
 export function splitAmountAcrossInstallments(amount: number, installmentCount: number): number[] {
     const safeCount = Math.max(2, Math.floor(installmentCount));

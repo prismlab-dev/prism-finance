@@ -1,10 +1,5 @@
 import { roundToCents } from "./planningReportsUtils";
-
-const currencyFormatter = new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    minimumFractionDigits: 2,
-});
+import { currencyFormatter } from "../../../lib/formatters";
 
 export function formatReportCurrency(value: number): string {
     return currencyFormatter.format(roundToCents(value));

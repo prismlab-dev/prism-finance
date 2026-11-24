@@ -22,7 +22,7 @@ import {
 import { buildCreditCardInvoiceId, getCreditCardInvoiceMonthKey, parseCreditCardInvoiceId, resolveCreditCardInvoiceCycle, resolveCreditCardInvoiceCycleFromCycleKey } from "../../context/financeTypes";
 import { createId, findCurrentUserSelfBeneficiary } from "../../context/finance/helpers";
 import { useModal } from "../../context/ModalContext";
-import { extractCurrencyDigits, formatCurrencyFromDigits, parseCurrencyDigitsToNumber } from "../../lib/currencyMask";
+import { extractCurrencyDigits, formatCurrencyFromDigits, parseCurrencyDigitsToNumber, formatAmountInputFromValue } from "../../lib/currencyMask";
 import { getLocalTodayDate } from "../../lib/localDate";
 import { AnimatedTransactionFormPanel } from "./AnimatedTransactionFormPanel";
 import { DateField } from "./DateField";
@@ -35,7 +35,8 @@ import type { TransactionFormTab } from "./TransactionFormTabs";
 import { FIELD_ICON_TRIGGER_CLASS, FIELD_LABEL_CLASS } from "./transactionForm.constants";
 import { FormActionButtons, useSaveAndContinue } from "./SaveAndContinue";
 import { getTransactionSubmitErrorMessage } from "./transactionSubmitError";
-import { FooterButton } from "./TransactionForm";
+import { IconButton } from "../ui/IconButton";
+import { ModalFooterAction } from "../modal/ModalChrome";
 import { useTransactionDetails } from "./useTransactionDetails";
 import {
     BeneficiaryOptionContent,
@@ -78,11 +79,6 @@ const DATE_SHORTCUTS = [
     { label: "Hoje", offsetInDays: 0 },
     { label: "Ontem", offsetInDays: -1 },
 ];
-
-function formatAmountInputFromValue(value: number): string {
-    const cents = Math.max(0, Math.round(Math.abs(value) * 100));
-    return formatCurrencyFromDigits(String(cents));
-}
 
 function normalizeIgnoredInstallmentsCountInput(value: string, installmentCount: number | null): number {
     if (!installmentCount || installmentCount < 2) {
@@ -646,24 +642,17 @@ function CardSpendingFormBody({
 
     return (
         <>
-            <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-white/[0.09] bg-surface p-4 text-white shadow-[0_26px_70px_-38px_rgba(0,0,0,0.95)]">
+            <ModalPanel className="h-full">
                     <header className="flex shrink-0 items-center justify-between">
                         <h1 className="text-sm ml-1 uppercase opacity-50">{isEditing ? (isSeriesTransaction ? "Editando gasto da série" : "Editando gasto no cartão") : "Novo gasto no cartão"}</h1>
                         <div className="flex items-center gap-2">
-                            <button
-                                type="button"
-                                onClick={closeModal}
-                                disabled={submitting}
-                                className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/[0.12] bg-white/[0.03] text-white/70 transition-colors hover:border-white/[0.22] hover:text-white disabled:cursor-not-allowed disabled:opacity-55"
-                                aria-label="Fechar modal"
-                                title="Fechar"
-                            >
+                            <IconButton onClick={closeModal} disabled={submitting} aria-label="Fechar modal" title="Fechar">
                                 <X size={15} />
-                            </button>
+                            </IconButton>
                         </div>
                     </header>
 
-                    {submitError && <p className="mt-3 rounded-xl border border-red-400/25 bg-red-500/10 px-3 py-2 text-sm text-red-100">{submitError}</p>}
+                    {submitError && <Alert tone="error" className="mt-3">{submitError}</Alert>}
 
                     <div className="mt-3 min-h-0 flex-1">
                         <AnimatedTransactionFormPanel activeTab={activeTab}>
@@ -843,19 +832,19 @@ function CardSpendingFormBody({
                             {isEditing && (
                                 <>
                                     {!(isInstallmentEdit && editScope === "this_and_next") && (
-                                        <FooterButton
+                                        <ModalFooterAction
                                             onClick={() => (transaction && isInstallmentEdit && editScope === "all" ? handleContextAction(transaction, DELETE_ALL_INSTALLMENTS_ACTION) : void runAction(remove))}
                                             disabled={submitting || transactionSaved}
                                         >
                                             <Trash2 size={15} /> {isInstallmentEdit && editScope === "all" ? "Excluir todas" : "Excluir"}
-                                        </FooterButton>
+                                        </ModalFooterAction>
                                     )}
-                                    <FooterButton onClick={() => void runAction(duplicate)} disabled={submitting || transactionSaved}>
+                                    <ModalFooterAction onClick={() => void runAction(duplicate)} disabled={submitting || transactionSaved}>
                                         <Copy size={15} /> Duplicar
-                                    </FooterButton>
-                                    <FooterButton onClick={() => void runAction(ignore, true)} disabled={submitting || transactionSaved}>
+                                    </ModalFooterAction>
+                                    <ModalFooterAction onClick={() => void runAction(ignore, true)} disabled={submitting || transactionSaved}>
                                         <SquareSlash size={15} /> Ignorar
-                                    </FooterButton>
+                                    </ModalFooterAction>
                                 </>
                             )}
                         </div>
@@ -872,8 +861,10 @@ function CardSpendingFormBody({
                         </div>
                     </div>
                 </footer>
-            </div>
+            </ModalPanel>
         </>
     );
 }
 import { duplicateTransactionDraft } from "./duplicateTransactionDraft";
+import { ModalPanel } from "../modal/ModalChrome";
+import { Alert } from "../ui/Alert";

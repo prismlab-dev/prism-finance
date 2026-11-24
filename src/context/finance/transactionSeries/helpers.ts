@@ -1,9 +1,7 @@
 import { parseAppDate } from "../../../lib/localDate";
 import type { Category, StoredTransaction, TransactionGroup, TransactionTag } from "../../financeTypes";
-
-export function roundToCents(value: number): number {
-    return Math.round(value * 100) / 100;
-}
+import { roundToCents } from "../../../lib/primitives";
+export { roundToCents } from "../../../lib/primitives";
 
 export function addDays(dateValue: string, days: number): string {
     const parsed = parseAppDate(dateValue);

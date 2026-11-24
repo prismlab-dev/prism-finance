@@ -1,6 +1,6 @@
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { FileSpreadsheet, FileUp, TextCursorInput } from "lucide-react";
-import { SETTINGS_PRIMARY_BUTTON_CLASS, SETTINGS_SECONDARY_BUTTON_CLASS, SettingsFeedback, SettingsSection } from "./SettingsSection";
+import { SettingsFeedback, SettingsSection } from "./SettingsSection";
 import { IconTextField } from "../../transactions/IconTextField";
 import { SingleSelectCombobox } from "../../transactions/SingleSelectCombobox";
 import { useFinance } from "../../../context/FinanceContext";
@@ -10,15 +10,10 @@ import {
     type CreditCardInvoiceCsvImportResult,
 } from "../../../lib/creditCardInvoiceCsvImport";
 import { buildFinanceBackupFile, downloadFinanceBackupFile } from "../../../lib/financeBackup";
+import { Button } from "../../ui/Button";
+import { formatCurrency } from "../../../lib/formatters";
 
 const INVOICE_CSV_IMPORT_CONFIRMATION_TEXT = "IMPORTAR FATURA";
-
-function formatCurrency(value: number): string {
-    return value.toLocaleString("pt-BR", {
-        style: "currency",
-        currency: "BRL",
-    });
-}
 
 function formatDate(value: string): string {
     const [year, month, day] = value.split("-");
@@ -200,15 +195,10 @@ export function CreditCardInvoiceCsvImportCard() {
         <SettingsSection title="Importar faturas" description="Adiciona despesas e encargos de faturas de cartão. Compras parceladas viram uma única série, ligada a cada fatura pela coluna Fatura.">
             <div className="space-y-4">
                 <input ref={fileInputRef} type="file" accept=".csv,text/csv" onChange={handleFileChange} className="hidden" />
-                <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={!finance || loading || activeCreditCards.length < 1}
-                    className={SETTINGS_SECONDARY_BUTTON_CLASS}
-                >
+                <Button variant="secondary" size="lg" type="button" onClick={() => fileInputRef.current?.click()} disabled={!finance || loading || activeCreditCards.length < 1}>
                     <FileSpreadsheet size={16} aria-hidden />
                     Escolher arquivo CSV
-                </button>
+                </Button>
                 {activeCreditCards.length < 1 ? <p className="text-sm text-white/45">Cadastre um cartão antes de importar faturas.</p> : null}
 
                 <SettingsFeedback feedback={feedback} />
@@ -253,13 +243,13 @@ export function CreditCardInvoiceCsvImportCard() {
                         </div>
 
                         <div className="flex flex-wrap gap-2">
-                            <button type="button" onClick={handleConfirmImport} disabled={!canImport} className={SETTINGS_PRIMARY_BUTTON_CLASS}>
+                            <Button variant="success" size="lg" type="button" onClick={handleConfirmImport} disabled={!canImport}>
                                 <FileUp size={16} aria-hidden />
                                 {isImporting ? "Importando..." : "Importar faturas"}
-                            </button>
-                            <button type="button" onClick={resetPreview} disabled={isImporting} className={SETTINGS_SECONDARY_BUTTON_CLASS}>
+                            </Button>
+                            <Button variant="secondary" size="lg" type="button" onClick={resetPreview} disabled={isImporting}>
                                 Cancelar
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 ) : null}

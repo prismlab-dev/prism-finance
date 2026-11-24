@@ -189,26 +189,6 @@ body::-webkit-scrollbar-thumb {
     }
 }
 
-.default-button {
-    border-radius: 8px;
-    border: 1px solid transparent;
-    font-size: 1em;
-    font-weight: 500;
-    font-family: inherit;
-    background-color: #2e2e2e;
-    cursor: pointer;
-    transition: border-color 0.25s;
-}
-
-.default-button:hover {
-    border-color: #367d88;
-}
-
-.default-button:focus,
-.default-button:focus-visible {
-    outline: 4px auto -webkit-focus-ring-color;
-}
-
 .spline-sans-mono {
   font-family: "Spline Sans Mono", monospace;
   font-optical-sizing: auto;

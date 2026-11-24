@@ -1,9 +1,6 @@
 import { parseDateOnlyToLocalDate } from "../../../lib/localDate";
 import type { RecurrenceEnd, RecurrenceRule } from "./types";
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
-}
+import { isRecord } from "../../../lib/primitives";
 
 function stringArray(value: unknown): string[] {
     return Array.isArray(value) ? [...new Set(value.filter((item): item is string => typeof item === "string"))] : [];

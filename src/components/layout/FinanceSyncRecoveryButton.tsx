@@ -1,3 +1,4 @@
+import { Button } from "../ui/Button";
 import { useFinanceSync } from "../../context/FinanceContext";
 import { useModal } from "../../context/ModalContext";
 import { ConfirmActionModal } from "../modal/ConfirmActionModal";
@@ -17,7 +18,7 @@ export function FinanceSyncRecoveryButton() {
             onConfirm={sync.restoreConfirmedData}
         />,
     );
-    return <button type="button" onClick={handleRecovery} className="text-left text-xs text-orange-200 underline underline-offset-2 hover:text-orange-100">
+    return <Button variant="link" onClick={handleRecovery} className="text-xs! text-orange-200! underline hover:text-orange-100!">
         Restaurar dados confirmados
-    </button>;
+    </Button>;
 }

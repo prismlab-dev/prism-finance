@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 import { AlertTriangle, CircleCheck, ShieldAlert } from "lucide-react";
 import type { PlanningAlert, PlanningSummary } from "./planningPageShared";
 import { formatCurrency, formatDateLabel } from "./planningPageShared";
+import { Surface } from "../../ui/Surface";
+import { EmptyState } from "../../ui/EmptyState";
 
 interface PlanningAlertsPanelProps {
     summary: PlanningSummary;
@@ -32,7 +34,7 @@ export function PlanningAlertsPanel({ summary }: PlanningAlertsPanelProps) {
 
     return (
         <section className="space-y-2">
-            <article className="rounded-2xl border border-white/[0.08] bg-surface p-4 text-left shadow-[0_24px_60px_-32px_rgba(0,0,0,0.9)]">
+            <Surface as="article" className="p-4 text-left">
                 <p className="text-lg font-medium text-white">Alertas inteligentes</p>
                 <div className="mt-3 space-y-2">
                     {summary.alerts.map((alert) => {
@@ -50,9 +52,9 @@ export function PlanningAlertsPanel({ summary }: PlanningAlertsPanelProps) {
                         );
                     })}
                 </div>
-            </article>
+            </Surface>
 
-            <article className="rounded-2xl border border-white/[0.08] bg-surface p-4 text-left shadow-[0_24px_60px_-32px_rgba(0,0,0,0.9)]">
+            <Surface as="article" className="p-4 text-left">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="text-lg font-medium text-white">Linha do tempo de caixa</p>
                     <p className={`text-sm font-medium ${summary.minBalanceInMonth < 0 ? "text-red-300" : "text-emerald-300"}`}>
@@ -62,7 +64,7 @@ export function PlanningAlertsPanel({ summary }: PlanningAlertsPanelProps) {
                 <p className="mt-1 text-xs text-white/45">Data critica: {formatDateLabel(summary.minBalanceDate)}</p>
 
                 <div className="mt-3 space-y-1.5">
-                    {visibleEvents.length < 1 && <p className="rounded-lg border border-white/[0.08] bg-white/[0.02] p-3 text-sm text-white/55">Nenhum evento de caixa no mes selecionado.</p>}
+                    {visibleEvents.length < 1 && <EmptyState variant="soft" size="sm">Nenhum evento de caixa no mes selecionado.</EmptyState>}
                     {visibleEvents.map((event) => (
                         <div key={event.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-white/[0.06] bg-white/[0.02] px-2.5 py-2">
                             <div>
@@ -78,7 +80,7 @@ export function PlanningAlertsPanel({ summary }: PlanningAlertsPanelProps) {
                 </div>
 
                 {hasHiddenEvents && <p className="mt-2 text-xs text-white/45">Exibindo 12 de {summary.events.length} eventos.</p>}
-            </article>
+            </Surface>
         </section>
     );
 }

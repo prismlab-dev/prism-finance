@@ -1,3 +1,4 @@
+import { toRevision } from "../../lib/primitives";
 import { getSupabaseClient } from "../supabaseClient";
 import { FINANCE_TABLES, type FinanceSyncStateRow } from "./financeTables";
 
@@ -5,11 +6,6 @@ export interface FinanceRevisionChange {
     revision: number;
     updatedAt: string;
     updatedBy: string | null;
-}
-
-function toRevision(value: number | string | null | undefined): number {
-    const revision = Number(value);
-    return Number.isFinite(revision) && revision >= 0 ? revision : 0;
 }
 
 function toRevisionChange(row: Partial<FinanceSyncStateRow> | null | undefined): FinanceRevisionChange | null {

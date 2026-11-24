@@ -3,7 +3,8 @@ import { useState, type FormEvent } from "react";
 import { resolveSupabaseAuthErrorMessage } from "../../../../supabase/auth/authErrorMessages";
 import { requestSupabaseEmailChange } from "../../../../supabase/auth/authService";
 import { IconTextField } from "../../../transactions/IconTextField";
-import { SETTINGS_PRIMARY_BUTTON_CLASS, SettingsFeedback, SettingsSection } from "../SettingsSection";
+import { SettingsFeedback, SettingsSection } from "../SettingsSection";
+import { Button } from "../../../ui/Button";
 
 type EmailSectionProps = {
     email: string | null;
@@ -65,9 +66,9 @@ export function EmailSection({ email }: EmailSectionProps) {
 
                 <SettingsFeedback feedback={feedback} />
 
-                <button type="submit" disabled={loading || !newEmail.trim()} className={SETTINGS_PRIMARY_BUTTON_CLASS}>
+                <Button variant="success" size="lg" type="submit" disabled={loading || !newEmail.trim()}>
                     {loading ? "Enviando..." : "Trocar e-mail"}
-                </button>
+                </Button>
             </form>
         </SettingsSection>
     );

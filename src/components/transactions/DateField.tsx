@@ -4,6 +4,8 @@ import { formatLocalDateInput, getLocalDateFromOffset, parseDateOnlyToLocalDate 
 import { AnchoredOverlay } from "./AnchoredOverlay";
 import { FIELD_INPUT_CLASS, FIELD_LABEL_CLASS } from "./transactionForm.constants";
 import { TransactionFieldIcon } from "./TransactionFieldIcon";
+import { IconButton } from "../ui/IconButton";
+import { capitalizeLabel } from "../../lib/primitives";
 
 const DATE_MONTH_LABEL_FORMATTER = new Intl.DateTimeFormat("pt-BR", {
     month: "long",
@@ -38,10 +40,6 @@ interface DateFieldProps {
     labelClassName?: string;
     inputClassName?: string;
     hideLabel?: boolean;
-}
-
-function capitalizeLabel(value: string): string {
-    return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
 export function DateField({
@@ -195,27 +193,17 @@ export function DateField({
                 <ChevronDown size={15} className={`shrink-0 text-white/65 transition-transform ${isOpen ? "rotate-180" : ""}`} />
             </button>
 
-            <AnchoredOverlay anchorRef={triggerRef} overlayRef={overlayRef} isOpen={isOpen && !disabled} preferredMaxHeight={430} className="rounded-xl border border-white/[0.12] bg-surface p-2 shadow-[0_20px_50px_-26px_rgba(0,0,0,0.95)]">
+            <AnchoredOverlay anchorRef={triggerRef} overlayRef={overlayRef} isOpen={isOpen && !disabled} preferredMaxHeight={430} surface="solid" className="p-2">
                     <div className="flex items-center justify-between">
-                        <button
-                            type="button"
-                            onClick={() => setVisibleMonth((currentMonth) => new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))}
-                            className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-white/[0.12] bg-white/[0.03] text-white/70 transition-colors hover:border-white/[0.22] hover:text-white"
-                            aria-label="Mes anterior"
-                        >
+                        <IconButton variant="outline" size="sm" shape="square" type="button" onClick={() => setVisibleMonth((currentMonth) => new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))} aria-label="Mes anterior">
                             <ChevronLeft size={20} />
-                        </button>
+                        </IconButton>
 
                         <span className="text-sm font-medium text-white/90">{monthLabel}</span>
 
-                        <button
-                            type="button"
-                            onClick={() => setVisibleMonth((currentMonth) => new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))}
-                            className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-white/[0.12] bg-white/[0.03] text-white/70 transition-colors hover:border-white/[0.22] hover:text-white"
-                            aria-label="Proximo mes"
-                        >
+                        <IconButton variant="outline" size="sm" shape="square" type="button" onClick={() => setVisibleMonth((currentMonth) => new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))} aria-label="Proximo mes">
                             <ChevronRight size={20} />
-                        </button>
+                        </IconButton>
                     </div>
 
                     {dateShortcuts.length > 0 && (

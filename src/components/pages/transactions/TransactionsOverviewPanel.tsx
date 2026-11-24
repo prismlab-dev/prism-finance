@@ -15,6 +15,8 @@ import {
     type TransactionsSummary,
     type TransactionsTabKey,
 } from "./transactionsPageShared";
+import { SegmentedControl } from "../../ui/SegmentedControl";
+import { Badge } from "../../ui/Badge";
 
 interface TransactionsOverviewPanelProps {
     wallets: Wallet[];
@@ -129,7 +131,7 @@ function PeriodPickerControl({ dateFrom, dateTo, onDateFromChange, onDateToChang
                 isOpen={isOpen}
                 overlayWidth={260}
                 align="center"
-                className="rounded-2xl border border-white/[0.12] bg-canvas/95 p-3 shadow-[0_30px_70px_-36px_rgba(0,0,0,0.95)] backdrop-blur-xl"
+                surface="glass" className="p-3"
             >
                 <div className="flex flex-col gap-2.5">
                     <DateField label="De" value={dateFrom} onChange={onDateFromChange} shortcuts={[]} required={false} />
@@ -242,26 +244,17 @@ export function TransactionsOverviewPanel({
 
             {/* Seletor de periodo: mes unico ou intervalo */}
             <div className="relative mt-3.5 border-y border-white/[0.06] py-2.5">
-                <div className="flex items-center justify-center gap-1 pb-2">
-                    <button
-                        type="button"
-                        onClick={() => onDateModeChange("month")}
-                        className={`rounded-full px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.05em] transition-colors ${
-                            dateMode === "month" ? "bg-white/[0.1] text-white" : "text-white/40 hover:text-white/70"
-                        }`}
-                    >
-                        Mês
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => onDateModeChange("period")}
-                        className={`rounded-full px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.05em] transition-colors ${
-                            dateMode === "period" ? "bg-white/[0.1] text-white" : "text-white/40 hover:text-white/70"
-                        }`}
-                    >
-                        Período
-                    </button>
-                </div>
+                <SegmentedControl
+                    variant="pill"
+                    ariaLabel="Modo de data"
+                    className="pb-2"
+                    options={[
+                        { value: "month", label: "Mês" },
+                        { value: "period", label: "Período" },
+                    ]}
+                    value={dateMode}
+                    onChange={onDateModeChange}
+                />
 
                 {dateMode === "month" ? (
                     <MonthPickerControl selectedMonth={selectedMonth} onMonthChange={onMonthChange} formatMonthLabel={formatMonthLabel} shiftMonth={shiftMonth} />
@@ -274,7 +267,7 @@ export function TransactionsOverviewPanel({
             <div className="relative mt-3.5">
                 <div className="flex items-center justify-between">
                     <p className="text-[10px] uppercase tracking-[0.14em] text-white/55">Total</p>
-                    <span className="rounded-full border border-white/10 bg-white/[0.04] px-1.5 py-0.5 text-[10px] text-white/60">{summary.total.count}</span>
+                    <Badge>{summary.total.count}</Badge>
                 </div>
                 <p className={`mt-1 text-xl font-semibold tracking-wide ${tone.amount}`}>{currencyFormatter.format(summary.total.amount)}</p>
             </div>

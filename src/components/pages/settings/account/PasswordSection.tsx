@@ -4,7 +4,8 @@ import type { AppUser } from "../../../../auth/appUser";
 import { resolveSupabaseAuthErrorMessage } from "../../../../supabase/auth/authErrorMessages";
 import { updateSupabasePassword } from "../../../../supabase/auth/authService";
 import { IconTextField } from "../../../transactions/IconTextField";
-import { SETTINGS_PRIMARY_BUTTON_CLASS, SettingsFeedback, SettingsSection } from "../SettingsSection";
+import { SettingsFeedback, SettingsSection } from "../SettingsSection";
+import { Button } from "../../../ui/Button";
 
 type PasswordSectionProps = {
     user: AppUser;
@@ -101,9 +102,9 @@ export function PasswordSection({ user, supportsPassword }: PasswordSectionProps
 
                     <SettingsFeedback feedback={feedback} />
 
-                    <button type="submit" disabled={loading} className={SETTINGS_PRIMARY_BUTTON_CLASS}>
+                    <Button variant="success" size="lg" type="submit" disabled={loading}>
                         {loading ? "Alterando..." : "Alterar senha"}
-                    </button>
+                    </Button>
                 </form>
             )}
         </SettingsSection>

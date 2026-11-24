@@ -1,7 +1,6 @@
 import type { InstallmentPlan } from "./installmentPreview";
 import { formatCurrencyBRL } from "./transactionView";
-
-const ACTION_CLASS = "rounded-md bg-white/[0.1] px-2 py-1 text-xs text-white transition-colors hover:bg-white/[0.18] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 disabled:cursor-not-allowed disabled:opacity-50";
+import { Button } from "../ui/Button";
 
 function describeEmpty(numbers: number[]): string {
     if (numbers.length === 1) return `A parcela ${numbers[0]} está sem valor.`;
@@ -28,9 +27,9 @@ export function InstallmentPlanWarning({ plan, className = "" }: { plan: Install
                 ) : null}
             </div>
             <div className="flex flex-wrap gap-1.5">
-                {differs && !isEmpty && preview.canSpread ? <button type="button" className={ACTION_CLASS} onClick={plan.onSpread} disabled={disabled}>Ajustar as outras</button> : null}
-                {differs && !isEmpty && preview.hiddenCount === 0 ? <button type="button" className={ACTION_CLASS} onClick={plan.onUseSumAsTotal} disabled={disabled}>Usar a soma como total</button> : null}
-                <button type="button" className={ACTION_CLASS} onClick={plan.onReset} disabled={disabled}>Voltar a dividir igual</button>
+                {differs && !isEmpty && preview.canSpread ? <Button variant="secondary" size="sm" type="button" onClick={plan.onSpread} disabled={disabled}>Ajustar as outras</Button> : null}
+                {differs && !isEmpty && preview.hiddenCount === 0 ? <Button variant="secondary" size="sm" type="button" onClick={plan.onUseSumAsTotal} disabled={disabled}>Usar a soma como total</Button> : null}
+                <Button variant="secondary" size="sm" type="button" onClick={plan.onReset} disabled={disabled}>Voltar a dividir igual</Button>
             </div>
         </div>
     );

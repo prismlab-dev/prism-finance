@@ -4,10 +4,9 @@ import { BalancoMensal } from "../home/charts/BalancoMensal";
 import { PlanningReportsPanel, REPORT_MONO_STYLE } from "./PlanningReportsPanel";
 import { formatReportCurrency } from "./planningReportFormatting";
 import type { MonthReport } from "./planningReportsUtils";
+import { compactFormatter } from "../../../lib/formatters";
 
 const GRID_LINES = 4;
-const compactFormatter = new Intl.NumberFormat("pt-BR", { notation: "compact", maximumFractionDigits: 1 });
-
 interface PlanningReportsFlowSectionProps {
     monthReports: MonthReport[];
     transactions: Transaction[];

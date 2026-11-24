@@ -4,6 +4,7 @@ import { parseAppDate } from "../../../lib/localDate";
 import { transactionSettlementDate } from "../../../lib/transactionSettlementDate";
 import { MiniTransactionBlock } from "./SmTransactionBlock";
 import { usePage } from "../../../context/PageContext";
+import { EmptyState } from "../../ui/EmptyState";
 
 interface RecentTransactionsPanelProps {
     transactions: Transaction[];
@@ -64,7 +65,7 @@ export function RecentTransactionsPanel({ transactions }: RecentTransactionsPane
             </div>
 
             {groups.length === 0 ? (
-                <p className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-6 text-center text-sm text-neutral-400">Nenhuma movimentação registrada</p>
+                <EmptyState variant="soft" size="md">Nenhuma movimentação registrada</EmptyState>
             ) : (
                 <ol className="relative">
                     {groups.map((group, index) => {

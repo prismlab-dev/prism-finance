@@ -12,6 +12,7 @@ import {
 } from "../context/financeTypes";
 import { ensureWalletId } from "../context/finance/helpers";
 import { normalizeCsvHeader, parseCsvRows } from "./csv";
+import { roundToCents } from "./primitives";
 
 const REQUIRED_HEADERS = ["Fatura", "Data de Compra", "Categoria", "Descricao", "Parcela", "Valor (R$)", "Tipo"] as const;
 const IMPORTED_EXPENSE_TYPES = new Set(["despesa", "encargo"]);
@@ -174,10 +175,6 @@ function parseInstallment(value: string): ParsedInstallment {
     }
 
     return { current, total };
-}
-
-function roundToCents(value: number): number {
-    return Math.round(value * 100) / 100;
 }
 
 function shiftCycleKey(cycleKey: string, offset: number): string {

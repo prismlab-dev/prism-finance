@@ -10,7 +10,7 @@ import {
 } from "../../context/FinanceContext";
 import { createId } from "../../context/finance/helpers";
 import { getLocalDateFromOffset, getLocalTodayDate, parseDateOnlyToLocalDate } from "../../lib/localDate";
-import { extractCurrencyDigits, formatCurrencyFromDigits, parseCurrencyDigitsToNumber } from "../../lib/currencyMask";
+import { extractCurrencyDigits, formatCurrencyFromDigits, parseCurrencyDigitsToNumber, formatAmountInputFromValue } from "../../lib/currencyMask";
 
 export interface TransferFormPrefill {
     initialDate?: string;
@@ -25,11 +25,6 @@ export interface TransferFormPrefill {
 interface UseTransferFormOptions {
     prefill?: TransferFormPrefill;
     transaction?: Transaction | null;
-}
-
-function formatAmountInputFromValue(value: number): string {
-    const cents = Math.max(0, Math.round(Math.abs(value) * 100));
-    return formatCurrencyFromDigits(String(cents));
 }
 
 function resolveInitialDate(prefillDate?: string): string {

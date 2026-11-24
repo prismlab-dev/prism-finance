@@ -32,6 +32,10 @@ import {
     type SortMode,
     type TransactionsTabKey,
 } from "./transactionsPageShared";
+import { Badge } from "../../ui/Badge";
+import { EmptyState } from "../../ui/EmptyState";
+import { isRecord } from "../../../lib/primitives";
+import { DATA_CELL_CLASS, DATA_CELL_MUTED_CLASS } from "../../ui/tableClasses";
 
 interface TransactionsListPanelProps {
     activeTab: TransactionsTabKey;
@@ -85,10 +89,6 @@ const DEFAULT_TRANSACTIONS_TABLE_VIEW_PREFERENCES: TransactionsTableViewPreferen
     showBeneficiary: true,
     showValue: true,
 };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
-}
 
 function normalizeTransactionsTableViewPreferences(value: unknown): TransactionsTableViewPreferences {
     if (!isRecord(value)) {
@@ -421,10 +421,7 @@ function TransactionsTable({ tabs, activeTab, wallets, beneficiariesById, transa
             </div>
 
             {transactions.length < 1 ? (
-                <div className="mx-4 mb-4 rounded-xl border border-dashed border-white/[0.1] px-4 py-10 text-center">
-                    <p className="text-sm text-white/70">{activeTabConfig.emptyMessage}</p>
-                    <p className="mt-1 text-xs text-white/40">Troque o mês ou limpe os filtros para ver outras transações.</p>
-                </div>
+                <EmptyState variant="dashed" size="lg" className="mx-4 mb-4" description="Troque o mês ou limpe os filtros para ver outras transações.">{activeTabConfig.emptyMessage}</EmptyState>
             ) : (
                 <div className="elegant-scrollbar min-w-0 overflow-x-auto px-2 pb-2">
                     <table className="finance-table w-full max-w-full table-fixed border-separate border-spacing-0 text-sm text-white/85">
@@ -526,7 +523,7 @@ function TransactionsTable({ tabs, activeTab, wallets, beneficiariesById, transa
                                             <Fragment key={column}>
                                                 {({
                                                     status: showStatus && (
-                                                <td className="overflow-hidden whitespace-nowrap border-b border-white/[0.04] px-3 py-2.5">
+                                                <td className={DATA_CELL_CLASS}>
                                                     <div className="flex min-w-0 items-center gap-2 overflow-hidden whitespace-nowrap">
                                                         <span
                                                             className={`inline-flex shrink-0 items-center gap-1 rounded-md border px-2 py-0.5 text-[11px]/4 font-medium ${statusBadgeClass}`}
@@ -548,7 +545,7 @@ function TransactionsTable({ tabs, activeTab, wallets, beneficiariesById, transa
                                                 </td>
                                             ),
                                                     date: showDate && (
-                                                <td className="overflow-hidden whitespace-nowrap border-b border-white/[0.04] px-3 py-2.5">
+                                                <td className={DATA_CELL_CLASS}>
                                                     <span className="font-medium text-white/85">{formatTransactionDate(transaction.date, "dd")}</span>
                                                     <span className="text-white/40">{formatTransactionDate(transaction.date, "/MM/yyyy")}</span>
                                                 </td>
@@ -567,7 +564,7 @@ function TransactionsTable({ tabs, activeTab, wallets, beneficiariesById, transa
                                                 </td>
                                             ),
                                                     category: showCategory && (
-                                                <td className="overflow-hidden whitespace-nowrap border-b border-white/[0.04] px-3 py-2.5 text-white/70">
+                                                <td className={DATA_CELL_MUTED_CLASS}>
                                                     {transaction.type === "transfer" ? (
                                                         <WalletTableCell wallet={wallet} />
                                                     ) : (
@@ -584,7 +581,7 @@ function TransactionsTable({ tabs, activeTab, wallets, beneficiariesById, transa
                                                 </td>
                                             ),
                                                     tags: showTags && (
-                                                <td className="overflow-hidden whitespace-nowrap border-b border-white/[0.04] px-3 py-2.5 text-white/70">
+                                                <td className={DATA_CELL_MUTED_CLASS}>
                                                     {visibleTags.length < 1 ? (
                                                         <span className="text-white/25">—</span>
                                                     ) : (
@@ -599,16 +596,16 @@ function TransactionsTable({ tabs, activeTab, wallets, beneficiariesById, transa
                                                                 </span>
                                                             ))}
                                                             {hiddenTagsCount > 0 && (
-                                                                <span className="shrink-0 rounded-full border border-white/10 bg-white/[0.03] px-2 py-0.5 text-[10px] font-medium text-white/55">
+                                                                <Badge className="font-medium">
                                                                     +{hiddenTagsCount}
-                                                                </span>
+                                                                </Badge>
                                                             )}
                                                         </div>
                                                     )}
                                                 </td>
                                             ),
                                                     beneficiary: showBeneficiary && (
-                                                <td className="overflow-hidden whitespace-nowrap border-b border-white/[0.04] px-3 py-2.5 text-white/70">
+                                                <td className={DATA_CELL_MUTED_CLASS}>
                                                     {transaction.type === "transfer" ? (
                                                         destinationWallet ? (
                                                             <WalletTableCell wallet={destinationWallet} />
@@ -630,7 +627,7 @@ function TransactionsTable({ tabs, activeTab, wallets, beneficiariesById, transa
                                                 </td>
                                             ),
                                                     value: showValue && (
-                                                <td className={`overflow-hidden whitespace-nowrap border-b border-white/[0.04] px-3 py-2.5 text-right font-semibold ${typeMeta.amountColorClass}`}>
+                                                <td className={`${DATA_CELL_CLASS} text-right font-semibold ${typeMeta.amountColorClass}`}>
                                                     <span className="mr-1 text-xs font-normal opacity-50">R$</span>
                                                     {formatCurrencyBRL(transaction.value)}
                                                 </td>

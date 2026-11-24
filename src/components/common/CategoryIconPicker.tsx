@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
 import { CATEGORY_ICON_NAMES, getCategoryIconComponent, hasCategoryIconName, normalizeCategoryIconName } from "../../lib/categoryIcons";
 import { FIELD_EMBEDDED_INPUT_CLASS, FIELD_ICON_CONTROL_CLASS } from "../transactions/transactionForm.constants";
+import { EmptyState } from "../ui/EmptyState";
 
 const ICONS_PER_BATCH = 96;
 const DEFAULT_COLOR = "#64748B";
@@ -145,7 +146,7 @@ export function CategoryIconPicker({ value, categoryType, onChange, color = DEFA
                     </>
                 ) : null}
                 <div className="grid grid-cols-8 gap-1 sm:grid-cols-10">{visibleIcons.map(renderIcon)}</div>
-                {searchResults?.length === 0 ? <p className="py-10 text-center text-sm text-white/45">Nenhum ícone para “{query.trim()}”. Tente em inglês.</p> : null}
+                {searchResults?.length === 0 ? <EmptyState variant="plain" size="lg" align="center">Nenhum ícone para “{query.trim()}”. Tente em inglês.</EmptyState> : null}
             </div>
         </div>
     );

@@ -1,4 +1,5 @@
 import type { SupabaseFinanceData } from "../../supabase/finance";
+import { isRecord, toRevision } from "../../lib/primitives";
 
 export interface PendingFinanceSync {
     queuedAt: string;
@@ -39,15 +40,6 @@ function getLegacyStorageKeys(userId: string, clientId: string): string[] {
         `prism.finance.pending-sync.${userId}.${clientId}`,
         `prism.finance.pending-sync.${userId}`,
     ];
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === "object" && value !== null;
-}
-
-function toRevision(value: unknown): number {
-    const revision = Number(value);
-    return Number.isFinite(revision) && revision >= 0 ? revision : 0;
 }
 
 export function parsePendingFinanceSync(raw: unknown, userId: string, clientId: string): PendingFinanceSync | null {

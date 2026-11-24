@@ -11,7 +11,8 @@ import { PasswordSection } from "./account/PasswordSection";
 import { ProfileSection } from "./account/ProfileSection";
 import { SignInMethodsSection } from "./account/SignInMethodsSection";
 import { useLinkedIdentities } from "./account/useLinkedIdentities";
-import { SETTINGS_DANGER_BUTTON_CLASS, SettingsSection } from "./SettingsSection";
+import { SettingsSection } from "./SettingsSection";
+import { Button } from "../../ui/Button";
 
 type AccountSettingsTabProps = {
     onSignOut: () => void | Promise<void>;
@@ -66,10 +67,10 @@ export function AccountSettingsTab({ onSignOut }: AccountSettingsTabProps) {
                 </SettingsSection>
 
                 <SettingsSection title="Sessão" description="Sai deste dispositivo. Seus dados ficam salvos na conta.">
-                    <button type="button" onClick={() => void onSignOut()} className={SETTINGS_DANGER_BUTTON_CLASS}>
+                    <Button variant="danger" size="lg" type="button" onClick={() => void onSignOut()}>
                         <LogOut size={16} aria-hidden />
                         Sair da conta
-                    </button>
+                    </Button>
                 </SettingsSection>
 
                 <DeleteAccountSection />

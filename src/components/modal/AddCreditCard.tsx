@@ -3,7 +3,7 @@ import { CalendarCheck, CalendarClock, CircleDollarSign, CreditCard as CreditCar
 import { v4 as uuidv4 } from "uuid";
 import { type CreditCard, type Wallet, useFinanceActions, useFinanceCreditCards, useFinanceWallets } from "../../context/FinanceContext";
 import { useModal } from "../../context/ModalContext";
-import { extractCurrencyDigits, formatCurrencyFromDigits, parseCurrencyDigitsToNumber } from "../../lib/currencyMask";
+import { extractCurrencyDigits, formatCurrencyFromDigits, formatAmountInputFromValue, parseAmountInput } from "../../lib/currencyMask";
 import {
     DEFAULT_CREDIT_CARD_ICON,
     DEFAULT_WALLET_COLOR,
@@ -19,93 +19,17 @@ import { DayOfMonthField } from "../transactions/DayOfMonthField";
 import { SingleSelectCombobox, type ComboboxOptionBase } from "../transactions/SingleSelectCombobox";
 import { WalletOptionContent } from "../transactions/TransactionFormParts";
 import { TransactionFieldIcon } from "../transactions/TransactionFieldIcon";
-import { FIELD_EMBEDDED_INPUT_CLASS, FIELD_ICON_CONTROL_CLASS } from "../transactions/transactionForm.constants";
 import { ModalBody, ModalCancelButton, ModalError, ModalFooter, ModalFooterAction, ModalHeader, ModalPanel, ModalPrimaryButton } from "./ModalChrome";
+import { Button } from "../ui/Button";
+import { ColorField } from "../common/ColorField";
+import { optimizeImageFile, normalizeHttpImageUrl } from "../../lib/imageUpload";
+import { Alert } from "../ui/Alert";
 
-const MAX_IMAGE_SIZE_BYTES = 350 * 1024;
-const MAX_IMAGE_DIMENSION = 320;
 
 interface AddCreditCardProps {
     mode?: "create" | "edit";
     creditCardId?: string;
     initialCreditCard?: CreditCard;
-}
-
-function estimateDataUrlBytes(dataUrl: string): number {
-    const commaIndex = dataUrl.indexOf(",");
-    const payload = commaIndex >= 0 ? dataUrl.slice(commaIndex + 1) : dataUrl;
-    return Math.ceil((payload.length * 3) / 4);
-}
-
-function loadImageFromDataUrl(dataUrl: string): Promise<HTMLImageElement> {
-    return new Promise((resolve, reject) => {
-        const image = new Image();
-        image.onload = () => resolve(image);
-        image.onerror = () => reject(new Error("Nao foi possivel carregar a imagem."));
-        image.src = dataUrl;
-    });
-}
-
-function readFileAsDataUrl(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result ?? ""));
-        reader.onerror = () => reject(new Error("Falha ao ler o arquivo."));
-        reader.readAsDataURL(file);
-    });
-}
-
-async function optimizeImageFile(file: File): Promise<string> {
-    const sourceDataUrl = await readFileAsDataUrl(file);
-    const image = await loadImageFromDataUrl(sourceDataUrl);
-
-    const ratio = Math.min(1, MAX_IMAGE_DIMENSION / Math.max(image.width, image.height));
-    const width = Math.max(1, Math.round(image.width * ratio));
-    const height = Math.max(1, Math.round(image.height * ratio));
-
-    const canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
-    const context = canvas.getContext("2d");
-    if (!context) {
-        throw new Error("Falha ao processar a imagem.");
-    }
-
-    context.drawImage(image, 0, 0, width, height);
-
-    let quality = 0.86;
-    let output = canvas.toDataURL("image/jpeg", quality);
-
-    while (estimateDataUrlBytes(output) > MAX_IMAGE_SIZE_BYTES && quality > 0.45) {
-        quality -= 0.08;
-        output = canvas.toDataURL("image/jpeg", quality);
-    }
-
-    if (estimateDataUrlBytes(output) > MAX_IMAGE_SIZE_BYTES) {
-        throw new Error("A imagem continua grande demais mesmo apos compressao.");
-    }
-
-    return output;
-}
-
-function normalizeHttpImageUrl(value: string): string | null {
-    const normalized = value.trim();
-    if (!normalized) {
-        return null;
-    }
-    if (/^https?:\/\//i.test(normalized)) {
-        return normalized;
-    }
-    return null;
-}
-
-function formatAmountInputFromValue(value: number): string {
-    const cents = Math.max(0, Math.round(Math.abs(value) * 100));
-    return formatCurrencyFromDigits(String(cents));
-}
-
-function parseAmountInput(value: string): number {
-    return parseCurrencyDigitsToNumber(extractCurrencyDigits(value));
 }
 
 function parseDay(value: string): number {
@@ -121,8 +45,6 @@ const NO_WALLET_OPTION_ID = "__no-wallet__";
 interface BankWalletOption extends ComboboxOptionBase {
     wallet: Wallet | null;
 }
-
-const SECONDARY_BUTTON_CLASS = "shrink-0 rounded-lg border border-white/[0.12] bg-white/[0.03] px-2 py-1 text-[11px] uppercase tracking-[0.04em] text-white/62 transition-colors hover:border-white/[0.28] hover:text-white disabled:cursor-not-allowed disabled:opacity-45";
 
 export function AddCreditCard({ mode = "create", creditCardId, initialCreditCard }: AddCreditCardProps) {
     const creditCards = useFinanceCreditCards();
@@ -368,7 +290,7 @@ export function AddCreditCard({ mode = "create", creditCardId, initialCreditCard
             >
                 <ModalBody className="flex flex-col gap-2">
                     {mode === "edit" && !editingCreditCard && (
-                        <p className="rounded-xl border border-amber-400/25 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">Cartão não encontrado.</p>
+                        <Alert tone="warning">Cartão não encontrado.</Alert>
                     )}
 
                     <div className="flex items-stretch gap-2">
@@ -385,18 +307,7 @@ export function AddCreditCard({ mode = "create", creditCardId, initialCreditCard
 
                         <div className="flex min-w-0 flex-1 flex-col gap-2">
                             <IconTextField ariaLabel="Nome do cartão" value={name} onChange={setName} placeholder="Nome do cartão. Ex.: Cartão principal" icon={CreditCardIcon} maxLength={70} />
-                            <label className={`${FIELD_ICON_CONTROL_CLASS} flex min-h-[50px] items-center gap-2`}>
-                                <TransactionFieldIcon icon={CircleDollarSign} />
-                                <input
-                                    id="credit-card-limit"
-                                    aria-label="Limite"
-                                    inputMode="numeric"
-                                    value={limitInput}
-                                    onChange={(event) => setLimitInput(formatCurrencyFromDigits(extractCurrencyDigits(event.target.value)))}
-                                    className={`${FIELD_EMBEDDED_INPUT_CLASS} tabular-nums`}
-                                    placeholder="Limite"
-                                />
-                            </label>
+                            <IconTextField ariaLabel="Limite" value={limitInput} onChange={(value) => setLimitInput(formatCurrencyFromDigits(extractCurrencyDigits(value)))} placeholder="Limite" icon={CircleDollarSign} id="credit-card-limit" inputMode="numeric" tabular />
                         </div>
                     </div>
 
@@ -416,29 +327,26 @@ export function AddCreditCard({ mode = "create", creditCardId, initialCreditCard
                         renderOptionContent={(option) => <BankWalletOptionContent option={option} />}
                     />
 
-                    <div className={`${FIELD_ICON_CONTROL_CLASS} flex min-h-[50px] items-center gap-2`}>
-                        <TransactionFieldIcon icon={Link2} />
-                        <input
-                            id="credit-card-url-input"
-                            aria-label="URL da imagem"
-                            type="text"
-                            value={iconUrlInput}
-                            onChange={(event) => setIconUrlInput(event.target.value)}
-                            className={FIELD_EMBEDDED_INPUT_CLASS}
-                            placeholder="Ou cole a URL de uma imagem"
-                        />
-                        <button type="button" onClick={applyImageUrl} disabled={!iconUrlInput.trim()} className={SECONDARY_BUTTON_CLASS}>
-                            Usar
-                        </button>
-                        <button type="button" onClick={clearCustomIcon} className={SECONDARY_BUTTON_CLASS}>
-                            Ícone padrão
-                        </button>
-                    </div>
+                    <IconTextField
+                        ariaLabel="URL da imagem"
+                        value={iconUrlInput}
+                        onChange={setIconUrlInput}
+                        placeholder="Ou cole a URL de uma imagem"
+                        icon={Link2}
+                        id="credit-card-url-input"
+                        trailing={
+                            <>
+                                <Button variant="secondary" size="sm" className="uppercase tracking-[0.06em]" type="button" onClick={applyImageUrl} disabled={!iconUrlInput.trim()}>
+                                    Usar
+                                </Button>
+                                <Button variant="secondary" size="sm" className="uppercase tracking-[0.06em]" type="button" onClick={clearCustomIcon}>
+                                    Ícone padrão
+                                </Button>
+                            </>
+                        }
+                    />
 
-                    <label className={`${FIELD_ICON_CONTROL_CLASS} flex min-h-[50px] items-center gap-2`}>
-                        <input aria-label="Cor do cartão" type="color" value={cardColor} onChange={(event) => setCardColor(event.target.value)} className="h-7 w-7 shrink-0 cursor-pointer rounded-md border border-white/[0.12] bg-transparent p-0.5" />
-                        <input aria-label="Código da cor" type="text" value={cardColor} onChange={(event) => setCardColor(event.target.value)} className={FIELD_EMBEDDED_INPUT_CLASS} placeholder={DEFAULT_WALLET_COLOR} />
-                    </label>
+                    <ColorField ariaLabel="Cor do cartão" value={cardColor} onChange={setCardColor} placeholder={DEFAULT_WALLET_COLOR} />
 
                     {uploadError && <p className="pl-1 text-sm text-amber-200">{uploadError}</p>}
                 </ModalBody>

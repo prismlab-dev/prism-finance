@@ -33,12 +33,10 @@ import {
     type StatementFilterState,
 } from "./statement/statementPageShared";
 import { StatementOverviewPanel } from "./statement/StatementOverviewPanel";
+import { Button } from "../ui/Button";
+import { isRecord } from "../../lib/primitives";
 
 const STATEMENT_PAGE_PREFERENCES_SECTION = "statement";
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
-}
 
 function normalizeStatementFilterState(value: unknown): StatementFilterState {
     if (!isRecord(value)) {
@@ -323,15 +321,10 @@ export function StatementPage() {
                                     onPayInvoice={handlePayInvoice}
                                     onInvoiceStateAdjustment={handleInvoiceStateAdjustment}
                                 />
-                                <button
-                                    type="button"
-                                    onClick={handleCreateCardSpendingFromStatement}
-                                    disabled={cardById.size < 1}
-                                    className="mt-2 inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-emerald-300/30 bg-emerald-500/15 px-3 py-2 text-xs font-semibold uppercase tracking-[0.05em] text-emerald-100 transition-all hover:border-emerald-300/45 hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-50"
-                                >
+                                <Button variant="success" className="mt-2 w-full cursor-pointer text-xs! uppercase tracking-[0.05em]" type="button" onClick={handleCreateCardSpendingFromStatement} disabled={cardById.size < 1}>
                                     <Plus size={14} />
                                     Adicionar gasto
-                                </button>
+                                </Button>
                             </>
                         }
                     />

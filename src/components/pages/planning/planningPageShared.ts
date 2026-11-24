@@ -1,6 +1,10 @@
 import type { CreditCard, CreditCardInvoice, Transaction, Wallet } from "../../../context/FinanceContext";
 import { getMonthKeyFromDateValue, resolveCreditCardInvoiceCycle, type LedgerEntry } from "../../../context/financeTypes";
 import { formatLocalDateInput, getLocalTodayDate, parseAppDate } from "../../../lib/localDate";
+import { formatCurrency } from "../../../lib/formatters";
+import { formatMonthLabel, getCurrentMonthKey, padMonthPart, parseMonthKey, shiftMonth } from "../../../lib/monthKey";
+
+export { formatCurrency };
 
 export type PlanningAlertTone = "neutral" | "success" | "warning" | "danger";
 
@@ -108,17 +112,6 @@ interface BuildPlanningSummaryParams extends BuildPlanningProjectionParams {
     simulationInput: PlanningSimulationInput;
 }
 
-const monthLabelFormatter = new Intl.DateTimeFormat("pt-BR", {
-    month: "long",
-    year: "numeric",
-});
-
-const currencyFormatter = new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    minimumFractionDigits: 2,
-});
-
 const dateLabelFormatter = new Intl.DateTimeFormat("pt-BR", {
     day: "2-digit",
     month: "2-digit",
@@ -128,30 +121,8 @@ function roundToCents(value: number): number {
     return Number(value.toFixed(2));
 }
 
-function padMonthPart(value: number): string {
-    return String(value).padStart(2, "0");
-}
-
 function getDayCountInMonth(year: number, monthIndex: number): number {
     return new Date(year, monthIndex + 1, 0).getDate();
-}
-
-function parseMonthKey(monthKey: string): { year: number; monthIndex: number } | null {
-    const match = /^(\d{4})-(\d{2})$/.exec(monthKey.trim());
-    if (!match) {
-        return null;
-    }
-
-    const year = Number(match[1]);
-    const month = Number(match[2]);
-    if (!Number.isInteger(year) || !Number.isInteger(month) || month < 1 || month > 12) {
-        return null;
-    }
-
-    return {
-        year,
-        monthIndex: month - 1,
-    };
 }
 
 function resolveMonthBounds(monthKey: string, referenceDate = new Date()): MonthBounds {
@@ -217,7 +188,7 @@ function createInvalidSimulationResult(baseProjectedEndBalance: number, reason: 
     };
 }
 
-function isIncludedStatus(status: Transaction["status"]): boolean {
+export function isIncludedStatus(status: Transaction["status"]): boolean {
     return status === "paid" || status === "pending";
 }
 
@@ -302,33 +273,7 @@ function buildPlanningAlerts(params: {
     return alerts;
 }
 
-export function getCurrentMonthKey(referenceDate = new Date()): string {
-    return `${referenceDate.getFullYear()}-${padMonthPart(referenceDate.getMonth() + 1)}`;
-}
-
-export function shiftMonth(monthKey: string, offset: number): string {
-    const parsedMonth = parseMonthKey(monthKey);
-    if (!parsedMonth) {
-        return getCurrentMonthKey();
-    }
-
-    const shiftedDate = new Date(parsedMonth.year, parsedMonth.monthIndex + offset, 1);
-    return `${shiftedDate.getFullYear()}-${padMonthPart(shiftedDate.getMonth() + 1)}`;
-}
-
-export function formatMonthLabel(monthKey: string): string {
-    const parsedMonth = parseMonthKey(monthKey);
-    if (!parsedMonth) {
-        return monthKey;
-    }
-
-    const formatted = monthLabelFormatter.format(new Date(parsedMonth.year, parsedMonth.monthIndex, 1));
-    return formatted.charAt(0).toUpperCase() + formatted.slice(1);
-}
-
-export function formatCurrency(value: number): string {
-    return currencyFormatter.format(value);
-}
+export { formatMonthLabel, getCurrentMonthKey, shiftMonth };
 
 export function formatDateLabel(dateValue: string): string {
     const parsedDate = parseAppDate(dateValue);

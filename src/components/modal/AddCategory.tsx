@@ -9,10 +9,13 @@ import { CategoryIconPicker } from "../common/CategoryIconPicker";
 import { ConfirmActionModal } from "./ConfirmActionModal";
 import { ModalStructure } from "./ModalStructure";
 import { ModalBody, ModalCancelButton, ModalFooter, ModalFooterAction, ModalHeader, ModalPanel, ModalPrimaryButton } from "./ModalChrome";
-import { FIELD_EMBEDDED_INPUT_CLASS, FIELD_ICON_CONTROL_CLASS } from "../transactions/transactionForm.constants";
 import { TransactionFieldIcon } from "../transactions/TransactionFieldIcon";
 import { SingleSelectCombobox, type ComboboxOptionBase } from "../transactions/SingleSelectCombobox";
 import { CategoryOptionContent } from "../transactions/TransactionFormParts";
+import { SegmentedControl } from "../ui/SegmentedControl";
+import { ColorSwatchInput } from "../common/ColorField";
+import { IconTextField } from "../transactions/IconTextField";
+import { Alert } from "../ui/Alert";
 
 const NO_PARENT_OPTION_ID = "__no-parent__";
 
@@ -217,7 +220,7 @@ export function AddCategory({ mode = "create", categoryId, initialCategory }: Ad
                 <ModalHeader title={isEditMode ? "Editando categoria" : "Nova categoria"} disabled={submitting} />
 
                 <ModalBody className="flex flex-col gap-2">
-                    {mode === "edit" && !editingCategory && <p className="rounded-xl border border-amber-400/25 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">Categoria não encontrada.</p>}
+                    {mode === "edit" && !editingCategory && <Alert tone="warning">Categoria não encontrada.</Alert>}
 
                     {isInvoicePaymentCategory && (
                         <div className="flex items-start gap-2 rounded-xl border border-blue-300/25 bg-blue-500/10 px-3 py-2 text-xs leading-5 text-blue-200">
@@ -226,28 +229,19 @@ export function AddCategory({ mode = "create", categoryId, initialCategory }: Ad
                         </div>
                     )}
 
-                    <div className="flex gap-1 rounded-xl border border-white/[0.1] bg-black/35 p-1" role="radiogroup" aria-label="Tipo">
-                        {CATEGORY_TYPES.map((item) => (
-                            <button
-                                key={item.value}
-                                type="button"
-                                role="radio"
-                                aria-checked={type === item.value}
-                                onClick={() => setType(item.value)}
-                                disabled={isInvoicePaymentCategory}
-                                className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
-                                    type === item.value ? (item.value === "income" ? "bg-emerald-500/20 text-emerald-200" : "bg-red-500/15 text-red-200") : "text-white/65 hover:bg-white/[0.06]"
-                                }`}
-                            >
-                                {item.label}
-                            </button>
-                        ))}
-                    </div>
+                    <SegmentedControl
+                        ariaLabel="Tipo"
+                        options={CATEGORY_TYPES.map((item) => ({
+                            value: item.value,
+                            label: item.label,
+                            activeClassName: item.value === "income" ? "bg-emerald-500/20 text-emerald-200" : "bg-red-500/15 text-red-200",
+                        }))}
+                        value={type}
+                        onChange={setType}
+                        disabled={isInvoicePaymentCategory}
+                    />
 
-                    <label className={`${FIELD_ICON_CONTROL_CLASS} flex min-h-[50px] items-center gap-2`}>
-                        <input aria-label="Cor da categoria" type="color" value={color} onChange={(event) => setColor(event.target.value)} className="h-7 w-7 shrink-0 cursor-pointer rounded-md border border-white/[0.12] bg-transparent p-0.5" />
-                        <input aria-label="Nome da categoria" type="text" value={name} onChange={(event) => setName(event.target.value)} className={FIELD_EMBEDDED_INPUT_CLASS} placeholder="Nome da categoria" />
-                    </label>
+                    <IconTextField ariaLabel="Nome da categoria" value={name} onChange={setName} placeholder="Nome da categoria" leading={<ColorSwatchInput ariaLabel="Cor da categoria" value={color} onChange={setColor} />} />
 
                     <SingleSelectCombobox
                         hideLabel

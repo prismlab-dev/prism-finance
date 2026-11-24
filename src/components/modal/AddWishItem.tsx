@@ -8,12 +8,13 @@ import { useModal } from "../../context/ModalContext";
 import { extractCurrencyDigits, formatCurrencyFromDigits, parseCurrencyDigitsToNumber } from "../../lib/currencyMask";
 import { WISH_ITEM_PRIORITY_OPTIONS } from "../../lib/wishlistPriority";
 import { CategoryOptionContent } from "../transactions/TransactionFormParts";
-import { FIELD_EMBEDDED_INPUT_CLASS, FIELD_ICON_CONTROL_CLASS } from "../transactions/transactionForm.constants";
 import { IconTextField } from "../transactions/IconTextField";
-import { TransactionFieldIcon } from "../transactions/TransactionFieldIcon";
+
 import { SingleSelectCombobox, type ComboboxOptionBase } from "../transactions/SingleSelectCombobox";
 import { ModalBody, ModalCancelButton, ModalFooter, ModalFooterAction, ModalHeader, ModalPanel, ModalPrimaryButton } from "./ModalChrome";
 import { ModalStructure } from "./ModalStructure";
+import { SegmentedControl } from "../ui/SegmentedControl";
+import { Alert } from "../ui/Alert";
 
 interface CategoryOption extends ComboboxOptionBase {
     category: Category;
@@ -217,23 +218,12 @@ export function AddWishItem({ mode = "create", wishItemId, initialWishItem }: Ad
                 <ModalHeader title={isEditMode ? "Editando desejo" : "Novo desejo"} disabled={submitting} />
 
                 <ModalBody className="flex flex-col gap-2">
-                    {mode === "edit" && !editingWishItem ? <p className="rounded-xl border border-amber-400/25 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">Item não encontrado.</p> : null}
+                    {mode === "edit" && !editingWishItem ? <Alert tone="warning">Item não encontrado.</Alert> : null}
 
                     <IconTextField ariaLabel="Descrição" value={description} onChange={setDescription} placeholder="O que você quer comprar? Ex.: Kindle, tênis novo" />
 
                     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                        <label className={`${FIELD_ICON_CONTROL_CLASS} flex min-h-[50px] items-center gap-2`}>
-                            <TransactionFieldIcon icon={CircleDollarSign} />
-                            <input
-                                aria-label="Valor"
-                                type="text"
-                                inputMode="numeric"
-                                value={formatCurrencyFromDigits(amountDigits)}
-                                onChange={(event) => setAmountDigits(extractCurrencyDigits(event.target.value))}
-                                className={`${FIELD_EMBEDDED_INPUT_CLASS} tabular-nums`}
-                                placeholder="R$ 0,00"
-                            />
-                        </label>
+                        <IconTextField ariaLabel="Valor" value={formatCurrencyFromDigits(amountDigits)} onChange={(value) => setAmountDigits(extractCurrencyDigits(value))} placeholder="R$ 0,00" icon={CircleDollarSign} inputMode="numeric" tabular />
 
                         <SingleSelectCombobox
                             label="Categoria"
@@ -247,26 +237,17 @@ export function AddWishItem({ mode = "create", wishItemId, initialWishItem }: Ad
                         />
                     </div>
 
-                    <div className="flex gap-1 rounded-xl border border-white/[0.1] bg-black/35 p-1" role="radiogroup" aria-label="Prioridade">
-                        {WISH_ITEM_PRIORITY_OPTIONS.map((option) => {
-                            const isSelected = priority === option.value;
-
-                            return (
-                                <button
-                                    key={option.value}
-                                    type="button"
-                                    role="radio"
-                                    aria-checked={isSelected}
-                                    onClick={() => setPriority(option.value)}
-                                    className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${isSelected ? "" : "text-white/65 hover:bg-white/[0.06]"}`}
-                                    style={isSelected ? { color: option.color, backgroundColor: `${option.color}26` } : undefined}
-                                >
-                                    <Flag size={14} style={isSelected ? undefined : { color: option.color }} />
-                                    {option.label}
-                                </button>
-                            );
-                        })}
-                    </div>
+                    <SegmentedControl
+                        ariaLabel="Prioridade"
+                        options={WISH_ITEM_PRIORITY_OPTIONS.map((option) => ({
+                            value: option.value,
+                            label: option.label,
+                            icon: <Flag size={14} style={{ color: option.color }} />,
+                            activeStyle: { color: option.color, backgroundColor: `${option.color}26` },
+                        }))}
+                        value={priority}
+                        onChange={setPriority}
+                    />
 
                     <IconTextField ariaLabel="Link do produto" value={link} onChange={setLink} placeholder="Link do produto (opcional)" icon={Link2} />
                     <IconTextField ariaLabel="Link da imagem" value={imageUrl} onChange={setImageUrl} placeholder="Link da imagem (opcional)" icon={ImageIcon} />

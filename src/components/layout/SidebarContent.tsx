@@ -3,6 +3,7 @@ import { AppBrand } from "./AppBrand";
 import { BugReportButton } from "./BugReportButton";
 import { FinanceSyncStatus } from "./FinanceSyncStatus";
 import { NavSection } from "./NavSection";
+import { IconButton } from "../ui/IconButton";
 
 type SidebarContentVariant = "mobile" | "responsive";
 
@@ -29,14 +30,9 @@ export function SidebarContent({ variant, onClose, showBrand = true }: SidebarCo
                         <AppBrand compactAtLaptop={isResponsive} />
 
                         {onClose ? (
-                            <button
-                                type="button"
-                                onClick={onClose}
-                                aria-label="Fechar menu lateral"
-                                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.03] text-white/70 transition-colors duration-200 hover:bg-white/[0.07] hover:text-white"
-                            >
+                            <IconButton variant="outline" size="md" shape="square" type="button" onClick={onClose} aria-label="Fechar menu lateral">
                                 <X size={16} />
-                            </button>
+                            </IconButton>
                         ) : null}
                     </div>
 

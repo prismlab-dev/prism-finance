@@ -5,6 +5,7 @@ import { PlanningReportsPanel, REPORT_MONO_STYLE } from "./PlanningReportsPanel"
 import type { UpcomingInstallmentMonth } from "./planningAccountReports";
 import { formatReportCurrency } from "./planningReportFormatting";
 import { formatMonthLabel } from "./planningReportsUtils";
+import { EmptyState } from "../../ui/EmptyState";
 
 const UPCOMING_LIMIT = 8;
 
@@ -20,7 +21,7 @@ export function PlanningReportsInstallmentsSection({ months }: { months: Upcomin
             aside={<span className="text-sm text-white/70" style={REPORT_MONO_STYLE}>{formatReportCurrency(total)}</span>}
         >
             {visible.length === 0 ? (
-                <p className="py-8 text-center text-sm text-white/45">Nenhuma parcela futura nos cartões selecionados.</p>
+                <EmptyState variant="plain" align="center">Nenhuma parcela futura nos cartões selecionados.</EmptyState>
             ) : (
                 <ul className="space-y-3">
                     {visible.map((month) => (
@@ -44,7 +45,7 @@ export function PlanningReportsTopPurchasesSection({ purchases }: { purchases: T
     return (
         <PlanningReportsPanel title="Maiores compras">
             {purchases.length === 0 ? (
-                <p className="py-8 text-center text-sm text-white/45">Nenhuma compra no período.</p>
+                <EmptyState variant="plain" align="center">Nenhuma compra no período.</EmptyState>
             ) : (
                 <ul className="divide-y divide-white/[0.06]">
                     {purchases.map((purchase) => {

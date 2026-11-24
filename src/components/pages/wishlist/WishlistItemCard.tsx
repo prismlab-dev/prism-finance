@@ -3,14 +3,9 @@ import { useEffect, useState, type MouseEvent } from "react";
 import type { SharedWishlistSnapshot } from "../../../context/FinanceContext";
 import { getCategoryIconComponent } from "../../../lib/categoryIcons";
 import { getWishItemPriorityMeta } from "../../../lib/wishlistPriority";
+import { currencyFormatter } from "../../../lib/formatters";
 
 type WishlistCardItem = SharedWishlistSnapshot["items"][number];
-
-const currencyFormatter = new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    minimumFractionDigits: 2,
-});
 
 function resolveWishLink(link: string | null): string | null {
     if (!link?.trim()) {

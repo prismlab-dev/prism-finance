@@ -16,6 +16,7 @@ import { MobileAccountCombobox } from "./MobileAccountCombobox";
 import { MobileProgressSummary } from "./MobileProgressSummary";
 import { usePage } from "../context/PageContext";
 import { parseAppDate } from "../lib/localDate";
+import { SegmentedControl } from "../components/ui/SegmentedControl";
 
 // Same order and tones as the desktop TransactionsOverviewPanel tabs.
 const TABS: { key: TransactionsTabKey; label: string; active: string }[] = [
@@ -88,20 +89,14 @@ export function MobileTransactions() {
                 </button>
             </div>
 
-            <div className="grid grid-cols-3 gap-1 rounded-2xl bg-white/[0.04] p-1" role="tablist">
-                {TABS.map((item) => (
-                    <button
-                        key={item.key}
-                        type="button"
-                        role="tab"
-                        aria-selected={tab === item.key}
-                        onClick={() => setTab(item.key)}
-                        className={`rounded-xl border py-2 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-sky-400/60 ${tab === item.key ? item.active : "border-transparent text-neutral-400"}`}
-                    >
-                        {item.label}
-                    </button>
-                ))}
-            </div>
+            <SegmentedControl
+                variant="tabs"
+                role="tab"
+                ariaLabel="Tipo de transação"
+                options={TABS.map((item) => ({ value: item.key, label: item.label, activeClassName: item.active }))}
+                value={tab}
+                onChange={setTab}
+            />
 
             <MobileAccountCombobox label="Carteiras" placeholder="Todas as carteiras" emptyMessage="Nenhuma carteira encontrada." accounts={wallets} values={walletIds} onChange={setWalletIds} />
 

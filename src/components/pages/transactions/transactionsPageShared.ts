@@ -1,5 +1,9 @@
 import type { Category, Transaction, TransactionStatus } from "../../../context/FinanceContext";
 import { parseAppDate } from "../../../lib/localDate";
+import { currencyFormatter } from "../../../lib/formatters";
+import { formatMonthLabel, getCurrentMonthKey, shiftMonth } from "../../../lib/monthKey";
+
+export { currencyFormatter };
 
 export type SortField = "date" | "value" | "status" | "wallet" | "description" | "category" | "beneficiary";
 export type SortDirection = "asc" | "desc";
@@ -84,13 +88,7 @@ export const SORT_DEFAULT_DIRECTION: Record<SortField, SortDirection> = {
 export const SELECT_CLASS = "w-full rounded-full border border-white/[0.08] bg-black/25 px-3 py-2 text-sm text-white outline-none transition-colors focus:border-white/[0.24]";
 export const INPUT_CLASS = "w-full rounded-xl border border-white/[0.08] bg-black/25 px-3 py-2 text-sm text-white outline-none transition-colors focus:border-white/[0.24]";
 
-function padMonthPart(value: number): string {
-    return String(value).padStart(2, "0");
-}
-
-export function getCurrentMonthKey(referenceDate = new Date()): string {
-    return `${referenceDate.getFullYear()}-${padMonthPart(referenceDate.getMonth() + 1)}`;
-}
+export { formatMonthLabel, getCurrentMonthKey, shiftMonth };
 
 export function getTransactionMonthKey(dateValue: string): string {
     const parsedDate = parseAppDate(dateValue);
@@ -99,24 +97,6 @@ export function getTransactionMonthKey(dateValue: string): string {
     }
 
     return getCurrentMonthKey(parsedDate);
-}
-
-const monthLabelFormatter = new Intl.DateTimeFormat("pt-BR", {
-    month: "long",
-    year: "numeric",
-});
-
-export function formatMonthLabel(monthKey: string): string {
-    const [yearPart, monthPart] = monthKey.split("-");
-    const year = Number(yearPart);
-    const month = Number(monthPart);
-
-    if (!Number.isInteger(year) || !Number.isInteger(month) || month < 1 || month > 12) {
-        return monthKey;
-    }
-
-    const formatted = monthLabelFormatter.format(new Date(year, month - 1, 1));
-    return formatted.charAt(0).toUpperCase() + formatted.slice(1);
 }
 
 export const INITIAL_FILTER_STATE: TransactionsFilterState = {
@@ -135,27 +115,6 @@ export const INITIAL_FILTER_STATE: TransactionsFilterState = {
     minAmount: "",
     maxAmount: "",
 };
-
-export function shiftMonth(monthKey: string, offset: number): string {
-    const match = /^(\d{4})-(\d{2})$/.exec(monthKey.trim());
-    if (!match) {
-        return getCurrentMonthKey();
-    }
-
-    const year = Number(match[1]);
-    const month = Number(match[2]);
-    if (!Number.isInteger(year) || !Number.isInteger(month) || month < 1 || month > 12) {
-        return getCurrentMonthKey();
-    }
-
-    return getCurrentMonthKey(new Date(year, month - 1 + offset, 1));
-}
-
-export const currencyFormatter = new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    minimumFractionDigits: 2,
-});
 
 export type AdvancedFilterValues = Pick<TransactionsFilterState, "selectedCategoryKey" | "selectedBeneficiary" | "selectedStatus" | "selectedTagIds" | "minAmount" | "maxAmount">;
 

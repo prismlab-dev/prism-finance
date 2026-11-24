@@ -1,6 +1,6 @@
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { FileSpreadsheet, FileUp, TextCursorInput } from "lucide-react";
-import { SETTINGS_PRIMARY_BUTTON_CLASS, SETTINGS_SECONDARY_BUTTON_CLASS, SettingsFeedback, SettingsSection } from "./SettingsSection";
+import { SettingsFeedback, SettingsSection } from "./SettingsSection";
 import { IconTextField } from "../../transactions/IconTextField";
 import { SingleSelectCombobox } from "../../transactions/SingleSelectCombobox";
 import { useFinance } from "../../../context/FinanceContext";
@@ -10,15 +10,10 @@ import {
     type BankStatementCsvImportResult,
 } from "../../../lib/bankStatementCsvImport";
 import { buildFinanceBackupFile, downloadFinanceBackupFile } from "../../../lib/financeBackup";
+import { Button } from "../../ui/Button";
+import { formatCurrency } from "../../../lib/formatters";
 
 const CSV_IMPORT_CONFIRMATION_TEXT = "IMPORTAR CSV";
-
-function formatCurrency(value: number): string {
-    return value.toLocaleString("pt-BR", {
-        style: "currency",
-        currency: "BRL",
-    });
-}
 
 function getDefaultWalletId(walletIds: Set<string>, favoriteWalletId: string): string {
     if (favoriteWalletId && walletIds.has(favoriteWalletId)) {
@@ -163,15 +158,10 @@ export function CsvTransactionImportCard() {
         <SettingsSection title="Importar extrato" description="Adiciona transações de um extrato CSV com data, título, descrição, entrada e saída. Nada do que já existe é apagado.">
             <div className="space-y-4">
                 <input ref={fileInputRef} type="file" accept=".csv,text/csv" onChange={handleFileChange} className="hidden" />
-                <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={!finance || loading || availableWallets.length < 1}
-                    className={SETTINGS_SECONDARY_BUTTON_CLASS}
-                >
+                <Button variant="secondary" size="lg" type="button" onClick={() => fileInputRef.current?.click()} disabled={!finance || loading || availableWallets.length < 1}>
                     <FileSpreadsheet size={16} aria-hidden />
                     Escolher arquivo CSV
-                </button>
+                </Button>
                 {availableWallets.length < 1 ? <p className="text-sm text-white/45">Crie uma carteira antes de importar um extrato.</p> : null}
 
                 <SettingsFeedback feedback={feedback} />
@@ -215,13 +205,13 @@ export function CsvTransactionImportCard() {
                         </div>
 
                         <div className="flex flex-wrap gap-2">
-                            <button type="button" onClick={handleConfirmImport} disabled={!canImport} className={SETTINGS_PRIMARY_BUTTON_CLASS}>
+                            <Button variant="success" size="lg" type="button" onClick={handleConfirmImport} disabled={!canImport}>
                                 <FileUp size={16} aria-hidden />
                                 {isImporting ? "Importando..." : "Importar transações"}
-                            </button>
-                            <button type="button" onClick={resetPreview} disabled={isImporting} className={SETTINGS_SECONDARY_BUTTON_CLASS}>
+                            </Button>
+                            <Button variant="secondary" size="lg" type="button" onClick={resetPreview} disabled={isImporting}>
                                 Cancelar
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 ) : null}

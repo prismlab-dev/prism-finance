@@ -16,7 +16,9 @@ import { SortableContext, arrayMove, rectSortingStrategy, sortableKeyboardCoordi
 import { CSS } from "@dnd-kit/utilities";
 import { Eye, EyeOff, GripVertical } from "lucide-react";
 import { DEFAULT_HOME_LAYOUT, HOME_WIDGETS, useHomeLayout, type HomeLayout, type HomeWidgetId } from "../../../lib/homeLayout";
-import { SETTINGS_SECONDARY_BUTTON_CLASS } from "./SettingsSection";
+
+import { Button } from "../../ui/Button";
+import { IconButton } from "../../ui/IconButton";
 
 // Listas 0..2 são as colunas da Home; 3 é a bandeja de ocultos. O id de cada lista é "list-<índice>".
 const LIST_LABELS = ["Coluna 1", "Coluna 2", "Coluna 3", "Ocultos"] as const;
@@ -50,17 +52,19 @@ function WidgetChip({ id, hidden, onToggle, overlay = false }: WidgetChipProps) 
         >
             <GripVertical aria-hidden className="h-4 w-4 shrink-0 text-white/30" />
             <span className="min-w-0 flex-1 truncate">{LABELS[id]}</span>
-            <button
+            <IconButton
+                variant="bare"
+                size="xs"
+                shape="square"
                 type="button"
                 title={hidden ? "Mostrar na Home" : "Ocultar da Home"}
                 aria-label={`${hidden ? "Mostrar" : "Ocultar"} ${LABELS[id]}`}
                 onClick={onToggle}
                 // Espaço/Enter no botão não devem iniciar o arraste do item.
                 onKeyDown={(event) => event.stopPropagation()}
-                className="rounded-md p-1 text-white/40 hover:bg-white/[0.06] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
             >
                 {hidden ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-            </button>
+            </IconButton>
         </div>
     );
 }
@@ -177,9 +181,9 @@ export function HomeLayoutEditor() {
             </DndContext>
             <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-xs text-white/40">Arraste para reordenar. No teclado: Espaço para pegar, setas para mover, Espaço para soltar.</p>
-                <button type="button" onClick={() => setLayout(DEFAULT_HOME_LAYOUT)} className={SETTINGS_SECONDARY_BUTTON_CLASS}>
+                <Button variant="secondary" size="lg" type="button" onClick={() => setLayout(DEFAULT_HOME_LAYOUT)}>
                     Restaurar padrão
-                </button>
+                </Button>
             </div>
         </div>
     );
