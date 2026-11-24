@@ -1,12 +1,15 @@
 import { HandCoins, Plus } from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
-import { useFinanceSession, useFinanceTransactionGroups, useFinanceTransactions } from "../../../context/FinanceContext";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useFinanceSession, useFinanceTransactionGroups, useFinanceTransactions, type Transaction } from "../../../context/FinanceContext";
 import { useModal } from "../../../context/ModalContext";
+import { readTransactionLinkParams } from "../../../context/PageContext";
 import { buildTeamShareStatus } from "../../../context/team/teamShareStatus";
 import type { TeamExpenseEntry, TeamSummary } from "../../../context/teamTypes";
 import { removeTeamExpense } from "../../../supabase/team";
 import { ConfirmActionModal } from "../../modal/ConfirmActionModal";
 import { EditTransaction } from "../../modal/EditTransaction";
+import { ShareTransactionModal } from "../../transactions/ShareTransactionModal";
 import { buildTransactionContextActions, type TransactionContextAction } from "../../transactions/transactionContextActions";
 import { useTransactionContextActionHandler } from "../../transactions/useTransactionContextActionHandler";
 import { getCurrentMonthKey } from "../transactions/transactionsPageShared";
@@ -69,13 +72,16 @@ export function TeamExpensesPage({ team }: { team: TeamSummary }) {
         const transaction = personalTransactionOf(expense);
         const removeAction: TransactionContextAction = { id: "remove_from_team", label: "Tirar da equipe" };
         if (!transaction) return canEdit && expense.kind !== "settlement" ? [removeAction] : [];
-        const [open, ...rest] = buildTransactionContextActions({ transaction, group: transactionGroups.find((group) => group.id === transaction.groupId) })
+        const personalActions = buildTransactionContextActions({ transaction, group: transactionGroups.find((group) => group.id === transaction.groupId) })
             .filter((action) => action.id !== "select" && action.id !== "duplicate" && action.id !== "view_in_team");
         const viewInPersonal: TransactionContextAction = {
             id: "view_in_personal",
             label: transaction.paymentMethod === "credit_card" ? "Ver na minha fatura" : "Ver na minha carteira",
         };
-        return [open, viewInPersonal, ...rest.filter((action) => action.tone !== "danger"), ...(expense.kind !== "settlement" ? [removeAction] : []), ...rest.filter((action) => action.tone === "danger")];
+        // Segue a ordem das transações pessoais: o atalho de navegação entra onde ficaria "Ver na equipe", depois de abrir/editar/visualizar série.
+        const navIndex = personalActions.filter((action) => action.id === "open" || action.id === "edit_series" || action.id === "view_series").length;
+        const ordered = [...personalActions.slice(0, navIndex), viewInPersonal, ...personalActions.slice(navIndex)];
+        return [...ordered.filter((action) => action.tone !== "danger"), ...(expense.kind !== "settlement" ? [removeAction] : []), ...ordered.filter((action) => action.tone === "danger")];
     };
 
     const handleAction = (expense: TeamExpenseEntry, action: TransactionContextAction) => {
@@ -83,7 +89,32 @@ export function TeamExpensesPage({ team }: { team: TeamSummary }) {
         // "Abrir" na equipe abre a despesa da equipe, não o formulário pessoal.
         if (action.id === "open") return handleOpen(expense);
         const transaction = personalTransactionOf(expense);
+        if (transaction && action.id === "share") return shareExpense(expense, transaction);
         if (transaction) handleTransactionAction(transaction, action);
+    };
+
+    // Na equipe o comprovante mostra a divisão e quem pagou, não a carteira pessoal.
+    const shareExpense = (expense: TeamExpenseEntry, transaction: Transaction) => {
+        const settled = new Map((shareStatus.get(expense.transactionId) ?? []).map((share) => [share.memberId, share.paid]));
+        const shares = expense.shares
+            .filter((share) => share.amount > 0)
+            .map((share) => ({
+                memberId: share.memberId,
+                name: nameOf(share.memberId),
+                photoUrl: photoOf(share.memberId),
+                amount: share.amount,
+                paid: settled.get(share.memberId) ?? share.paid,
+                isPayer: share.memberId === expense.payerId,
+            }));
+        openModal(
+            <ShareTransactionModal
+                transaction={transaction}
+                sourceLabel=""
+                note={expense.note ?? undefined}
+                team={{ payerName: nameOf(expense.payerId), status: expense.status, shares, category: expense.category }}
+                owner={{ kind: "team", name: team.name, image: team.avatarImage }}
+            />,
+        );
     };
 
     const handleOpen = (expense: TeamExpenseEntry) => {
@@ -101,6 +132,30 @@ export function TeamExpensesPage({ team }: { team: TeamSummary }) {
         }
         else if (transaction) openModal(<EditTransaction transaction={transaction} />);
     };
+
+    // Link compartilhado (?transacao=): vai para o mês da despesa e abre quando ela e a transação de quem pagou carregarem.
+    const location = useLocation();
+    const navigate = useNavigate();
+    const [linkedTransactionId, setLinkedTransactionId] = useState(() => readTransactionLinkParams(location.search)?.transactionId ?? null);
+    useEffect(() => {
+        const link = readTransactionLinkParams(location.search);
+        if (!link) return;
+        setLinkedTransactionId(link.transactionId);
+        if (link.selectedMonth) setSelectedMonth(link.selectedMonth);
+        navigate(location.pathname, { replace: true });
+    }, [location.pathname, location.search, navigate]);
+    useEffect(() => {
+        if (!linkedTransactionId || loading) return;
+        const expense = view.expenses.find((item) => item.transactionId === linkedTransactionId);
+        // Sem acesso à equipe/despesa, o link só não abre nada.
+        if (!expense) return setLinkedTransactionId(null);
+        if (expense.payerId === currentUserId && !personalTransactionOf(expense)) return;
+        setActiveTab(expense.kind === "income" ? "income" : "spending");
+        setLinkedTransactionId(null);
+        handleOpen(expense);
+        // handleOpen/personalTransactionOf mudam a cada render; o efeito só precisa rodar quando os dados chegam.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [linkedTransactionId, loading, view.expenses, transactions]);
 
     return (
         <div className="finance-page w-full flex pb-4">

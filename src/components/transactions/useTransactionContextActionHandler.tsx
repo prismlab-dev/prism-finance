@@ -1,5 +1,5 @@
 import type { Transaction } from "../../context/FinanceContext";
-import { useFinanceActions, useFinanceCreditCardInvoices } from "../../context/FinanceContext";
+import { useFinanceActions, useFinanceCreditCardInvoices, useFinanceCreditCards, useFinanceWallets } from "../../context/FinanceContext";
 import { getMonthKeyFromDateValue } from "../../context/financeTypes";
 import { getLocalTodayDate } from "../../lib/localDate";
 import { useModal } from "../../context/ModalContext";
@@ -12,6 +12,8 @@ import { AddTransferModal } from "../modal/AddTransferModal";
 import { TransactionSeriesModal } from "../modal/TransactionSeriesModal";
 import { buildDeleteTransactionImpactPreview, useDeleteTransactionImpactData } from "./deleteTransactionImpact";
 import type { TransactionContextAction } from "./transactionContextActions";
+import { ShareTransactionModal } from "./ShareTransactionModal";
+import { resolveTransactionWallet } from "./transactionView";
 import { buildDuplicateTransactionPrefill, buildDuplicateTransferPrefill } from "./duplicateTransactionPrefill";
 
 function getTransactionDisplayLabel(transaction: Transaction): string {
@@ -73,6 +75,8 @@ function getStatusDescription(transaction: Transaction, action: TransactionConte
 export function useTransactionContextActionHandler() {
     const { deleteTransactionWithScope, setTransactionStatus, markTransactionAsPaid, updateTransaction } = useFinanceActions();
     const creditCardInvoices = useFinanceCreditCardInvoices();
+    const creditCards = useFinanceCreditCards();
+    const wallets = useFinanceWallets();
     const { openModal } = useModal();
     const { goToPage } = usePage();
     const deleteImpactData = useDeleteTransactionImpactData();
@@ -142,6 +146,12 @@ export function useTransactionContextActionHandler() {
                 return;
             }
             openModal(<AddTransactionModal type={transaction.type} prefill={buildDuplicateTransactionPrefill(transaction)} />);
+            return;
+        }
+
+        if (action.id === "share") {
+            const card = transaction.creditCardId ? creditCards.find((item) => item.id === transaction.creditCardId) : undefined;
+            openModal(<ShareTransactionModal transaction={transaction} sourceLabel={card?.name ?? resolveTransactionWallet(wallets, transaction.inWallet).name} />);
             return;
         }
 

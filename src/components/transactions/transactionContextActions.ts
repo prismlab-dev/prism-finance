@@ -1,7 +1,7 @@
 import { isTeamSplitEntry } from "../../context/finance/teamExpense";
 import type { Transaction, TransactionGroup, TransactionSeriesScope, TransactionStatus } from "../../context/FinanceContext";
 
-export type TransactionContextActionId = "open" | "edit_series" | "view_series" | "view_invoice" | "view_expenses" | "select" | "toggle_status" | "pay_today" | "post_card" | "post_card_today" | "ignore" | "duplicate" | "delete_single" | "delete_this_and_next" | "delete_all" | "view_in_personal" | "view_in_team" | "remove_from_team";
+export type TransactionContextActionId = "open" | "edit_series" | "view_series" | "view_invoice" | "view_expenses" | "select" | "toggle_status" | "pay_today" | "post_card" | "post_card_today" | "ignore" | "duplicate" | "share" | "delete_single" | "delete_this_and_next" | "delete_all" | "view_in_personal" | "view_in_team" | "remove_from_team";
 
 export interface TransactionContextAction {
     id: TransactionContextActionId;
@@ -193,6 +193,10 @@ export function buildTransactionContextActions({ transaction, group, isSelected 
             id: "duplicate",
             label: getDuplicateLabel(transaction),
         });
+    }
+
+    if (!isInvoicePayment(transaction)) {
+        actions.push({ id: "share", label: "Compartilhar" });
     }
 
     actions.push({

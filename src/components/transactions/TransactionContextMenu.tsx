@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
-import { CheckCheck, CircleCheckBig, Clock, Copy, Eye, LayoutList, Layers3, Link, ListChecks, SquareArrowOutUpRight, SquareSlash, Trash2, TriangleAlert, Users } from "lucide-react";
+import { CheckCheck, CircleCheckBig, Clock, Copy, Eye, LayoutList, Layers3, Link, ListChecks, Share2, SquareArrowOutUpRight, SquareSlash, Trash2, TriangleAlert, Users } from "lucide-react";
 import type { TransactionContextAction, TransactionContextActionId } from "./transactionContextActions";
 
 export interface TransactionContextMenuState {
@@ -35,6 +35,7 @@ const ACTION_ICONS: Record<TransactionContextActionId, typeof Eye> = {
     post_card_today: CheckCheck,
     ignore: SquareSlash,
     duplicate: Copy,
+    share: Share2,
     delete_single: Trash2,
     delete_this_and_next: Trash2,
     delete_all: TriangleAlert,

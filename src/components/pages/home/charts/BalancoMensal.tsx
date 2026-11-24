@@ -3,11 +3,11 @@ import { Line } from "react-chartjs-2";
 import { type Transaction, useFinanceTransactions } from "../../../../context/FinanceContext";
 import { transactionSettlementDate } from "../../../../lib/transactionSettlementDate";
 
-const INCOME_COLOR = "#34d399";
-const SPENDING_COLOR = "#fb7185";
+export const INCOME_COLOR = "#34d399";
+export const SPENDING_COLOR = "#fb7185";
 const INVOICE_COLOR = "#fcd34d";
 
-function areaFill(rgb: string) {
+export function areaFill(rgb: string) {
     return (context: ScriptableContext<"line">) => {
         const { ctx, chartArea } = context.chart;
         if (!chartArea) return "transparent";

@@ -74,6 +74,30 @@ const PAGE_PATHS: Record<AppPage, string> = {
     teamMembers: "/equipe/membros",
 };
 
+const TRANSACTION_LINK_PARAM = "transacao";
+const MONTH_LINK_PARAM = "mes";
+
+/** Link que abre a transação; só funciona para quem tem a transação (ou a equipe) carregada. */
+export function buildTransactionLink(transaction: { id: string; date: string; type: TransactionsIntentTab }, team = false): string {
+    const path = team ? PAGE_PATHS.teamTransactions : getPathForPage("transactions", { page: "transactions", tab: transaction.type });
+    const params = new URLSearchParams({ [TRANSACTION_LINK_PARAM]: transaction.id, [MONTH_LINK_PARAM]: transaction.date.slice(0, 7) });
+    return `${window.location.origin}${path}?${params}`;
+}
+
+/** Lê o id da transação de um link compartilhado. */
+export function readTransactionLinkParams(search: string): { transactionId: string; selectedMonth: string | undefined } | null {
+    const params = new URLSearchParams(search);
+    const transactionId = params.get(TRANSACTION_LINK_PARAM);
+    return transactionId ? { transactionId, selectedMonth: params.get(MONTH_LINK_PARAM) ?? undefined } : null;
+}
+
+function readTransactionLink(pathname: string, search: string): PageNavigationIntent | null {
+    const link = readTransactionLinkParams(search);
+    const page = getPageFromPathname(pathname);
+    if (!link || (page !== "spending" && page !== "income" && page !== "transfer")) return null;
+    return { page: "transactions", tab: page, selectedMonth: link.selectedMonth, targetTransactionId: link.transactionId };
+}
+
 function normalizePathname(pathname: string) {
     const normalized = pathname.toLowerCase().replace(/\/+$/, "");
     return normalized || "/";
@@ -141,10 +165,14 @@ export function PageProvider({ children }: { children: ReactNode }) {
     );
 
     const consumePendingNavigation = useCallback(() => {
-        const pendingNavigation = pendingNavigationRef.current;
+        const pendingNavigation = pendingNavigationRef.current ?? readTransactionLink(location.pathname, location.search);
         pendingNavigationRef.current = null;
+        if (new URLSearchParams(location.search).has(TRANSACTION_LINK_PARAM)) {
+            // Consome o link compartilhado uma vez; recarregar a página não reabre a transação.
+            navigate(location.pathname, { replace: true });
+        }
         return pendingNavigation;
-    }, []);
+    }, [location.pathname, location.search, navigate]);
 
     const value = useMemo<PageContextType>(
         () => ({

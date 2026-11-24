@@ -11,6 +11,7 @@ import { AddTransactionModal } from "../../modal/AddTransaction";
 import { formatCurrencyBRL } from "../../transactions/transactionView";
 import { dayLabel } from "../home/RecentTransactionsPanel";
 import { ActivityRow, MemberAvatar, OverviewCard, PersonDebtRow, OverviewEmpty, PendingRow, parseDay } from "./TeamOverviewRows";
+import { TeamBalanceCard } from "./TeamBalanceCard";
 import { TeamExpenseFormModal } from "./TeamExpenseFormModal";
 import { type PersonDebt, TeamPersonDebtsModal } from "./TeamPersonDebtsModal";
 import { TeamActivitySkeleton } from "./TeamSkeletons";
@@ -207,6 +208,7 @@ export function TeamOverviewActivity({ team }: { team: TeamSummary }) {
     return (
         <div className="grid items-start gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,400px)]">
             <div className="flex min-w-0 flex-col gap-3">
+                <TeamBalanceCard entries={view.expenses} />
                 {iOwe.length === 0 && owedToMe.length === 0 ? (
                     <p className="flex items-center gap-3 rounded-2xl border border-emerald-400/15 bg-emerald-500/[0.06] px-4 py-3 text-sm text-emerald-100/85">
                         <CheckCircle2 size={18} className="shrink-0 text-emerald-300" />
