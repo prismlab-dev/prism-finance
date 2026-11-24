@@ -38,4 +38,4 @@ export type {
     TransactionType,
     Wallet,
     WalletType,
-} from "./financeCore";
+} from "./domainTypes";

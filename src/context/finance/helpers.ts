@@ -1,4 +1,4 @@
-import type { Beneficiary, Category, TransactionDraft, TransactionGroup, Wallet } from "./domainTypes";
+import type { Beneficiary, Category, TransactionGroup, Wallet } from "./domainTypes";
 import { DEFAULT_BENEFICIARY_ID, DEFAULT_WALLET_ID, SYSTEM_EXPENSE_CARD_INVOICE_CATEGORY_ID } from "./domainConstants";
 import { getLocalTodayDate } from "../../lib/localDate";
 import { roundToCents } from "../../lib/primitives";
@@ -22,7 +22,8 @@ export function createId(prefix: string): string {
     return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1_000_000)}`;
 }
 
-export function resolveGroupType(type: TransactionDraft["type"], signedValue: number): TransactionGroup["type"] {
+/** Aceita também valores legados/desconhecidos: sem tipo reconhecido, o sinal do valor decide. */
+export function resolveGroupType(type: unknown, signedValue: number): TransactionGroup["type"] {
     if (type === "income") {
         return "income";
     }
